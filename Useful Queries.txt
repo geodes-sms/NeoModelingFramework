@@ -1,0 +1,56 @@
+
+//get type of properties of the node
+match (n) WHERE ID(n) = 170
+WITH properties(n) as props
+return props, apoc.meta.types(props)
+
+
+// remove all elements excluding metamodel
+MATCH (:EPackage)-[*0..2]->(m)
+WITH collect(DISTINCT m) AS m
+OPTIONAL MATCH (n) WHERE NOT n IN m
+DETACH DELETE n
+
+
+// ref setter  upperBound == 1
+MATCH (c:MindMap) WHERE ID(c)=811
+MATCH (e:CentralTopic) WHERE ID(e)=813
+OPTIONAL MATCH (c)-[r:centralTopic {containment:true}]->(:CentralTopic)
+OPTIONAL MATCH (e)<-[{containment: true}]-(endNodeContainer)
+WITH c, e, r, COUNT(endNodeContainer) = 0  AS predicate
+FOREACH (ignoreMe IN CASE WHEN predicate THEN [1] ELSE [] END |
+	DELETE r
+	MERGE (c)-[:centralTopic {containment:true}]->(e))
+RETURN predicate
+
+
+//ref setter  upperBound > 1
+MATCH (c:MindMap) WHERE ID(c)=811
+MATCH (e:CentralTopic) WHERE ID(e)=813
+OPTIONAL MATCH (c)-[r:centralTopic {containment:true}]->(:CentralTopic)
+OPTIONAL MATCH (e)<-[{containment: true}]-(endNodeContainer)
+WITH c, e, COUNT(r) < 2 AND COUNT(endNodeContainer) = 0 AS predicate
+FOREACH (ignoreMe IN CASE WHEN predicate THEN [1] ELSE [] END |
+  CREATE (c)-[r:$refName{containment:{containment}}]->(e))
+RETURN predicate
+
+
+
+
+val res = transaction.run("MATCH (p:EPackage)-->(c:EClass) WHERE ID(p)={ePackageID}" +
+" OPTIONAL MATCH (c)-[:eSuperTypes]->(directST:EClass)" +
+" WITH c, collect(directST) AS directST, collect(directST.name) AS directSTName" +
+" WITH c, directST[0] AS base, directST[1..] AS d, directSTName" +
+" UNWIND CASE WHEN d = [] THEN [null] ELSE d END AS directST" +
+" WITH c, base, directST, directSTName" +
+" OPTIONAL MATCH (c)-->(ownAttr:EAttribute)" +
+" OPTIONAL MATCH (c)-->(ownRef:EReference)-[:eType]->(ownRT:EClass)" +
+" OPTIONAL MATCH (directST)-[:eSuperTypes*0..]->(superClass:EClass)" +
+" OPTIONAL MATCH (superClass)-->(superAttr:EAttribute)" +
+" OPTIONAL MATCH (superClass)-->(superRef:EReference)-[:eType]->(superRT:EClass)" +
+" WITH c, base.name AS baseName, directSTName," +
+" collect(DISTINCT superRef{.*, endClass:superRT.name}) AS superRef," +
+" collect(DISTINCT ownRef{.*, endClass:ownRT.name}) AS ownRef," +
+" collect(DISTINCT superAttr) AS superAttr, collect(DISTINCT ownAttr) AS ownAttr" +
+" RETURN c AS class, baseName, directSTName, superAttr, ownAttr, superRef, ownRef",
+Values.parameters("ePackageID", packageID))

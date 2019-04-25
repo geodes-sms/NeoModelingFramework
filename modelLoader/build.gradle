@@ -1,0 +1,13 @@
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlin_version}"
+    runtimeClasspath files(compileKotlin.destinationDir)
+    testImplementation 'junit:junit:4.12'
+
+    implementation 'org.eclipse.emf:org.eclipse.emf.ecore.xmi:2.15.0'
+    implementation "org.neo4j.driver:neo4j-java-driver:$neo4jdriver_version"
+
+}
