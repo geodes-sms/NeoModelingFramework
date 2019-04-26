@@ -3,9 +3,9 @@ apply plugin: 'kotlin'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     runtimeClasspath files(compileKotlin.destinationDir)
 
-    implementation "org.neo4j.driver:neo4j-java-driver:$neo4jdriver_version"
+    api "org.neo4j.driver:neo4j-java-driver:$neo4jdriver_version"
 }
 
