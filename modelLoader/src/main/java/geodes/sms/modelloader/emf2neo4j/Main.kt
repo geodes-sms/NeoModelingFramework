@@ -9,17 +9,8 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        //val basePath = "/home/vitali/Desktop/my flash/model.loader/model"
-
+        //val basePath = "./EmfModel/metamodel_test"
         //val modelPath = "$basePath/Containment.xmi"
-        //val modelPath = "$basePath/Document.xmi"
-        //val modelPath = "$basePath/MindMap.xmi"
-        //val modelPath = "$basePath/Ecore.ecore"
-        //val modelPath = "$basePath/Containment.ecore"
-        //val modelPath = "$basePath/AttributesTest.ecore"
-        //val modelPath = "$basePath/Latex.ecore"
-        //val modelPath = "$basePath/MindMaps.ecore"
-        //val modelPath = "$basePath/${args[0]}"
 
         val f = File(args[0])
         val dbUri = "bolt://localhost:7687"
@@ -43,19 +34,7 @@ object Main {
             }
         }
 
-        /*
-        //use function close AutoCloseable
-        driver.use {
-            val dbWriter = Neo4jBufferedWriter(it)
-            EmfModelLoader.createFromContent(args[0]).load(dbWriter)
-            dbWriter.close()
-        }*/
-
-        /*
-        dbWriter.use {
-            EmfModelLoader.createFromContent(args[0]).load(it)
-        }
-        //driver.close()*/
+        println("Loading finished")
     }
 }
 

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="LatexMetamodel" nsURI="http://www.example.org/latexmetamodel"
+    nsPrefix="LatexMetamodel">
+  <eClassifiers xsi:type="ecore:EClass" name="TextContainer" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="text" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"
+        defaultValueLiteral=""/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Abstract" eSuperTypes="#//TextContainer"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Paragraph" eSuperTypes="#//TextContainer"/>
+  <eClassifiers xsi:type="ecore:EClass" name="NamedTextContainer" abstract="true"
+      eSuperTypes="#//TextContainer">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Bibliography" eSuperTypes="#//NamedTextContainer">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="style" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Section" eSuperTypes="#//NamedTextContainer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="subsection" upperBound="-1"
+        eType="#//SubSection" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="test_opposite" eType="#//document"
+        eOpposite="#//document/section" eKeys="#//document/name"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubSection" eSuperTypes="#//NamedTextContainer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="subsubsection" upperBound="-1"
+        eType="#//SubSubSection" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SubSubSection" eSuperTypes="#//NamedTextContainer">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="paragraph" upperBound="-1"
+        eType="#//Paragraph" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="document">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="title" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="author" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="abstract" eType="#//Abstract"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="bibliography" eType="#//Bibliography"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="section" upperBound="-1"
+        eType="#//Section" containment="true" eOpposite="#//Section/test_opposite"/>
+  </eClassifiers>
+  <eSubpackages name="p1" nsURI="p1" nsPrefix="p1">
+    <eSubpackages name="p_inner" nsURI="p_inner" nsPrefix="p_inner"/>
+  </eSubpackages>
+  <eSubpackages name="p2" nsURI="p2" nsPrefix="p2"/>
+</ecore:EPackage>

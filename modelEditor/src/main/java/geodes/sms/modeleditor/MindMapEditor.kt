@@ -12,7 +12,7 @@ object MindMapEditor {
         val username = "neo4j"
         val password = "admin"
         val manager = ModelManagerNeo4jImpl(dbUri, username, password)
-        /*
+
         val mindMap = manager.createMindMap()
         val centralTopic1 = manager.createCentralTopic()
         val centralTopic2 = manager.createCentralTopic()
@@ -30,8 +30,8 @@ object MindMapEditor {
         println("set ct2: " + mindMap.setCentralTopic(centralTopic2))
         centralTopic2.addMainTopics(mainTopic1)
 
-        println(centralTopic1.getName())*/
-
+        println(centralTopic1.getName())
+        /*
         val mindMap = manager.getMindMapByID(855)!!
         val centralTopic1 = manager.getCentralTopicByID(856)!!
         val centralTopic2 = manager.getCentralTopicByID(857)!!
@@ -67,6 +67,7 @@ object MindMapEditor {
         println(centralTopic1.addMarker(marker6))
         println(centralTopic1.addMarker(marker6))
 
+*/
         manager.close()
     }
 }

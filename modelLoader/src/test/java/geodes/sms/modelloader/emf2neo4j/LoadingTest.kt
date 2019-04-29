@@ -15,7 +15,7 @@ class LoadingTest {
         val password = "admin"
         val driver = GraphDatabase.driver(dbUri, AuthTokens.basic(username, password))
 
-        //inside test File("./").absolutePath() gives module level path
+        //inside test File("./").absolutePath() gives module level path. Use ../ to get project level
         val modelDir = File("../EmfModel/all")
         val resWriter = File("../TestResults/Loader.csv").bufferedWriter()
 
@@ -27,20 +27,20 @@ class LoadingTest {
                 for (i in 1..20) {
                     print("$i  ")
 
-                    val startTime = System.nanoTime()
+                    val startTime = System.currentTimeMillis()
                     val dbWriter = Neo4jBufferedWriter(it)
                     dbWriter.use { writer ->
                         EmfModelLoader.createFromContent(file.path).load(writer)
                     }
-                    val endTime = System.nanoTime()
+                    val endTime = System.currentTimeMillis()
                     times.add(endTime - startTime)
                     driver.session().run("MATCH (n) DETACH DELETE n")
                 }
-                val total = times.reduce { acc, time -> acc + time } / times.size
-                val seconds = total.toDouble() / 1000000000
-                resWriter.write("${file.name}; $total; $seconds\n")
+                val totalMillis = times.reduce { acc, time -> acc + time } / times.size
+                val seconds = totalMillis.toDouble() / 1000
 
-                println("\ntotal: $total $seconds\n")
+                resWriter.write("${file.name}; $totalMillis; $seconds\n")
+                println("\ntotal: $totalMillis $seconds\n")
             }
             resWriter.close()
         }

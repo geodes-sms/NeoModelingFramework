@@ -30,15 +30,15 @@ class CodeGeneratorTest {
                 for (i in 1..20) {
                     print("$i  ")
 
-                    val startTime = System.nanoTime()
+                    val startTime = System.currentTimeMillis()
                     val packageName = CodeGenerator.generateFromNeo4jMetamodel(it, metamodelID, outputDir.path)
-                    val endTime = System.nanoTime()
+                    val endTime = System.currentTimeMillis()
 
                     times.add(endTime - startTime)
-                    //File(outputDir, packageName).deleteRecursively()
+                    File(outputDir, packageName).deleteRecursively()
                 }
                 val total = times.reduce { acc, time -> acc + time } / times.size
-                val seconds = total.toDouble() / 1000000000
+                val seconds = total.toDouble() / 1000
                 resWriter.write("ID: $metamodelID; $total; $seconds\n")
 
                 println("\ntotal: $total $seconds\n")
