@@ -33,6 +33,7 @@ class Main {
 		 	genSimpleInheritance(1, n)
 
 		 	print(n + " ")
+
 		]
 
 
