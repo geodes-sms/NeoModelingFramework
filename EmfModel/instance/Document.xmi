@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LatexMetamodel:Document
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:LatexMetamodel="http://www.example.org/latexmetamodel"
+    xsi:schemaLocation="http://www.example.org/latexmetamodel ../metamodel/Latex.ecore"
+    title="some title"
+    author="Me"
+    name="Doc1ee">
+  <abstract
+      text="abstract text here1"/>
+  <bibliography
+      text="bibliogr. text"
+      name="bibliography name"
+      style="style here"/>
+  <section text="text of section1"
+      name="section1">
+    <subsection
+        text="txt of subsection1"
+        name="subsection1">
+      <subsubsection
+          text="txt of subs11"
+          name="subs11"/>
+    </subsection>
+    <subsection
+        text="txt of subsection2"
+        name="subsection2"/>
+    <subsection
+        text="txt of subsection3"
+        name="subsection3"/>
+  </section>
+  <section text="text of section2"
+      name="section2">
+    <subsection
+        text="txt of subsection1"
+        name="subsection1">
+      <subsubsection
+          text="txt of subs11"
+          name="subs 21"/>
+    </subsection>
+    <subsection
+        text="txt of subsection2"
+        name="subsection2"/>
+    <subsection
+        text="txt of subsection3"
+        name="subsection3"/>
+  </section>
+</LatexMetamodel:Document>

@@ -5,7 +5,10 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     runtimeClasspath files(compileKotlin.destinationDir)
 
-    implementation project(':neo4jEcore')
+    runtimeOnly 'org.neo4j:neo4j-ogm-bolt-driver:3.1.14'
+    implementation 'org.neo4j:neo4j-ogm-core:3.1.14'
+
+    //implementation project(':NeoEcore')
     //implementation "org.neo4j.driver:neo4j-java-driver:$neo4jdriver_version" //imported from :neo4jEcore
     //implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"  //imported from :neo4jEcore
 }

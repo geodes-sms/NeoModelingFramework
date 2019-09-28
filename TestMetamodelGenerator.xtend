@@ -5,44 +5,45 @@ import java.nio.file.Files
 
 class Main {
 
-	//static val baseDir = Paths.get("/home/vitali/Public/Projects/AndroidStudioProj/Neo4jEMF/EmfModel/metamodel_test")
-	static val baseDir = Paths.get("./model")
+	static val outputDir = Paths.get("/home/vitali/Public/Projects/AndroidStudioProj/Neo4jEMF/EmfModel/metamodel_test")
+	//static val outputDir = Paths.get("./model")
 
 	def static void main(String[] args) {
 
-		if(!Files.exists(baseDir)) Files.createDirectories(baseDir)
-		//Files.walk(baseDir).map[it.toFile].forEach[it.delete]
+		if(!Files.exists(metamodel.generator.Main.outputDir)) Files.createDirectories(metamodel.generator.Main.outputDir)
+		Files.walk(outputDir).map[it.toFile].filter[it.file].forEach[it.delete]
 
-		val testList = #[3, 2]
-		val longList = #[20, 50, 70, 100, 120, 150, 170, 200, 250, 300, 370, 450, 540, 600]
+		val testList = #[3, 2, 4]
+		val longList = #[20, 50, 70, 100, 120, 150, 170, 200, 250, 300, 370, 450, 540]
 		val shortList = #[1, 2, 3, 4, 5]
 
 		print("long list: ")
-		testList.forEach[ n |
+		longList.forEach[ n |
 
 		 	genAttrString(n)
 		 	genSelfRef(n)
 
 		 	genRef(1, n, 1)
 		 	genRef(n, 1, 1)
-		 	genRef(1, n, n)
 
+		 	longList.forEach[ q |
+		 		genRef(1, q, n)
+				genRef(n, q, 1)
+		 	]
 
-		 	genSimpleInheritance(3, n)
-		 	genSimpleInheritance(4, n)
-		 	genSimpleInheritance(1, n)
+		 	//genSimpleInheritance(3, n)
+		 	//genSimpleInheritance(4, n)
+		 	//genSimpleInheritance(4, n)
 
 		 	print(n + " ")
-
 		]
-
 
 		println("\nFinished")
 	}
 
 	static def genAttrString(int n) {
-		val name = '''Attr_str_n«n»'''
-		val writer = Files.newBufferedWriter(Paths.get('''«baseDir»/«name».ecore'''))
+		val name = '''Attr_str_n«String.format("%03d", n)»'''
+		val writer = Files.newBufferedWriter(Paths.get('''«metamodel.generator.Main.outputDir»/«name».ecore'''))
 		writer.append('''
 			<?xml version="1.0" encoding="UTF-8"?>
 			<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI"
@@ -62,13 +63,14 @@ class Main {
 	}
 
 	static def genSelfRef(int n) {
-		val writer = Files.newBufferedWriter(Paths.get('''«baseDir»/Ref_«n»_src1_trg0.ecore'''))
+		val name = '''selfRef_«String.format("%03d", n)»'''
+		val writer = Files.newBufferedWriter(Paths.get('''«metamodel.generator.Main.outputDir»/«name».ecore'''))
 		writer.append('''
 			<?xml version="1.0" encoding="UTF-8"?>
 			<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI"
 				xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
-				name="selfRef_«n»" nsURI="selfRef_«n»" nsPrefix="selfRef_«n»">
+				name="«name»" nsURI="«name»" nsPrefix="«name»">
 				<eClassifiers xsi:type="ecore:EClass" name="Src">
 		''')
 
@@ -88,8 +90,8 @@ class Main {
 	 * targ: number of target nodes
 	 */
 	static def genRef(int src, int n, int tar) {
-		val name = '''Ref_src«src»_n«n»_tar«tar»'''
-		val writer = Files.newBufferedWriter(Paths.get('''«baseDir»/«name».ecore'''))
+		val name = '''Ref_src«String.format("%03d", src)»_n«String.format("%03d", n)»_tar«String.format("%03d", tar)»'''
+		val writer = Files.newBufferedWriter(Paths.get('''«metamodel.generator.Main.outputDir»/«name».ecore'''))
 
 		writer.append('''
 			<?xml version="1.0" encoding="UTF-8"?>
@@ -124,8 +126,8 @@ class Main {
 	 * @param width is a number of inherited elements for each element
 	 */
 	static def genSimpleInheritance(int depth, int width) {
-		val name = '''SimpleInheritance_depth«depth»_width«width»'''
-		val writer = Files.newBufferedWriter(Paths.get('''«baseDir»/«name».ecore'''))
+		val name = '''SimpleInheritance_depth«String.format("%03d", depth)»_width«String.format("%03d", width)»'''
+		val writer = Files.newBufferedWriter(Paths.get('''«metamodel.generator.Main.outputDir»/«name».ecore'''))
 
 		writer.append('''
 			<?xml version="1.0" encoding="UTF-8"?>
@@ -155,7 +157,7 @@ class Main {
 
 	static def genComplexModel(int attr, int ref, int depth, int width) {
 		val name = '''ComplexModel_attr«attr»_depth«depth»_width«width»'''
-		val writer = Files.newBufferedWriter(Paths.get('''«baseDir»/«name».ecore'''))
+		val writer = Files.newBufferedWriter(Paths.get('''«metamodel.generator.Main.outputDir»/«name».ecore'''))
 
 		writer.append('''
 			<?xml version="1.0" encoding="UTF-8"?>
