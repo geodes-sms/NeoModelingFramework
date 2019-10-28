@@ -4,26 +4,28 @@ import org.neo4j.driver.v1.Value
 import org.neo4j.driver.v1.Values
 
 
-//used to restrict ID setter
-interface StateListener {
-    fun onSave(id: Long)
-}
+class Node : INode, GraphStateListener {
 
-interface INode {
-    val id: Long
-    val alias : String
-    fun setProperty(name: String, value: Any)
-}
+    /** Constructor is used to create proxy for a new node */
+    constructor(graph: NodeStateListener) {
+        this.graph = graph
+        this.state = StateInited
+        this.id = -1
+    }
 
-class Node(private val props: HashMap<String, Value>): INode,
-    StateListener {
+    /** Used to create proxy Node object for existing node in DB */
+    constructor(graph: NodeStateListener, id: Long) {
+        this.graph = graph
+        this.state = StateNotInited()
+        this.id = id
+    }
 
     private companion object {
         var n: Int = 0
             get() = field++
 
         fun createAlias(): String { //"n" + "$n".padStart(3, '0')
-            val length = 3
+            val length = 6
             val base = n.toString()
 
             return if (length <= base.length) "n$base"
@@ -37,16 +39,62 @@ class Node(private val props: HashMap<String, Value>): INode,
         }
     }
 
-    override val alias = "n$n"
-    override var id : Long = -1
-        private set
+    private val graph: NodeStateListener
+    private var state: NodeState
+    override val alias: String
+        get() = state.alias
 
+    override var id: Long
+        private set
+    private val props = hashMapOf<String, Value>()
+
+
+    //// Inherited from GraphStateListener
     override fun onSave(id: Long) {
         this.id = id
-        props.clear()
+        onSave()
     }
 
-    override fun setProperty(name: String, value: Any) {
+    override fun onSave() {
+        state = StateNotInited()
+        props.clear()
+    }
+    ////
+
+
+    override fun remove() {
+        graph.onRemove(this)
+        props.clear()
+        state = StateInited
+    }
+
+    override fun setProperty(name: String, value: Any?) {
+
+        //check value here
         props[name] = Values.value(value)
+        state.update()
+    }
+
+    override fun getProperties(): Map<String, Value> = props
+
+
+    private inner class StateNotInited : NodeState {
+
+        override val alias: String
+            get() {
+                //graph.onMatch()
+                state = StateInited
+                return "n$n"
+            }
+
+        override fun update() {
+            graph.onUpdate(this@Node, props)
+            state = StateInited
+        }
+    }
+
+    private object StateInited : NodeState {
+        override val alias = "n$n"
+        override fun update() = Unit
     }
 }
