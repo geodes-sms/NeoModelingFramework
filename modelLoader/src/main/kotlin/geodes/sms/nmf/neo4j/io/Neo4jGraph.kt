@@ -5,18 +5,22 @@ import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.v1.*
 
 
-class Neo4jGraph(dbUri: String, username: String, pwd: String): IGraph, AutoCloseable {
-    private val driver = GraphDatabase.driver(dbUri, AuthTokens.basic(username, pwd))
+class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeStateListener {
+
+    private val session = driver.session(AccessMode.WRITE)
 
     /** It is recommended to create no more then 75 entities (nodes or refs)
      *  at a time before calling graph.save() for performance reasons */
     private val buffCapacity = 75
 
     /** Node aliases that appear in query within CREATE(alias) or MATCH(alias) clauses */
-    private val initedNodes = hashSetOf<INode>()
+    //private val initedNodes = hashSetOf<INode>()
 
     /** Set IDs for those nodes after Graph.save() command */
-    private val onSaveListeners = hashMapOf<String, StateListener>()
+    private val nodesToCreate = hashMapOf<String, GraphStateListener>()
+
+    /** Update properties */
+    private val nodesToUpdate = mutableListOf<GraphStateListener>()
 
     /*
      * Initial capacity calculated for creating 200 nodes or 200 refs
@@ -24,107 +28,113 @@ class Neo4jGraph(dbUri: String, username: String, pwd: String): IGraph, AutoClos
      */
     private val qCreate = StringBuilder(buffCapacity * 68)
     private val qMatch = StringBuilder(buffCapacity * 36)
+    private val qSet = StringBuilder()
     private val qReturn = StringBuilder(buffCapacity * 14)
-    private val properties = mutableMapOf<String, Value>()  //Str -> MapValue
+    private val properties = mutableMapOf<String, Value>()
 
-    override fun createNode(label: String) : INode {
-        val localProps = hashMapOf<String, Value>()
-        val node = Node(localProps)
-        val prAlias = "pr_${node.alias}"
-        properties[prAlias] = MapValue(localProps)
+    private val TYPE_DEFAULT = "TYPE_DEFAULT"
 
-        qCreate.append("CREATE (${node.alias}")
+    companion object {
+        fun create(cr: DBCreadentials): IGraph =
+            Neo4jGraph(GraphDatabase.driver(cr.dbUri, AuthTokens.basic(cr.username, cr.password)))
+    }
+
+    override fun createNode(label: String): INode {
+        val node = Node(this)
+        val alias = node.alias
+        val prAlias = "pr_$alias"
+        properties[prAlias] = MapValue(node.props)  //connect localProps to globalProps
+
+        qCreate.append("CREATE ($alias")
         if (label.isNotEmpty()) qCreate.append(":$label")
         qCreate.appendln(" $$prAlias)")
-        qReturn.append("${node.alias}:ID(${node.alias}),")
+        qReturn.append("$alias:ID($alias),")
 
-        initedNodes.add(node)
-        onSaveListeners[node.alias] = node
+        //initedNodes.add(node)
+        nodesToCreate[alias] = node
         return node
     }
 
+    override fun matchNode(id: Long): INode {
+        return Node(this, id)
+    }
+
     override fun createRelation(type: String, start: INode, end: INode, containment: Boolean) {
-        matchNode(start)
-        matchNode(end)
-        qCreate.appendln("CREATE (${start.alias})-[:$type{containment:$containment}]->(${end.alias})")
+        (start as Node).nodeState.register()
+        (end as Node).nodeState.register()
+        val validType = if (type.isEmpty()) TYPE_DEFAULT else type
+        qCreate.appendln("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias})")
     }
 
     /**
-     * Create relation with endNode ( -->(newNode) ). StartNode must already exist
+     * Create new relation with new endNode ( -->(newNode) ). StartNode must already exist
      * @return newNode
      */
-    override fun createPath(start: INode, endLabel: String, type: String, containment: Boolean): INode {
-        matchNode(start)
-
-        val localProps = hashMapOf<String, Value>()
-        val end = Node(localProps)
+    override fun createPath(start: INode, endLabel: String, refType: String, containment: Boolean): INode {
+        (start as Node).nodeState.register()
+        val validType = if (refType == "") TYPE_DEFAULT else refType
+        val end = Node(this)
         val prAlias = "pr_${end.alias}"
-        properties[prAlias] = MapValue(localProps)
+        properties[prAlias] = MapValue(end.props)
 
-        qCreate.append("CREATE (${start.alias})-[:$type{containment:$containment}]->(${end.alias}")
-            .append(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)" )
+        qCreate.append("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias}")
+            .append(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)")
         qReturn.append("${end.alias}:ID(${end.alias}),")
 
-        initedNodes.add(end)
-        onSaveListeners[end.alias] = end
+        nodesToCreate[end.alias] = end
         return end
     }
 
-    /*
-    fun setProperties(node: INode) {
-        matchNode(node)
-        //=
+    //// Inherited from NodeStateListener
+    override fun onMatch(node: Node) {
+        nodesToUpdate.add(node)
+        val alias = node.alias
+        val idAlias = "id_$alias"
+        qMatch.appendln("MATCH ($alias) WHERE ID($alias)=$$idAlias")
+        properties[idAlias] = IntegerValue(node.id)
     }
 
-    fun appendProperties(node: INode) {
-        matchNode(node)
-        //+=
-    }*/
+    override fun onUpdate(node: Node, props: Map<String, Value>) {
+        val prAlias = "pr_${node.alias}"
+        properties[prAlias] = MapValue(props)
+        qSet.appendln("SET ${node.alias}+=$$prAlias")
+    }
+    ////
 
-    private fun matchNode(node: INode) {
-        if (!initedNodes.contains(node)) {
-            val idAlias = "id_${node.alias}"
-            qMatch.appendln("MATCH (${node.alias}) WHERE ID(${node.alias})=$$idAlias")
-            properties[idAlias] = IntegerValue(node.id)
-            initedNodes.add(node)
-        }
+    private fun qReturn() : String {
+        if (qReturn.isNotEmpty())
+            qReturn.setCharAt(qReturn.length - 1, ' ')
+        return "RETURN {$qReturn} AS nodeIDs"
     }
 
-    private fun getQueryReturn() : String {
-        qReturn.setCharAt(qReturn.length - 1, '}')
-        return "RETURN {${qReturn.append("AS nodeIDs")}"
-    }
 
     override fun save() {
-        if (initedNodes.isEmpty()) return
-        val session = driver.session()  //.use { } instead of try catch block
+        if (nodesToCreate.isEmpty() && nodesToUpdate.isEmpty()) return
 //        try {
-            //there are nodes and/or refs to create
+        //there are nodes and/or refs to create
 
-//            println("MATCH   capacity: ${qMatch.capacity()}  length: ${qMatch.length}")
-//            println("CREATE  capacity: ${qCreate.capacity()}  length: ${qCreate.length}")
-//            println("RETURN  capacity: ${qReturn.capacity()}  length: ${qReturn.length}")
-//            println()
+            println("MATCH  $qMatch   capacity: ${qMatch.capacity()}  length: ${qMatch.length}")
+            println("CREATE $qCreate  capacity: ${qCreate.capacity()}  length: ${qCreate.length}")
+            println("RETURN ${qReturn()} capacity: ${qReturn.capacity()}  length: ${qReturn.length}")
+            println()
 
-            if (onSaveListeners.isNotEmpty()) {
-                val map = session.writeTransaction {
-                    val res = it.run(Statement(qMatch.toString() + qCreate.toString() +
-                            getQueryReturn(), MapValue(properties)))
-                    res.single().get("nodeIDs").asMap(Values.ofLong())
-                }
+        val map = session.writeTransaction {
+            val res = it.run(Statement(qMatch.toString() + qCreate.toString() + qSet.toString() + qReturn(),
+                MapValue(properties)))
+            res.single().get("nodeIDs").asMap(Values.ofLong())
+        }
 
-                map.forEach { (alias, id) -> onSaveListeners[alias]!!.onSave(id) }
-                onSaveListeners.clear()
-                qReturn.clear()
-            } else {    //nothing to return; create ref only
-                session.writeTransaction { it.run(Statement(
-                    qMatch.toString() + qCreate.toString(), MapValue(properties))) }
-            }
+        map.forEach { (alias, id) -> nodesToCreate[alias]!!.onSave(id) }
+        nodesToUpdate.forEach { it.onSave() }
 
-            initedNodes.clear()
-            qCreate.clear() //clear() preserve initial capacity of StringBuilder
-            qMatch.clear()
-            properties.clear()
+        nodesToCreate.clear()
+        nodesToUpdate.clear()
+        qMatch.clear()  // clear() method preserves initial capacity of StringBuilder
+        qCreate.clear()
+        qSet.clear()
+        qReturn.clear()
+        properties.clear()
+
 //        } catch (e: Exception) {
 //            println("Transaction exception:")
 //            println(e.printStackTrace())
@@ -132,18 +142,16 @@ class Neo4jGraph(dbUri: String, username: String, pwd: String): IGraph, AutoClos
 //        } finally {
 //            session.close()
 //        }
-            session.close() //to finally block
+        session.close() //to finally block
     }
 
     override fun clearDB() {
         driver.session().use { it.run(Statement("MATCH (n) DETACH DELETE n")) }
     }
 
-    fun execute(query: String) {
-        driver.session().use { it.run(query) }
-    }
-
     override fun close() {
+        //save()
+        session.close()
         driver.close()
     }
 }

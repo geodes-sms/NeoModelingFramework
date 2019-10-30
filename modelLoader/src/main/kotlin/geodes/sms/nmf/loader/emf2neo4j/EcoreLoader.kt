@@ -1,15 +1,14 @@
-package geodes.sms.modelloader.emf2neo4j
+package geodes.sms.nmf.loader.emf2neo4j
 
-import org.eclipse.emf.common.util.EList
+import geodes.sms.nmf.neo4j.io.IGraph
+import geodes.sms.nmf.neo4j.io.INode
 import org.eclipse.emf.ecore.*
 import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.emf.ecore.util.ECrossReferenceAdapter
 
 
-class MetaModelLoader(
-    private val resource: Resource,
-    private val adapter: ECrossReferenceAdapter) : EmfModelLoader {
+class EcoreLoader(val resource: Resource, val graph: IGraph)/* : EmfModelLoader*/ {
 
+    /*
     /** lists must not contain containment refs */
     private fun allowedOutputRefs(eObject: EModelElement) : List<String> {
         return when (eObject) {
@@ -36,9 +35,40 @@ class MetaModelLoader(
             is EEnumLiteral -> listOf("eLiterals")
             else -> emptyList()
         }
-    }
+    }*/
 
-    override fun load(dbWriter: Neo4jBufferedWriter) {
+    private val map = hashMapOf<EObject, INode>()
+
+    fun load(pack: EPackage) {
+
+        val grPack = graph.createNode(pack.name)
+
+        pack.eClassifiers.forEach {
+            val grClass = graph.createPath(grPack, it.eClass().name, "eClassifiers", true)
+            grClass.setProperty("name", it.name)
+            map[it] = grClass
+
+            if(it is EClass) {
+                grClass.setProperty("abstract", it.isAbstract)
+                grClass.setProperty("interface", it.isInterface)
+
+                it.eReferences.forEach{ eRef ->
+                    val grRef = graph.createPath(grClass, "EReference","eStructuralFeatures", true)
+                    grRef.setProperty("","")
+
+                    map[eRef] = grRef
+
+                    //eoposite; ekeys
+                }
+
+                it.eAttributes.forEach { eAttr ->
+
+                }
+
+            } else {    //EDataType
+                ""
+            }
+        }
 
         resource.allContents.asSequence().filterIsInstance<EModelElement>().forEach { eObject ->
             val eClass = eObject.eClass()
@@ -46,10 +76,11 @@ class MetaModelLoader(
             //val label = eClass.eAllSuperTypes.joinToString("", prefix = eClass.name, transform = {":${it.name}"})
             val label = eClass.name
             val nodeUri = resource.getURIFragment(eObject)
-            val props = eClass.eAllAttributes.associateBy ({ it.name }, { eObject.eGet(it) })
-                .minus(listOf(/*"defaultValue",*/ "instanceClass", "instance"))
-                .plus(listOfNotNull(if (eObject is EAttribute) "eType" to eObject.eAttributeType.instanceClassName else null))
+            val props = eClass.eAllAttributes.associateBy({ it.name }, { eObject.eGet(it) })
+                .minus(listOf("defaultValue", "instanceClass", "instance"))
+                .plus(listOfNotNull(if (eObject is EAttribute) "eType" to eObject.eType.name else null))
 
+            /*
             /**
              * Output crossRefs without children containment
              * List<Pair<eRef -> endNodeUri>>
@@ -57,8 +88,7 @@ class MetaModelLoader(
             val outputCrossRefs = eClass.eAllReferences
                 .filter { eObject.eIsSet(it) && it.name in allowedOutputRefs(eObject) }
                 .flatMap { eRef ->
-                    val value = eObject.eGet(eRef)
-                    when (value) {
+                    when (val value = eObject.eGet(eRef)) {
                         is EList<*> -> value.filterIsInstance<EObject>().map { eRef to resource.getURIFragment(it) }
                         is EObject -> listOf(Pair(eRef, resource.getURIFragment(value)))
                         else ->  throw Exception("cannot parse EReference ${eRef.name} eType to $value")
@@ -97,7 +127,7 @@ class MetaModelLoader(
                     isContainment = eRef.isContainment
                 )
                 //println("  out: " + eRef.name + " --> " + endNodeUri)
-            }
+            }*/
         }
         //dbWriter.close()
     }

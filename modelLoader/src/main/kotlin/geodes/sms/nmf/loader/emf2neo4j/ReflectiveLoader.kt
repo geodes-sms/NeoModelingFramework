@@ -1,27 +1,32 @@
-package geodes.sms.modelloader.emf2neo4j
+package geodes.sms.nmf.loader.emf2neo4j
 
-import org.eclipse.emf.common.util.EList
+import geodes.sms.nmf.neo4j.io.IGraph
 import org.eclipse.emf.ecore.EObject
-import org.eclipse.emf.ecore.EReference
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.emf.ecore.util.ECrossReferenceAdapter
-import kotlin.Exception
 
 
-class ModelInstanceLoader(
+class ReflectiveLoader(
     private val resource: Resource,
-    private val adapter: ECrossReferenceAdapter) : EmfModelLoader {
+    private val graph: IGraph,
+    private val adapter: ECrossReferenceAdapter) /*: EmfModelLoader*/ {
 
-    override fun load(dbWriter: Neo4jBufferedWriter) {
-        val iterator = resource.allContents
+
+    fun load(rootObj: EObject) {
+        val iterator = rootObj.eAllContents()
         while(iterator.hasNext()) {
             val eObject = iterator.next()
             val eClass = eObject.eClass()
 
+            //val nodeUri = resource.getURIFragment(eObject)
             //val label = eClass.eAllSuperTypes.joinToString("", prefix = eClass.name, transform = {":${it.name}"})
             val label = eClass.name
-            val nodeUri = resource.getURIFragment(eObject)
-            val props = eClass.eAllAttributes.filter { eObject.eIsSet(it) }.associateBy ({ it.name }, { eObject.eGet(it) })
+            val props = eClass.eAllAttributes
+                .filter { eObject.eIsSet(it) }
+                .associateBy ({ it.name }, { eObject.eGet(it, true) })
+
+            /*
+
 
             /**
              * Output crossRefs without containment
@@ -30,8 +35,7 @@ class ModelInstanceLoader(
             val outputCrossRefs = eClass.eAllReferences
                 .filter { eObject.eIsSet(it) && !it.isContainment }
                 .flatMap { eRef ->
-                    val value = eObject.eGet(eRef)
-                    when (value) {
+                    when (val value = eObject.eGet(eRef)) {
                         is EList<*> -> value.filterIsInstance<EObject>().map { eRef to resource.getURIFragment(it) }
                         is EObject -> listOf(Pair(eRef, resource.getURIFragment(value)))
                         else -> throw Exception("cannot parse EReference ${eRef.name}")
@@ -40,6 +44,7 @@ class ModelInstanceLoader(
 
             /** Input refs including containment */
             val inputRefs = adapter.getInverseReferences(eObject, true)
+
 
             println("${eClass.name}  $nodeUri  ${outputCrossRefs.size + inputRefs.size}")
             props.forEach { (k, v) -> println(" $k  $v   ${v?.javaClass?.name}") }
@@ -69,7 +74,7 @@ class ModelInstanceLoader(
                     isContainment = eRef.isContainment
                 )
                 //println("  out: " + eRef.name + " --> " + endNodeUri)
-            }
+            }*/
 
             //if (eClass.name == "A") c++
             //if (c == 2) iterator.prune()
