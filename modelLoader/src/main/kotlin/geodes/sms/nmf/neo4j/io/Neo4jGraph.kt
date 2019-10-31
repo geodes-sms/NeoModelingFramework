@@ -7,8 +7,6 @@ import org.neo4j.driver.v1.*
 
 class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeStateListener {
 
-    private val session = driver.session(AccessMode.WRITE)
-
     /** It is recommended to create no more then 75 entities (nodes or refs)
      *  at a time before calling graph.save() for performance reasons */
     private val buffCapacity = 75
@@ -59,26 +57,26 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         return Node(this, id)
     }
 
-    override fun createRelation(type: String, start: INode, end: INode, containment: Boolean) {
+    override fun createRelation(refType: String, start: INode, end: INode, containment: Boolean) {
         (start as Node).nodeState.register()
         (end as Node).nodeState.register()
-        val validType = if (type.isEmpty()) TYPE_DEFAULT else type
+        val validType = if (refType.isEmpty()) TYPE_DEFAULT else refType
         qCreate.appendln("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias})")
     }
 
     /**
      * Create new relation with new endNode ( -->(newNode) ). StartNode must already exist
-     * @return newNode
+     * @return newNode with specified label
      */
-    override fun createPath(start: INode, endLabel: String, refType: String, containment: Boolean): INode {
+    override fun createPath(start:INode, endLabel:String, refType:String, containment:Boolean): INode {
         (start as Node).nodeState.register()
-        val validType = if (refType == "") TYPE_DEFAULT else refType
+        val validType = if (refType.isEmpty()) TYPE_DEFAULT else refType
         val end = Node(this)
         val prAlias = "pr_${end.alias}"
         properties[prAlias] = MapValue(end.props)
 
         qCreate.append("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias}")
-            .append(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)")
+            .appendln(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)")
         qReturn.append("${end.alias}:ID(${end.alias}),")
 
         nodesToCreate[end.alias] = end
@@ -110,17 +108,19 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
 
     override fun save() {
         if (nodesToCreate.isEmpty() && nodesToUpdate.isEmpty()) return
-//        try {
-        //there are nodes and/or refs to create
 
-            println("MATCH  $qMatch   capacity: ${qMatch.capacity()}  length: ${qMatch.length}")
-            println("CREATE $qCreate  capacity: ${qCreate.capacity()}  length: ${qCreate.length}")
-            println("RETURN ${qReturn()} capacity: ${qReturn.capacity()}  length: ${qReturn.length}")
-            println()
+//        println("$qMatch   MATCH capacity: ${qMatch.capacity()}  length: ${qMatch.length}")
+//        println("$qCreate  CREATE capacity: ${qCreate.capacity()}  length: ${qCreate.length}")
+//        println("$qSet  SET capacity: ${qSet.capacity()}  length: ${qSet.length}")
+//        println("${qReturn()}  RESTURN capacity: ${qReturn.capacity()}  length: ${qReturn.length}")
+//        println()
 
-        val map = session.writeTransaction {
-            val res = it.run(Statement(qMatch.toString() + qCreate.toString() + qSet.toString() + qReturn(),
-                MapValue(properties)))
+        val session = driver.session(AccessMode.WRITE)
+        //try {
+        val map = session.writeTransaction { tx->
+            val res = tx.run(Statement(qMatch.toString() + qCreate.toString() + qSet.toString()
+                    + qReturn(), MapValue(properties))
+            )
             res.single().get("nodeIDs").asMap(Values.ofLong())
         }
 
@@ -135,14 +135,8 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         qReturn.clear()
         properties.clear()
 
-//        } catch (e: Exception) {
-//            println("Transaction exception:")
-//            println(e.printStackTrace())
-//            throw e
-//        } finally {
-//            session.close()
-//        }
-        session.close() //to finally block
+        //finally {
+        session.close()
     }
 
     override fun clearDB() {
@@ -150,8 +144,7 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
     }
 
     override fun close() {
-        //save()
-        session.close()
+        save()
         driver.close()
     }
 }

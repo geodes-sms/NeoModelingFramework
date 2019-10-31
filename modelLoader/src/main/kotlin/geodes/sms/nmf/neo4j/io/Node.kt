@@ -28,7 +28,7 @@ class Node : INode, GraphStateListener {
         var n: Int = 0
             get() = field++
 
-        fun createAlias(): String { //"n" + "$n".padStart(3, '0')
+        fun createAlias(): String { //"n" + "$n".padStart(6, '0')
             val length = 6
             val base = n.toString()
 
@@ -44,12 +44,12 @@ class Node : INode, GraphStateListener {
     }
 
     private val graph: NodeStateListener
-    var nodeState: State    //= StateRegistered //Node must be inited in query (MATCH or CREATE)
+    var nodeState: State    // StateRegistered ==> Node must be inited in query (MATCH or CREATE)
         private set
     private var propsState: State
     override val alias: String = "n$n"
     override val props = hashMapOf<String, Value>()
-    override var id: Long = -1  //id
+    override var id: Long
         private set
 
     //// Inherited from GraphStateListener
@@ -89,11 +89,18 @@ class Node : INode, GraphStateListener {
             is EEnumLiteral -> StringValue(value.literal)
             is java.util.Date -> DateTimeValue(ZonedDateTime.ofInstant(value.toInstant(), ZoneId.systemDefault()))
             is List<*> -> Values.value(value)    //EList
-            //is Map<*, *> -> "Map"  //EMap
+            /*is Map<*, *> -> { //EMap      EMap is EList<Map.Entry<K, V>>
+                for ((key, value) in value) {
+                    if (key is String)
+                        props["$name.$key"] = Values.value(value)
+
+                }
+                //NullValue.NULL
+            }*/
             is java.math.BigDecimal -> StringValue(value.toString())
             is java.math.BigInteger -> StringValue(value.toString())
             //is EEnum = EClass = EDataType  //not in model instance; is not a direct attr type
-            else ->  NullValue.NULL //not persistable value
+            else -> NullValue.NULL //not persistable value
         }
 
         props[name] = input
