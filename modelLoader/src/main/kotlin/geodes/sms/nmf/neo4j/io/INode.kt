@@ -1,6 +1,6 @@
 package geodes.sms.nmf.neo4j.io
 
-import org.neo4j.driver.v1.Value
+import org.neo4j.driver.Value
 
 
 interface INode {

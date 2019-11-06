@@ -10,5 +10,5 @@ dependencies {
     implementation 'org.eclipse.emf:org.eclipse.emf.ecore.xmi:2.16.0'
     implementation 'org.eclipse.emf:org.eclipse.emf.ecore:2.19.0'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9'
-    implementation 'org.neo4j.driver:neo4j-java-driver:1.7.5'
+    implementation 'org.neo4j.driver:neo4j-java-driver:4.0.0-beta03'
 }

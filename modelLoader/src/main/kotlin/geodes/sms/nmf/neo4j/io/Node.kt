@@ -2,8 +2,8 @@ package geodes.sms.nmf.neo4j.io
 
 import org.eclipse.emf.ecore.EEnumLiteral
 import org.neo4j.driver.internal.value.*
-import org.neo4j.driver.v1.Value
-import org.neo4j.driver.v1.Values
+import org.neo4j.driver.Value
+import org.neo4j.driver.Values
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -14,7 +14,7 @@ class Node : INode, GraphStateListener {
         this.graph = graph
         this.id = -1
         this.nodeState = StateRegistered    //Node and props are inited in query (CREATE)
-        this.propsState = StateRegistered
+        this.propsState = PropsStateNotRegistered()
     }
 
     constructor(graph: NodeStateListener, id: Long) {

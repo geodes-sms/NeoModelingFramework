@@ -11,6 +11,21 @@ WITH collect(DISTINCT m) AS m
 OPTIONAL MATCH (n) WHERE NOT n IN m
 DETACH DELETE n
 
+// get count of all nodes and all relationships
+MATCH ()-[r]->()
+WITH  COUNT(r) as refCount
+MATCH (n)
+RETURN COUNT(n), refCount
+
+
+// create nodes with dynamic labels; return IDs by alias
+WITH [{alias: 'a1', label: 'LL', props: {a:10, b:20}},
+{alias: 'a2', label: 'LL', props: {a:30}},
+{alias: 'a3', label: 'LL', props: {a:40, b:50}}] as batch
+UNWIND batch as row
+CALL apoc.create.node([row.label], row.props) yield node
+RETURN row.alias AS alias, id(node) AS id
+
 
 // ref setter  upperBound == 1
 MATCH (c:MindMap) WHERE ID(c)=811

@@ -1,15 +1,21 @@
 package geodes.sms.nmf.neo4j.io
 
+import geodes.sms.nmf.neo4j.DBCredentials
 import org.neo4j.driver.internal.value.IntegerValue
 import org.neo4j.driver.internal.value.MapValue
-import org.neo4j.driver.v1.*
+import org.neo4j.driver.*
+import kotlin.properties.Delegates
 
 
 class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeStateListener {
 
     /** It is recommended to create no more then 75 entities (nodes or refs)
      *  at a time before calling graph.save() for performance reasons */
-    private val buffCapacity = 75
+    private val bufferCapacity = 85 //75
+    private var bufferPosition : Int by Delegates.observable(0) { _, _, newValue ->
+        if (newValue >= bufferCapacity)
+            save()
+    }
 
     /** Node aliases that appear in query within CREATE(alias) or MATCH(alias) clauses */
     //private val initedNodes = hashSetOf<INode>()
@@ -24,32 +30,34 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
      * Initial capacity calculated for creating 200 nodes or 200 refs
      * create node query line length ~32; create ref query line length ~64
      */
-    private val qCreate = StringBuilder(buffCapacity * 68)
-    private val qMatch = StringBuilder(buffCapacity * 36)
+    private val qCreate = StringBuilder(bufferCapacity * 68)
+    private val qMatch = StringBuilder(bufferCapacity * 36)
     private val qSet = StringBuilder()
-    private val qReturn = StringBuilder(buffCapacity * 14)
+    private val qReturn = StringBuilder(bufferCapacity * 14)
     private val properties = mutableMapOf<String, Value>()
 
     private val TYPE_DEFAULT = "TYPE_DEFAULT"
 
     companion object {
-        fun create(cr: DBCreadentials): IGraph =
+        fun create(cr: DBCredentials): IGraph =
             Neo4jGraph(GraphDatabase.driver(cr.dbUri, AuthTokens.basic(cr.username, cr.password)))
     }
 
     override fun createNode(label: String): INode {
         val node = Node(this)
         val alias = node.alias
+        /*
         val prAlias = "pr_$alias"
         properties[prAlias] = MapValue(node.props)  //connect localProps to globalProps
-
+*/
         qCreate.append("CREATE ($alias")
-        if (label.isNotEmpty()) qCreate.append(":$label")
-        qCreate.appendln(" $$prAlias)")
+            .append(if (label.isNotEmpty()) ":$label)" else ")")
+        //qCreate.appendln(" $$prAlias)")
         qReturn.append("$alias:ID($alias),")
 
         //initedNodes.add(node)
         nodesToCreate[alias] = node
+        //bufferPosition += 1
         return node
     }
 
@@ -62,6 +70,7 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         (end as Node).nodeState.register()
         val validType = if (refType.isEmpty()) TYPE_DEFAULT else refType
         qCreate.appendln("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias})")
+        //bufferPosition += 1
     }
 
     /**
@@ -76,10 +85,12 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         properties[prAlias] = MapValue(end.props)
 
         qCreate.append("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias}")
-            .appendln(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)")
+            .appendln(if (endLabel.isNotEmpty()) ":$endLabel)" else ")")
+            //.appendln(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)")
         qReturn.append("${end.alias}:ID(${end.alias}),")
 
         nodesToCreate[end.alias] = end
+        //bufferPosition += 2
         return end
     }
 
@@ -90,12 +101,14 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         val idAlias = "id_$alias"
         qMatch.appendln("MATCH ($alias) WHERE ID($alias)=$$idAlias")
         properties[idAlias] = IntegerValue(node.id)
+        //bufferPosition += 1
     }
 
     override fun onUpdate(node: Node, props: Map<String, Value>) {
         val prAlias = "pr_${node.alias}"
         properties[prAlias] = MapValue(props)
         qSet.appendln("SET ${node.alias}+=$$prAlias")
+        //bufferPosition += 1
     }
     ////
 
@@ -107,15 +120,16 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
 
 
     override fun save() {
-        if (nodesToCreate.isEmpty() && nodesToUpdate.isEmpty()) return
+        if (qCreate.isEmpty() && qSet.isEmpty()) return
 
-//        println("$qMatch   MATCH capacity: ${qMatch.capacity()}  length: ${qMatch.length}")
-//        println("$qCreate  CREATE capacity: ${qCreate.capacity()}  length: ${qCreate.length}")
-//        println("$qSet  SET capacity: ${qSet.capacity()}  length: ${qSet.length}")
-//        println("${qReturn()}  RESTURN capacity: ${qReturn.capacity()}  length: ${qReturn.length}")
+//        println("\nonSave")
+//        println("$qMatch  MATCH capacity: ${qMatch.capacity()}  length: ${qMatch.length}\n")
+//        println("$qCreate  CREATE capacity: ${qCreate.capacity()}  length: ${qCreate.length}\n")
+//        println("$qSet  SET capacity: ${qSet.capacity()}  length: ${qSet.length}\n")
+//        println("${qReturn()}  RETURN capacity: ${qReturn.capacity()}  length: ${qReturn.length}/n")
 //        println()
 
-        val session = driver.session(AccessMode.WRITE)
+        val session = driver.session()
         //try {
         val map = session.writeTransaction { tx->
             val res = tx.run(Statement(qMatch.toString() + qCreate.toString() + qSet.toString()
@@ -134,6 +148,7 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         qSet.clear()
         qReturn.clear()
         properties.clear()
+        bufferPosition = 0
 
         //finally {
         session.close()
