@@ -1,71 +1,92 @@
 package geodes.sms.nmf.loader.emf2neo4j
 
+import geodes.sms.nmf.neo4j.Values
+import geodes.sms.nmf.neo4j.io.GraphBatchWriter
+import geodes.sms.nmf.neo4j.io.IDHolder
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
-import org.neo4j.driver.*
-import org.neo4j.driver.internal.value.ListValue
-import org.neo4j.driver.internal.value.MapValue
-import org.neo4j.driver.internal.value.StringValue
 
 
-class ReflectiveBatchLoader(private val resource: Resource, driver: Driver) {
-    private val session = driver.session()
+class ReflectiveBatchLoader(private val resource: Resource, private val writer: GraphBatchWriter) {
 
-    private val nodeStep = 10000
-    private val nodeBatch = mutableListOf<MapValue>()  //Array(nodeStep) {Values.NULL}
-    private var nodeCount = 0
-
-    /** nodeAlias --> nodeID */
-    private val nodeID = hashMapOf<String, Long>()
-
+    private val nodes = hashMapOf<EObject, IDHolder>()
 
     fun load() {
+        val nodeCount = loadNodes()
+        val crossRefCount = loadRefs()
+
+        println("nodes loaded: $nodeCount")
+        println("crossRef loaded: $crossRefCount")
+    }
+
+    private fun loadNodes(): Int {
+        val nodeStep = 20000
         var cursor = 0
+        var nodeCount = 0
+
         for (eObject in resource.allContents) {
             val eClass = eObject.eClass()
 
-            val props = hashMapOf<String, Value>()
-            /*
-            eClass.eAllAttributes.filter { eObject.eIsSet(it) }.forEach { eAttr ->
-                node.setProperty(eAttr.name, eObject.eGet(eAttr, true))
-            }*/
+            val props = eClass.eAllAttributes
+                .asSequence()
+                .filter { eObject.eIsSet(it) }
+                .associateBy ({ it.name }, { Values.value(eObject.eGet(it, true)) })
 
             val alias = "n${nodeCount++}"
-            val batchRow = hashMapOf<String,Value>()
-            batchRow["label"] = StringValue(eClass.name)
-            batchRow["alias"] = StringValue(alias)
-            batchRow["props"] = MapValue(props)
+            val idHolder = writer.createNode(label = eClass.name, alias = alias, props = props)
+            nodes[eObject] = idHolder
 
-            nodeBatch.add(MapValue(batchRow))
             if (++cursor == nodeStep) {
-                loadNodes()
+                writer.saveNodes()
+                cursor = 0
+            }
+        }
+        if (cursor > 0) writer.saveNodes()
+        return nodeCount
+    }
+
+    private fun loadRefs(): Int {
+        val refStep = 10000
+        var cursor = 0
+        var refCount = 0
+
+        fun save() {
+            refCount++
+            if (++cursor == refStep) {
+                writer.saveRefs()
                 cursor = 0
             }
         }
 
-        if (cursor > 0) loadNodes()
-
-        session.close()
-        println("nodes loaded: $nodeCount")
-    }
-
-    private fun loadNodes() {
-        //println("loading nodes")
-
-        session.writeTransaction { tx ->
-            val res = tx.run(Statement("UNWIND \$batch AS row" +
-                    " CALL apoc.create.node([row.label], row.props) yield node" +
-                    " RETURN row.alias AS alias, id(node) AS id",
-                MapValue(mapOf("batch" to ListValue(*Array(nodeBatch.size) { i -> nodeBatch[i] }))))
-            )
-            for (record in res) {
-                nodeID[record["alias"].asString()] = record["id"].asLong()
-            }
+        nodes.forEach { (eObject, idHolder) ->
+            eObject.eClass().eAllReferences
+                .asSequence()
+                .filter { eObject.eIsSet(it) }
+                .forEach { eRef ->
+                    when (val value = eObject.eGet(eRef, true)) {
+                        is List<*> -> value.forEach {
+                            writer.createRef(
+                                startID = idHolder.id,
+                                type = eRef.name,
+                                containment = eRef.isContainment,
+                                endID = nodes.getOrDefault(it as EObject, IDHolder()).id
+                            )
+                            save()
+                        }
+                        is EObject -> {
+                            writer.createRef(
+                                startID = idHolder.id,
+                                type = eRef.name,
+                                containment = eRef.isContainment,
+                                endID = nodes.getOrDefault(value, IDHolder()).id
+                            )
+                            save()
+                        }
+                        else -> throw Exception("cannot parse EReference ${eRef.name}")
+                    }
+                }
         }
-        nodeBatch.clear()
-    }
-
-
-    fun loadRefs() {
-
+        if (cursor > 0) writer.saveRefs()
+        return refCount
     }
 }

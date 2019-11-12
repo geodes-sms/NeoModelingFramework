@@ -8,7 +8,7 @@ interface INode {
     val alias: String
     val props: Map<String, Value>
 
-    fun setProperty(name: String, value: Any)
+    fun setProperty(name: String, input: Any)
     fun removeProperty(name: String)
 
 }

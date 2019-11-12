@@ -1,11 +1,8 @@
 package geodes.sms.nmf.neo4j.io
 
-import org.eclipse.emf.ecore.EEnumLiteral
-import org.neo4j.driver.internal.value.*
+import geodes.sms.nmf.neo4j.Values
 import org.neo4j.driver.Value
-import org.neo4j.driver.Values
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import org.neo4j.driver.internal.value.NullValue
 
 
 class Node : INode, GraphStateListener {
@@ -74,36 +71,8 @@ class Node : INode, GraphStateListener {
         to do: re-design remove function
     }*/
 
-    override fun setProperty(name: String, value: Any) {
-        val input = when (value) {
-            is String ->  StringValue(value)
-            is Int ->   IntegerValue(value.toLong())
-            is Long ->  IntegerValue(value)
-            is Short -> IntegerValue(value.toLong())
-            is Boolean -> BooleanValue.fromBoolean(value)
-            is Byte ->  IntegerValue(value.toLong())
-            is ByteArray -> BytesValue(value)
-            is Char ->    StringValue(value.toString())
-            is Double ->  FloatValue(value)
-            is Float ->   FloatValue(value.toDouble())
-            is EEnumLiteral -> StringValue(value.literal)
-            is java.util.Date -> DateTimeValue(ZonedDateTime.ofInstant(value.toInstant(), ZoneId.systemDefault()))
-            is List<*> -> Values.value(value)    //EList
-            /*is Map<*, *> -> { //EMap      EMap is EList<Map.Entry<K, V>>
-                for ((key, value) in value) {
-                    if (key is String)
-                        props["$name.$key"] = Values.value(value)
-
-                }
-                //NullValue.NULL
-            }*/
-            is java.math.BigDecimal -> StringValue(value.toString())
-            is java.math.BigInteger -> StringValue(value.toString())
-            //is EEnum = EClass = EDataType  //not in model instance; is not a direct attr type
-            else -> NullValue.NULL //not persistable value
-        }
-
-        props[name] = input
+    override fun setProperty(name: String, input: Any) {
+        props[name] = Values.value(input)
         propsState.register()
     }
 

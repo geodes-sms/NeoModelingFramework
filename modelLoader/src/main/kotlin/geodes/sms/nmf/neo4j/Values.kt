@@ -8,10 +8,6 @@ import java.time.ZonedDateTime
 
 object Values {
 
-    fun from() {
-
-    }
-
     fun value(input: Any?): Value = when (input) {
         is String ->  StringValue(input)
         is Int ->   IntegerValue(input.toLong())
@@ -50,10 +46,6 @@ object Values {
     fun value(input: java.math.BigInteger) = StringValue(input.toString())
     fun value(input: EEnumLiteral) = StringValue(input.literal)
     fun value(input: java.util.Date) = DateTimeValue(ZonedDateTime.ofInstant(input.toInstant(), ZoneId.systemDefault()))
-    fun value(input: Map.Entry<*, *>) {
-
-    }
-
     fun value(input: List<*>) = ListValue(*Array<Value?>(input.size) { i -> value(input[i]) })
 }
 

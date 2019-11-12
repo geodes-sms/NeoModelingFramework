@@ -11,11 +11,7 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
 
     /** It is recommended to create no more then 75 entities (nodes or refs)
      *  at a time before calling graph.save() for performance reasons */
-    private val bufferCapacity = 85 //75
-    private var bufferPosition : Int by Delegates.observable(0) { _, _, newValue ->
-        if (newValue >= bufferCapacity)
-            save()
-    }
+    private val bufferCapacity = 75
 
     /** Node aliases that appear in query within CREATE(alias) or MATCH(alias) clauses */
     //private val initedNodes = hashSetOf<INode>()
@@ -46,18 +42,13 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
     override fun createNode(label: String): INode {
         val node = Node(this)
         val alias = node.alias
-        /*
-        val prAlias = "pr_$alias"
-        properties[prAlias] = MapValue(node.props)  //connect localProps to globalProps
-*/
+
         qCreate.append("CREATE ($alias")
             .append(if (label.isNotEmpty()) ":$label)" else ")")
-        //qCreate.appendln(" $$prAlias)")
         qReturn.append("$alias:ID($alias),")
 
         //initedNodes.add(node)
         nodesToCreate[alias] = node
-        //bufferPosition += 1
         return node
     }
 
@@ -148,7 +139,6 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         qSet.clear()
         qReturn.clear()
         properties.clear()
-        bufferPosition = 0
 
         //finally {
         session.close()
