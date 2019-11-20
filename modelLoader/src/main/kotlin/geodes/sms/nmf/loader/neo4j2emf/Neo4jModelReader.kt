@@ -1,11 +1,11 @@
 package geodes.sms.nmf.loader.neo4j2emf
 
 
-import org.neo4j.driver.v1.AuthTokens
-import org.neo4j.driver.v1.GraphDatabase
-import org.neo4j.driver.v1.Values
-import org.neo4j.driver.v1.types.Node
-import org.neo4j.driver.v1.types.Relationship
+import org.neo4j.driver.AuthTokens
+import org.neo4j.driver.GraphDatabase
+import org.neo4j.driver.Values
+import org.neo4j.driver.types.Node
+import org.neo4j.driver.types.Relationship
 
 
 class Neo4jModelReader (dbUri: String, username: String, password: String, val rootID : Long) : AutoCloseable {

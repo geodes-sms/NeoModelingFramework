@@ -4,7 +4,6 @@ import geodes.sms.nmf.neo4j.DBCredentials
 import org.neo4j.driver.internal.value.IntegerValue
 import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.*
-import kotlin.properties.Delegates
 
 
 class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeStateListener {
@@ -56,32 +55,30 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         return Node(this, id)
     }
 
-    override fun createRelation(refType: String, start: INode, end: INode, containment: Boolean) {
+    override fun createRelation(refType: String, start: INode, end: INode) {
         (start as Node).nodeState.register()
         (end as Node).nodeState.register()
         val validType = if (refType.isEmpty()) TYPE_DEFAULT else refType
-        qCreate.appendln("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias})")
-        //bufferPosition += 1
+        qCreate.appendln("CREATE (${start.alias})-[:$validType]->(${end.alias})")
     }
 
     /**
      * Create new relation with new endNode ( -->(newNode) ). StartNode must already exist
      * @return newNode with specified label
      */
-    override fun createPath(start:INode, endLabel:String, refType:String, containment:Boolean): INode {
+    override fun createPath(start:INode, endLabel:String, refType:String): INode {
         (start as Node).nodeState.register()
         val validType = if (refType.isEmpty()) TYPE_DEFAULT else refType
         val end = Node(this)
         val prAlias = "pr_${end.alias}"
         properties[prAlias] = MapValue(end.props)
 
-        qCreate.append("CREATE (${start.alias})-[:$validType{containment:$containment}]->(${end.alias}")
+        qCreate.append("CREATE (${start.alias})-[:$validType]->(${end.alias}")
             .appendln(if (endLabel.isNotEmpty()) ":$endLabel)" else ")")
             //.appendln(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)")
         qReturn.append("${end.alias}:ID(${end.alias}),")
 
         nodesToCreate[end.alias] = end
-        //bufferPosition += 2
         return end
     }
 
@@ -92,14 +89,12 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         val idAlias = "id_$alias"
         qMatch.appendln("MATCH ($alias) WHERE ID($alias)=$$idAlias")
         properties[idAlias] = IntegerValue(node.id)
-        //bufferPosition += 1
     }
 
     override fun onUpdate(node: Node, props: Map<String, Value>) {
         val prAlias = "pr_${node.alias}"
         properties[prAlias] = MapValue(props)
         qSet.appendln("SET ${node.alias}+=$$prAlias")
-        //bufferPosition += 1
     }
     ////
 

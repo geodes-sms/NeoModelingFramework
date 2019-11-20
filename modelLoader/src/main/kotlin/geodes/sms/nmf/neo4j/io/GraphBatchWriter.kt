@@ -12,6 +12,7 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
     private val driver = GraphDatabase.driver(cr.dbUri, AuthTokens.basic(cr.username, cr.password))
     private val session = driver.session()
 
+    private var n = 0   // alias creator
     private val onCreateListeners = hashMapOf<String, IDHolder>()
 
     /** Buffers used as parameters for query */
@@ -19,7 +20,8 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
     private val refsToCreate = mutableListOf<MapValue>()
     //private val nodesToRemove = mutableListOf<MapValue>()
 
-    fun createNode(label: String, alias: String, props: Map<String, Value>) : IDHolder {
+    fun createNode(label: String, props: Map<String, Value> = emptyMap()) : IDHolder {
+        val alias = "n${n++}"
         nodesToCreate.add(MapValue(mapOf(
             "label" to StringValue(label),
             "alias" to StringValue(alias),
@@ -30,41 +32,46 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
         return node
     }
 
-    fun createRef(startID: Long, endID: Long, type: String, containment: Boolean) {
+    fun createRef(startID: Long, endID: Long, type: String, props: Map<String, Value> = emptyMap()) {
         refsToCreate.add(MapValue(mapOf(
             "from" to IntegerValue(startID),
             "type" to StringValue(type),
-            "ctm" to BooleanValue.fromBoolean(containment),
+            "props" to MapValue(props),
             "to" to IntegerValue(endID)
         )))
     }
 
-    fun saveNodes() {
+    /** Save nodes from buffer and return count of saved nodes */
+    fun saveNodes() : Int {
         session.writeTransaction { tx ->
             val res = tx.run(Statement("UNWIND \$batch AS row" +
                     " CALL apoc.create.node([row.label], row.props) YIELD node" +
-                    " RETURN row.alias AS alias, id(node) AS id",
+                    " RETURN row.alias AS alias, ID(node) AS id",
                 MapValue(mapOf("batch" to ListValue(*Array(nodesToCreate.size) { i -> nodesToCreate[i] }))))
             )
             for (record in res) {
                 onCreateListeners[record["alias"].asString()]!!.id = record["id"].asLong()
             }
         }
+        val count = onCreateListeners.size
         onCreateListeners.clear()
         nodesToCreate.clear()
+        return count
     }
 
-    fun saveRefs() {
-        session.writeTransaction { tx ->
-            tx.run(Statement("UNWIND {batch} AS row" +
+    fun saveRefs() : Int {
+        val count = session.writeTransaction { tx ->
+            val res = tx.run(Statement("UNWIND {batch} AS row" +
                     " MATCH (from) WHERE ID(from) = row.from" +
                     " MATCH (to) WHERE ID(to) = row.to" +
-                    " CALL apoc.create.relationship(from, row.type, {}, to) YIELD rel" +
-                    " SET rel.containment = row.ctm",
+                    " CALL apoc.create.relationship(from, row.type, row.props, to) YIELD rel" +
+                    " RETURN COUNT(rel) AS count",     // Query cannot conclude with CALL statement
                 MapValue(mapOf("batch" to ListValue(*Array(refsToCreate.size) { i -> refsToCreate[i]}))))
             )
+            res.single()["count"].asInt()
         }
         refsToCreate.clear()
+        return count
     }
 
     /*
@@ -86,6 +93,14 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
     fun save() {
 
     }*/
+
+    fun clearDB() {
+        session.writeTransaction {
+            it.run(Statement("CALL apoc.periodic.iterate(\"MATCH (n) return n\"," +
+                    " \"DETACH DELETE n\", {batchSize:8000}) YIELD batches, total" +
+                    " RETURN batches, total"))
+        }
+    }
 
     override fun close() {
         session.close()

@@ -22,28 +22,17 @@ fun main(args: Array<String>) {
 
         val graphWriter = GraphBatchWriter(jacksonObjectMapper().readValue(File("Neo4jDBCredentials.json")))
         val loader = ReflectiveBatchLoader(resource, graphWriter)
-        loader.load()
+        val (nodeCount, refCount) = loader.load()
+
+        println("Loaded successfully")
+        println("Nodes loaded: $nodeCount")
+        println("Refs loaded: $refCount")
 
         graphWriter.close()
-        println("Loaded successfully")
     } catch (e: Exception) {
         println("Loading fail")
         e.printStackTrace()
     }
-
-    /* Load multiple files
-    GraphDatabase.driver(dbUri, AuthTokens.basic(username, password)).use { driver ->
-        File(args[0]).walk()
-            .filter { file -> file.extension in listOf("ecore", "xmi") }
-            .forEach { file ->
-                Neo4jBufferedWriter(driver).use { dbWriter ->
-                    EmfModelLoader.createFromContent(file.path)
-                        .load(dbWriter)
-                    println("model loaded: ${file.name}")
-                }
-            }
-    }
-    println("Loading finished")*/
 }
 
 fun getResource(modelPath: String) : Resource {

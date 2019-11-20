@@ -11,12 +11,12 @@ class ReflectiveBatchLoader(private val resource: Resource, private val writer: 
 
     private val nodes = hashMapOf<EObject, IDHolder>()
 
-    fun load() {
+    fun load() : Pair<Int, Int> {
         val nodeCount = loadNodes()
-        val crossRefCount = loadRefs()
+        val refCount = loadRefs()
 
-        println("nodes loaded: $nodeCount")
-        println("crossRef loaded: $crossRefCount")
+        nodes.clear()
+        return (nodeCount to refCount)
     }
 
     private fun loadNodes(): Int {
@@ -32,16 +32,14 @@ class ReflectiveBatchLoader(private val resource: Resource, private val writer: 
                 .filter { eObject.eIsSet(it) }
                 .associateBy ({ it.name }, { Values.value(eObject.eGet(it, true)) })
 
-            val alias = "n${nodeCount++}"
-            val idHolder = writer.createNode(label = eClass.name, alias = alias, props = props)
-            nodes[eObject] = idHolder
+            nodes[eObject] = writer.createNode(label = eClass.name, props = props)
 
             if (++cursor == nodeStep) {
-                writer.saveNodes()
+                nodeCount += writer.saveNodes()
                 cursor = 0
             }
         }
-        if (cursor > 0) writer.saveNodes()
+        if (cursor > 0) nodeCount += writer.saveNodes()
         return nodeCount
     }
 
@@ -51,9 +49,8 @@ class ReflectiveBatchLoader(private val resource: Resource, private val writer: 
         var refCount = 0
 
         fun save() {
-            refCount++
             if (++cursor == refStep) {
-                writer.saveRefs()
+                refCount += writer.saveRefs()
                 cursor = 0
             }
         }
@@ -68,7 +65,7 @@ class ReflectiveBatchLoader(private val resource: Resource, private val writer: 
                             writer.createRef(
                                 startID = idHolder.id,
                                 type = eRef.name,
-                                containment = eRef.isContainment,
+                                //containment = eRef.isContainment,
                                 endID = nodes.getOrDefault(it as EObject, IDHolder()).id
                             )
                             save()
@@ -77,7 +74,7 @@ class ReflectiveBatchLoader(private val resource: Resource, private val writer: 
                             writer.createRef(
                                 startID = idHolder.id,
                                 type = eRef.name,
-                                containment = eRef.isContainment,
+                                //containment = eRef.isContainment,
                                 endID = nodes.getOrDefault(value, IDHolder()).id
                             )
                             save()
@@ -86,7 +83,7 @@ class ReflectiveBatchLoader(private val resource: Resource, private val writer: 
                     }
                 }
         }
-        if (cursor > 0) writer.saveRefs()
+        if (cursor > 0) refCount += writer.saveRefs()
         return refCount
     }
 }

@@ -18,12 +18,17 @@ MATCH (n)
 RETURN COUNT(n), refCount
 
 
+// clear db with apoc
+CALL apoc.periodic.iterate("MATCH (n) return n", "DETACH DELETE n", {batchSize:8000})
+YIELD batches, total return batches, total
+
+
 // create nodes with dynamic labels; return IDs by alias
 WITH [{alias: 'a1', label: 'LL', props: {a:10, b:20}},
 {alias: 'a2', label: 'LL', props: {a:30}},
 {alias: 'a3', label: 'LL', props: {a:40, b:50}}] as batch
 UNWIND batch as row
-CALL apoc.create.node([row.label], row.props) yield node
+CALL apoc.create.node([row.label], row.props) YIELD node
 RETURN row.alias AS alias, id(node) AS id
 
 
