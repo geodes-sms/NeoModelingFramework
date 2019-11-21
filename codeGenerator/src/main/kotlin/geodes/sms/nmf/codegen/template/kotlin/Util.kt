@@ -2,6 +2,7 @@ package geodes.sms.nmf.codegen.template.kotlin
 
 import org.eclipse.emf.ecore.EAttribute
 import org.eclipse.emf.ecore.EEnum
+import org.eclipse.emf.ecore.EReference
 
 object Util {
 
@@ -42,6 +43,8 @@ object Util {
             else -> "Any"
         }
     }
+
+    fun EReference.eType(): String = this.eType.name.capitalize()
 
     /** Default values for collections initializing */
     val defaultValue = mapOf(

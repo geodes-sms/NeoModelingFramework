@@ -13,7 +13,6 @@ class Neo4jOgmKotlinGenerator(private val ePack: EPackage, outputPath: String) {
 
     init {
         implDir.deleteRecursively()
-        //interfaceDir.mkdirs()
         implDir.mkdirs()
     }
 

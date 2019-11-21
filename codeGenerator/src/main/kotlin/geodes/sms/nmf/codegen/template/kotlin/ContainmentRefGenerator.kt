@@ -1,6 +1,7 @@
 package geodes.sms.nmf.codegen.template.kotlin
 
 import org.eclipse.emf.ecore.EReference
+import geodes.sms.nmf.codegen.template.kotlin.Util.eType
 
 
 object ContainmentRefGenerator {
@@ -8,39 +9,37 @@ object ContainmentRefGenerator {
     object SingleReferenceGenerator : IReferenceGenerator {
 
         override fun genInterface(eRef: EReference): String {
-            return "    fun set${eRef.name.capitalize()}(): ${eRef.eType.name.capitalize()}\n"
+            return "    fun <T:${eRef.eType()}> set${eRef.eType()}(): ${eRef.eType()}\n"
         }
 
-        override fun genImpl(eRef: EReference): String {
-            val type = eRef.eType.name.capitalize()
-            return """
-                @Relationship(type = "${eRef.name}")
-                var ${eRef.name}: $type? = null
-                    private set
-                
-                override fun set${eRef.name.capitalize()}() : $type {
-                    val res = ${type}Neo4jImpl()
-                    ${eRef.name} = res
-                    return res
-                }
+        override fun genImpl(eRef: EReference): String = """
+            @Relationship(type = "${eRef.name}")
+            var ${eRef.name}: ${eRef.eType()}? = null
+                private set
+            
+            override fun <T:${eRef.eType()}> set${eRef.name.capitalize()}(c: Class<T>): ${eRef.eType()} {
+                val res = c.newInstance()
+                ${eRef.name} = res
+                return res
+            }
         """.replaceIndent("\t").plus("\n\n")
-        }
     }
 
     object CollectionUnboundedReferenceGenerator : IReferenceGenerator {
 
         override fun genInterface(eRef: EReference): String {
-            return "    fun add${eRef.name.capitalize()}(): ${eRef.eType.name.capitalize()}\n"
+            val type = eRef.eType()
+            return "    fun <T:$type> add${eRef.name.capitalize()}(c: Class<T>): $type\n"
         }
 
         override fun genImpl(eRef: EReference): String {
-            val type = eRef.eType.name.capitalize()
+            val type = eRef.eType()
             return """
                 @Relationship(type = "${eRef.name}")
                 val ${eRef.name} = hashSetOf<$type>()
                 
-                override fun add${eRef.name.capitalize()}(): $type {
-                    val res = ${type}Neo4jImpl()
+                override fun <T:$type> add${eRef.name.capitalize()}(c: Class<T>): $type {
+                    val res = c.newInstance()
                     ${eRef.name}.add(res)
                     return res
                 }
@@ -51,17 +50,18 @@ object ContainmentRefGenerator {
     object CollectionBoundedReferenceGenerator : IReferenceGenerator {
 
         override fun genInterface(eRef: EReference): String {
-            return "    fun add${eRef.name.capitalize()}(): ${eRef.eType.name.capitalize()}\n"
+            val type = eRef.eType()
+            return "    fun <T:$type> add${eRef.name.capitalize()}(): $type\n"
         }
 
         override fun genImpl(eRef: EReference): String {
-            val type = eRef.eType.name.capitalize()
+            val type = eRef.eType()
             return """
                 @Relationship(type = "${eRef.name}")
                 val ${eRef.name} = util.BoundedList<$type>(${eRef.upperBound})
                 
-                override fun add${eRef.name.capitalize()}(): $type {
-                    val res = ${type}Neo4jImpl()
+                override fun <T:$type> add${eRef.name.capitalize()}(c: Class<T>): $type {
+                    val res = c.newInstance()
                     ${eRef.name}.add(res)
                     return res
                 }
