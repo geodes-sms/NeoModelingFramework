@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
     val resource = resourceSet.getResource(URI.createURI(File(metamodel).absolutePath), true)
 
     resource.contents.filterIsInstance<EPackage>().forEach { ePackage ->
-        val generator = KotlinCodeGenerator(ePackage, outputPath)
+        val generator = Neo4jOgmKotlinGenerator(ePackage, outputPath)
         generator.generate()
         println("Code generation for ${ePackage.name} finished")
     }
