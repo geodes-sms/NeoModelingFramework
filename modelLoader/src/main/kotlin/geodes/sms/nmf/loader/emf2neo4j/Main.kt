@@ -13,12 +13,9 @@ import kotlin.Exception
 
 
 fun main(args: Array<String>) {
-
     try {
         val resource = getResource(args[0])
         println("Loading model: ${args[0]}")
-        //val graph = Neo4jGraph.create(jacksonObjectMapper().readValue(File("Neo4jDBCredentials.json")))
-        //val loader = ReflectiveLoader(graph)
 
         val graphWriter = GraphBatchWriter(jacksonObjectMapper().readValue(File("Neo4jDBCredentials.json")))
         val loader = ReflectiveBatchLoader(resource, graphWriter)
@@ -40,10 +37,6 @@ fun getResource(modelPath: String) : Resource {
         put("ecore", EcoreResourceFactoryImpl())
         put("xmi", XMIResourceFactoryImpl())
     }
-
-    //val adapter = ECrossReferenceAdapter()
-    //val resourceSet = ResourceSetImpl()
-    //resourceSet.eAdapters().add(adapter)
 
     // createFileURI method is able to locate metamodel by xsi:schemaLocation
     // absolute path is important here !!

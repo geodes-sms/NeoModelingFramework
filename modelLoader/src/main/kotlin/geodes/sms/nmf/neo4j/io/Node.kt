@@ -7,18 +7,22 @@ import org.neo4j.driver.internal.value.NullValue
 
 class Node : INode, GraphStateListener {
 
-    constructor(graph: NodeStateListener) {
+    constructor(graph: NodeStateListener, props: Map<String, Value> = emptyMap()) {
         this.graph = graph
         this.id = -1
         this.nodeState = StateRegistered    //Node and props are inited in query (CREATE)
         this.propsState = PropsStateNotRegistered()
+        if (props.isNotEmpty()) {
+            this.props.putAll(props)
+            propsState.register()
+        }
     }
 
     constructor(graph: NodeStateListener, id: Long) {
         this.graph = graph
         this.id = id
         this.nodeState = NodeStateNotRegistered()
-        this.propsState = NodeStateNotRegistered()
+        this.propsState = PropsStateNotRegistered()
     }
 
     private companion object {
@@ -41,9 +45,9 @@ class Node : INode, GraphStateListener {
     }
 
     private val graph: NodeStateListener
-    var nodeState: State    // StateRegistered ==> Node must be inited in query (MATCH or CREATE)
+    var nodeState: State    // StateRegistered ==> Node is inited in query (MATCH or CREATE)
         private set
-    private var propsState: State
+    private var propsState: State   // StateRegistered ==> query contains SET statement for the Node
     override val alias: String = "n$n"
     override val props = hashMapOf<String, Value>()
     override var id: Long

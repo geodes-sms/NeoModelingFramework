@@ -38,15 +38,14 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
             Neo4jGraph(GraphDatabase.driver(cr.dbUri, AuthTokens.basic(cr.username, cr.password)))
     }
 
-    override fun createNode(label: String): INode {
-        val node = Node(this)
+    override fun createNode(label: String, props: Map<String, Value>): INode {
+        val node = Node(this, props)
         val alias = node.alias
 
         qCreate.append("CREATE ($alias")
             .append(if (label.isNotEmpty()) ":$label)" else ")")
+            .appendln()
         qReturn.append("$alias:ID($alias),")
-
-        //initedNodes.add(node)
         nodesToCreate[alias] = node
         return node
     }
@@ -66,16 +65,16 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
      * Create new relation with new endNode ( -->(newNode) ). StartNode must already exist
      * @return newNode with specified label
      */
-    override fun createPath(start:INode, endLabel:String, refType:String): INode {
+    override fun createPath(start: INode, refType: String, endLabel: String, props: Map<String, Value>): INode {
         (start as Node).nodeState.register()
         val validType = if (refType.isEmpty()) TYPE_DEFAULT else refType
-        val end = Node(this)
+        val end = Node(this, props)
         val prAlias = "pr_${end.alias}"
         properties[prAlias] = MapValue(end.props)
 
         qCreate.append("CREATE (${start.alias})-[:$validType]->(${end.alias}")
-            .appendln(if (endLabel.isNotEmpty()) ":$endLabel)" else ")")
-            //.appendln(if (endLabel.isNotEmpty()) ":$endLabel $$prAlias)" else " $$prAlias)")
+            .append(if (endLabel.isNotEmpty()) ":$endLabel)" else ")")
+            .appendln()
         qReturn.append("${end.alias}:ID(${end.alias}),")
 
         nodesToCreate[end.alias] = end
