@@ -1,1 +1,1 @@
-include ':modelLoader', ':codeGenerator', ':modelEditor', ':EmfExtension'
+include ':modelLoader', ':codeGenerator', ':modelEditor', ':EmfExtension', ':neo4j-io'
