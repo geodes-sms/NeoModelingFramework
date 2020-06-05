@@ -58,3 +58,14 @@ class EAnnotationImpl : Visitable, org.eclipse.emf.ecore.impl.EAnnotationImpl() 
     }
 }
 
+class EOperationImpl : Visitable, org.eclipse.emf.ecore.impl.EOperationImpl() {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
+
+class EParameterImpl : Visitable, org.eclipse.emf.ecore.impl.EParameterImpl() {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}

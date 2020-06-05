@@ -13,4 +13,6 @@ class EcoreFactory : EcoreFactoryImpl() {
     override fun createEDataType()  = EDataTypeImpl()
     override fun createEEnum() = EEnumImpl()
     override fun createEEnumLiteral() = EEnumLiteralImpl()
+    override fun createEOperation() = EOperationImpl()
+    override fun createEParameter() = EParameterImpl()
 }

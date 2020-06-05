@@ -15,7 +15,12 @@ Usage example:
     // custom factory
     EcorePackage.eINSTANCE.eFactoryInstance = VisitorEcoreFactory()
 
-    val visitor = Visitor()
+    val visitor = object: Visitor {
+        override fun visit(eClass: EClass) {
+            
+        }
+        //...
+    }
     val resourceSet = ResourceSetImpl()
     val resource = resourceSet.getResource(URI.createFileURI(model), true)
     val iterator = EcoreUtil.getAllContents<Visitable>(resource, true)

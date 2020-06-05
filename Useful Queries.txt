@@ -55,8 +55,23 @@ FOREACH (ignoreMe IN CASE WHEN predicate THEN [1] ELSE [] END |
 RETURN predicate
 
 
+//create whole subGraph
+with [{alias:1,label:"A",props:{}}, {alias:2,label:"B",props:{}}, {alias:3,label:"C",props:{}}] as nodes,
+  [{from:"1", to:"1"}, {from:"1", to:"2"}, {from:"2", to:"3"}, {from:"3", to:"3"}] AS refs
+UNWIND nodes as n
+CALL apoc.create.node([n.label], n.props) YIELD node
+WITH apoc.map.fromPairs(collect([n.alias, node])) as map, refs
+UNWIND refs as r
+CALL apoc.create.relationship(apoc.map.get(map, r.from), "r", {}, apoc.map.get(map, r.to)) YIELD rel
+RETURN rel
 
 
+//get connected nodes
+match (a) where id(a)=0
+CALL apoc.path.expand(a, "marker>", null, 1, 1) YIELD path
+RETURN nodes(path)[1] AS node, collect(ID(relationships(path)[0])) AS refID
+
+//
 val res = transaction.run("MATCH (p:EPackage)-->(c:EClass) WHERE ID(p)={ePackageID}" +
 " OPTIONAL MATCH (c)-[:eSuperTypes]->(directST:EClass)" +
 " WITH c, collect(directST) AS directST, collect(directST.name) AS directSTName" +
