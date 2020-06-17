@@ -2,11 +2,11 @@ apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    //implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
     api 'org.eclipse.emf:org.eclipse.emf.ecore.xmi:2.16.0'
-    api 'org.eclipse.emf:org.eclipse.emf.ecore:2.19.0'
+    api 'org.eclipse.emf:org.eclipse.emf.ecore:2.21.0'
 }
 
 

@@ -19,7 +19,7 @@ RETURN COUNT(n), refCount
 
 
 // clear db with apoc
-CALL apoc.periodic.iterate("MATCH (n) return n", "DETACH DELETE n", {batchSize:8000})
+call apoc.periodic.iterate("MATCH (n) return n", "DETACH DELETE n", {batchSize:10000, parallel:true})
 YIELD batches, total return batches, total
 
 

@@ -9,29 +9,24 @@ import kotlin.collections.HashSet
 internal class EMFGraph<N: INodeController, R: IRelationshipController> {
     /** uuid --> IController */
     private val nodes = hashMapOf<Int, N>()
-    private val refs = hashMapOf<Int, R>()
+    private val refs = hashMapOf<Int, R>()  //R data is enough to restore RC from adj
 
-    /** node innerID -> outRefType -> list refs */
-    private val adjOutputList = hashMapOf<Int, HashMap<String, HashSet<R>>>()
+    /** node uuid -> outRefType -> list refs */
+    private val adjOutput = hashMapOf<Int, HashMap<String, HashSet<R>>>()
 
-    /** node uuid  ->  input ref*/
+    /** node uuid  -> inputRefType -> input ref*/
     private val adjInput = hashMapOf<Int, HashMap<String, HashSet<R>>>()
-    //private val adjOutput = hashMapOf<Int, LinkedList<Int>>()
 
-    fun putNode(node: N) {
-        nodes[node._uuid] = node
-    }
 
-    fun putRelationship(ref: R): Boolean {
-        val outputs = adjOutputList[ref.startUUID]
-        val inputs = adjInput[ref.endUUID]
+    fun putNode(node: N) { nodes[node._uuid] = node }
 
+    fun putRelationship(rel: R): Boolean {
+        val outputs = adjOutput[rel.startUUID]
+        val inputs = adjInput[rel.endUUID]
         return if (outputs != null && inputs != null) {
-            val outputList = outputs.getOrPut(ref.type) { hashSetOf() }
-            val inputList = inputs.getOrPut(ref.type) { hashSetOf() }
-            outputList.add(ref)
-            inputList.add(ref)
-            refs[ref._uuid] = ref
+            outputs.getOrPut(rel.type) { hashSetOf() }.add(rel)
+            inputs.getOrPut(rel.type) { hashSetOf() }.add(rel)
+            refs[rel._uuid] = rel
             true
         } else false
     }
@@ -43,53 +38,54 @@ internal class EMFGraph<N: INodeController, R: IRelationshipController> {
     fun getNode(uuid: Int): N? = nodes[uuid]
     fun getRelationship(uuid: Int): R? = refs[uuid]
 
-    fun removeNode(uuid: Int): Pair<N?, List<R>> {
-        //remove mapping
-        val outputs = adjOutputList.getOrElse(uuid) { hashMapOf() }
-        val inputs = adjInput.getOrElse(uuid) { hashMapOf() }
-
-        //val outRefs = outputs.values.flatten()
-        //val inputRef = inputs.values.flatten()
-        val refs = outputs.values.flatten() + inputs.values.flatten()
-
-        outputs.clear()
-        inputs.clear()
-
-        return nodes.remove(uuid) to refs
+    inline fun removeNode(nodeUUID: Int, onNodeRemove: (N) -> Unit/*, onRelRemove: (R) -> Unit*/): N? {
+        val node = nodes.remove(nodeUUID)
+        if (node != null) {
+            //remove mapping
+            adjOutput.remove(nodeUUID)//?.asSequence()?.map {it.value}?.flatten()?.forEach(onRelRemove)
+            adjInput.remove(nodeUUID)//?.asSequence()?.map {it.value }?.flatten()?.forEach(onRelRemove)
+            onNodeRemove(node)
+        }
+        return node
     }
 
     fun removeRelationship(uuid: Int): R? {
         val ref = refs.remove(uuid)
-        return if (ref != null) {  //remove mapping
-            val outputs = adjOutputList.getOrElse(ref.startUUID) { hashMapOf() }[ref.type]
+        if (ref != null) {
+            //remove mapping
+            val outputs = adjOutput.getOrElse(ref.startUUID) { hashMapOf() }[ref.type]
             val inputs = adjInput.getOrElse(ref.endUUID) { hashMapOf() }[ref.type]
             outputs?.remove(ref)
             inputs?.remove(ref)
-            ref
-        } else null
+        }
+        return ref
     }
+
+//    fun rmRelationship(startUUID: Int, rType: String, endUUID: Int): R? {
+//        TODO()
+//    }
 
     //get connecting ref
     fun getRelationship(startUUID: Int, rType: String, endUUID: Int): R? {
-        val outputs = adjOutputList.getOrElse(startUUID) { hashMapOf() }[rType]
-        //val inputs = adjInput.getOrElse(endUUID) { hashMapOf() }[rType]
+        val outputs = adjOutput.getOrElse(startUUID) { hashMapOf() } [rType]
+        //val inputs = adjInput.getOrElse(endUUID) { hashMapOf() } [rType]
+        return outputs?.find { it.endUUID == endUUID }
+    }
 
-        return outputs?.find {it.endUUID == endUUID }
-    } //+ fun rmRelationship(... same params)
+    fun getConnectedNodesByOutRel(nodeUUID: Int, rType: String): Sequence<N> {
+        val outputs = adjOutput.getOrElse(nodeUUID) { hashMapOf() } [rType]
 
-
-    fun getConnectedOutputNodes(nodeUUID: Int, rType: String): List<N> {
-        val outputs = adjOutputList.getOrElse(nodeUUID) { hashMapOf() } [rType]
-
-        return outputs?.map {
-            nodes[it.endUUID]!!
-        } ?: emptyList()
-        TODO()
-
+        return outputs?.asSequence()?.map { nodes[it.endUUID] }?.filterNotNull() ?: emptySequence()
     } //+ fun rmConnectedNodes(...) == getSubGraphNode ??
 
 
-//    fun clear() {
-//        //foreach -> detach
-//    }
+    fun clear() {
+        nodes.clear()
+        refs.clear()
+//        adjInput.forEach { (_, v) -> //v.forEach { (_, vv) -> vv.clear() }
+//            v.clear() }
+//        adjOutput.forEach { (_, v) -> v.clear() }
+        adjInput.clear()
+        adjOutput.clear()
+    }
 }
