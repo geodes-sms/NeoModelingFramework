@@ -1,34 +1,38 @@
 package geodes.sms.neo4j.io.controllers
 
+import geodes.sms.neo4j.io.EntityState
 import geodes.sms.neo4j.io.entity.INodeEntity
 import geodes.sms.neo4j.io.entity.IRelationshipEntity
+import geodes.sms.neo4j.io.entity.RefBounds
 
 interface IController {
     val props: Map<String, Any>   //immutable here
     fun putProperty(name: String, value: Any?)
-
-    fun remove()    // call stateRemoved instead -- this state recursively call state.remove on ctms
+    fun putUniqueProperty(name: String, value: Any?)
+    fun remove()
     fun unload()
+    fun getState(): EntityState
 }
 
 interface IRelationshipController : IController, IRelationshipEntity
 
 interface INodeController : IController, INodeEntity {
     //addLabel(l: String); //removeLabel(l: String)
+    val label: String
+    fun createChild(rType: String, label: String, childRefBounds: Map<String, RefBounds> = emptyMap()): INodeController
+    fun createOutRef(rType: String, endNode: INodeEntity)//: IRelationshipController
+    //fun createInputRef(rType: String, startNode: INodeEntity): IRelationshipController
 
-    fun createChild(label: String, rType: String): INodeController
-    fun createOutRef(rType: String, endNode: INodeEntity): IRelationshipController
-    //fun createInputRef(rType: String, endNode: INodeController): IRelationshipController
+    fun removeChild(rType: String, childNode: INodeEntity)
+    fun removeOutRef(rType: String, endNode: INodeEntity)
+    //fun removeInputRef(rType: String, startNode: INodeEntity)
 
-    fun removeChild(rType: String, node: INodeEntity)   //extra for EMF
-    fun removeOutRef(rType: String, node: INodeEntity)  //extra... //getOutRefs then  ref.remove()
-    //fun removeInputRef(n: INodeEntity)
-
-    fun getChildrenFromCache(rType: String): List<INodeController>
+    //fun getChildrenFromCache(rType: String): Sequence<INodeController>
     fun loadChildren(
-        rType: String, endLabel: String, limit: Int = 100, filter: String = ""
+        rType: String,
+        endLabel: String,
+        outRefBounds: Map<String, RefBounds> = emptyMap(),
+        filter: String = "",
+        limit: Int = 100
     ): List<INodeController>
-
-    //fun getChildrenByOutRef(rType: String /*endLabel: String*/): List<INodeController>
-    //fun getOutRefs(type: String): List<IRelationshipController>
 }

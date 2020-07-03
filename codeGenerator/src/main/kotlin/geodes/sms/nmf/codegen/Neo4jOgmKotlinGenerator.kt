@@ -17,23 +17,28 @@ class Neo4jOgmKotlinGenerator(private val ePack: EPackage, outputPath: String) {
         implDir.mkdirs()
     }
 
-    fun generate() = ePack.eClassifiers.forEach {
-        when (it) {
-            is EClass -> {
-                if (!it.isAbstract && !it.isInterface)  // gen impl only for not abstract EClasses
-                    ImplementationWriter(it, implDir.path).doGenerate()
-                InterfaceWriter(it, interfaceDir.path).doGenerate()
-            }
-            is EEnum -> {
-                File(interfaceDir, "${it.name}.kt").writeText("package ${it.ePackage.name}\n" +
-                        "enum class ${it.name} { ${it.eLiterals.joinToString { lit -> lit.name }} }"
-                )
-            }
+    fun generate() {
+        genSessionObject()
+
+        ePack.eClassifiers.forEach {
+            when (it) {
+                is EClass -> {
+                    if (!it.isAbstract && !it.isInterface)  // gen impl only for not abstract EClasses
+                        ImplementationWriter(it, implDir.path).doGenerate()
+                    InterfaceWriter(it, interfaceDir.path).doGenerate()
+                }
+                is EEnum -> {
+                    File(interfaceDir, "${it.name}.kt").writeText("package ${it.ePackage.name}\n" +
+                            "enum class ${it.name} { ${it.eLiterals.joinToString { lit -> lit.name }} }"
+                    )
+                }
 //            is EDataType -> File(interfaceDir, "${it.name}.kt").writeText(
 //                "package ${it.ePackage.name}\n class ${it.name}")
+            }
         }
     }
 
+    /** Return list of subclass excluding abstract classes for each EClass in the package */
     private fun getSubClassMap(): Map<EClass, List<EClass>> {
         val map = hashMapOf<EClass, MutableList<EClass>>()
         ePack.eClassifiers.asSequence()
@@ -56,9 +61,9 @@ class Neo4jOgmKotlinGenerator(private val ePack: EPackage, outputPath: String) {
         File(interfaceDir, "Session.kt").writeText("""
             package ${ePack.name}
 
-            import org.neo4j.ogm.config.Configuration
-            import org.neo4j.ogm.session.Session
-            import org.neo4j.ogm.session.SessionFactory
+            import org.neo4j.io2.config.Configuration
+            import org.neo4j.io2.session.Session
+            import org.neo4j.io2.session.SessionFactory
 
             object Session {
                 private val configuration = Configuration.Builder()
@@ -73,5 +78,4 @@ class Neo4jOgmKotlinGenerator(private val ePack: EPackage, outputPath: String) {
             }
         """.trimIndent())
     }
-
 }

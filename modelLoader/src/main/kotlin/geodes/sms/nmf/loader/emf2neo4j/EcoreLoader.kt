@@ -53,6 +53,7 @@ class EcoreLoader(private val writer: IGraph) {
     private fun load(eClassNode: INode, eRef: EReference) {
         val refNode = writer.createPath(eClassNode, "eReferences", "EReference", getProps(eRef))
         connect(refNode, eRef.eType, "eReferenceType")
+        eRef.eOpposite?.let { eOpposite -> connect(refNode, eOpposite, "eOpposite") }
     }
 
     private fun connect(startNode: INode, endEObj: EObject, refType: String): INode {

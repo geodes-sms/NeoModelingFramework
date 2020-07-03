@@ -22,6 +22,10 @@ RETURN COUNT(n), refCount
 call apoc.periodic.iterate("MATCH (n) return n", "DETACH DELETE n", {batchSize:10000, parallel:true})
 YIELD batches, total return batches, total
 
+//delete all relationships
+call apoc.periodic.iterate("MATCH ()-[r]->() return r", "DELETE r", {batchSize:10000, parallel:false})
+YIELD batches, total return batches, total
+
 
 // create nodes with dynamic labels; return IDs by alias
 WITH [{alias: 'a1', label: 'LL', props: {a:10, b:20}},
@@ -71,21 +75,14 @@ match (a) where id(a)=0
 CALL apoc.path.expand(a, "marker>", null, 1, 1) YIELD path
 RETURN nodes(path)[1] AS node, collect(ID(relationships(path)[0])) AS refID
 
-//
-val res = transaction.run("MATCH (p:EPackage)-->(c:EClass) WHERE ID(p)={ePackageID}" +
-" OPTIONAL MATCH (c)-[:eSuperTypes]->(directST:EClass)" +
-" WITH c, collect(directST) AS directST, collect(directST.name) AS directSTName" +
-" WITH c, directST[0] AS base, directST[1..] AS d, directSTName" +
-" UNWIND CASE WHEN d = [] THEN [null] ELSE d END AS directST" +
-" WITH c, base, directST, directSTName" +
-" OPTIONAL MATCH (c)-->(ownAttr:EAttribute)" +
-" OPTIONAL MATCH (c)-->(ownRef:EReference)-[:eType]->(ownRT:EClass)" +
-" OPTIONAL MATCH (directST)-[:eSuperTypes*0..]->(superClass:EClass)" +
-" OPTIONAL MATCH (superClass)-->(superAttr:EAttribute)" +
-" OPTIONAL MATCH (superClass)-->(superRef:EReference)-[:eType]->(superRT:EClass)" +
-" WITH c, base.name AS baseName, directSTName," +
-" collect(DISTINCT superRef{.*, endClass:superRT.name}) AS superRef," +
-" collect(DISTINCT ownRef{.*, endClass:ownRT.name}) AS ownRef," +
-" collect(DISTINCT superAttr) AS superAttr, collect(DISTINCT ownAttr) AS ownAttr" +
-" RETURN c AS class, baseName, directSTName, superAttr, ownAttr, superRef, ownRef",
-Values.parameters("ePackageID", packageID))
+
+//create unique constraint
+CREATE CONSTRAINT [constraint_name] ON (n:LabelName) ASSERT n.$propertyName IS UNIQUE
+
+DROP CONSTRAINT $constraintName
+
+//List constraints -->  CALL db.constraints
+
+//graph model (Graph.ecore) constraints:
+CREATE CONSTRAINT vertexID ON (n:Vertex) ASSERT n.id IS UNIQUE
+CREATE CONSTRAINT compositeVertexID ON (c:CompositeVertex) ASSERT c.id IS UNIQUE

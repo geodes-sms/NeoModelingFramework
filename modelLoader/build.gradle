@@ -3,14 +3,15 @@ apply plugin: 'kotlin'
 
 dependencies {
     //implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlin_version}"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     runtimeClasspath files(compileKotlin.destinationDir)
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
 
     implementation 'org.eclipse.emf:org.eclipse.emf.ecore.xmi:2.16.0'
-    implementation 'org.eclipse.emf:org.eclipse.emf.ecore:2.19.0'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9'
-    implementation 'org.neo4j.driver:neo4j-java-driver:4.0.0-beta03'
+    implementation 'org.eclipse.emf:org.eclipse.emf.ecore:2.21.0'
+
+    //implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.10.2'
+    implementation 'org.neo4j.driver:neo4j-java-driver:4.0.2'
 }

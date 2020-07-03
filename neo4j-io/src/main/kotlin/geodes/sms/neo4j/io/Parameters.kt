@@ -2,12 +2,11 @@ package geodes.sms.neo4j.io
 
 import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.Value
-import org.neo4j.driver.types.Node
 
-//Query parameters
+
 class NodeParameter(val alias: Long, val label: String, val props: Map<String, Value>)
 
-class ReferenceParameter(
+internal class ReferenceParameter(
     val alias: Long,
     val type: String,
     val startNode: INodeEntity,
@@ -15,16 +14,37 @@ class ReferenceParameter(
     val props: Map<String, Value>
 )
 
-//Query result
-data class ContainmentResult(
-    val node: Node,
-    val containmentRefID: Long,
-    val refBound: Map<String, Pair<Int, Int>> = emptyMap()
+internal class PathMatchParameter(
+    val startID: Long,
+    val rType: String,
+    val endID: Long
 )
 
+internal class ReferenceMatchParameter(
+    val startID: Long,
+    val rType: String,
+    val endID: Long,
+    var limit: Long = 1
+) {
+    override fun equals(other: Any?): Boolean {
+        return if (other is ReferenceMatchParameter && other.startID == startID
+            && other.endID == endID && other.rType == rType
+        ) {
+            other.limit++
+            true
+        } else false
+    }
+
+    override fun hashCode(): Int {
+        return startID.hashCode() + rType.hashCode() + endID.hashCode()
+    }
+}
+
 data class NodeResult(
-    val node: Node,
-    val refBound: Map<String, Pair<Int, Int>> = emptyMap()
+    val id: Long,
+    //val label: String,
+    val props: MutableMap<String, Any>,
+    val outRefCount: MutableMap<String, Int> = hashMapOf() //output ref type count
 )
 
 

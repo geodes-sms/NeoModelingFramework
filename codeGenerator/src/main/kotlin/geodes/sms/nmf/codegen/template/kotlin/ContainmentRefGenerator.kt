@@ -9,7 +9,7 @@ object ContainmentRefGenerator {
     object SingleReferenceGenerator : IReferenceGenerator {
 
         override fun genInterface(eRef: EReference): String {
-            return "    fun <T:${eRef.eType()}> set${eRef.eType()}(c: Class<T>): ${eRef.eType()}\n"
+            return "    fun <T:${eRef.eType()}> set${eRef.name.capitalize()}(c: Class<T>): ${eRef.eType()}\n"
         }
 
         override fun genImpl(eRef: EReference): String = """
@@ -18,8 +18,9 @@ object ContainmentRefGenerator {
                 private set
             
             override fun <T:${eRef.eType()}> set${eRef.name.capitalize()}(c: Class<T>): ${eRef.eType()} {
-                ${eRef.name} = c.newInstance()
-                return ${eRef.name}
+                val res = c.newInstance()
+                ${eRef.name} = res
+                return res
             }
         """.replaceIndent("\t").plus("\n\n")
     }

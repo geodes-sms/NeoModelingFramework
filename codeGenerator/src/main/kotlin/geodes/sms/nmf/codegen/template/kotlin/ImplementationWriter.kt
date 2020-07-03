@@ -17,7 +17,7 @@ class ImplementationWriter(eClass: EClass, dir: String) : EClassWriter(eClass) {
             package ${packageName}.neo4jImpl
             
             import ${packageName}.*
-            import org.neo4j.ogm.annotation.*
+            import org.neo4j.io2.annotation.*
     
             @NodeEntity(label = "$className")
             class ${className}Neo4jImpl : $className {

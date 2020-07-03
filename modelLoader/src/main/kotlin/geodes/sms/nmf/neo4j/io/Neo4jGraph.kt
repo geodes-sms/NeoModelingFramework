@@ -117,8 +117,8 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
         val session = driver.session()
         //try {
         val map = session.writeTransaction { tx->
-            val res = tx.run(Statement(qMatch.toString() + qCreate.toString() + qSet.toString()
-                    + qReturn(), MapValue(properties))
+            val res = tx.run(qMatch.toString() + qCreate.toString() + qSet.toString()
+                    + qReturn(), MapValue(properties)
             )
             res.single().get("nodeIDs").asMap(Values.ofLong())
         }
@@ -139,7 +139,7 @@ class Neo4jGraph private constructor(private val driver: Driver) : IGraph, NodeS
     }
 
     override fun clearDB() {
-        driver.session().use { it.run(Statement("MATCH (n) DETACH DELETE n")) }
+        driver.session().use { it.run("MATCH (n) DETACH DELETE n") }
     }
 
     override fun close() {

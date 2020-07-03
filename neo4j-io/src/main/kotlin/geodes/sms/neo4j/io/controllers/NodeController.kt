@@ -2,21 +2,22 @@ package geodes.sms.neo4j.io.controllers
 
 import geodes.sms.neo4j.io.*
 import geodes.sms.neo4j.io.entity.INodeEntity
+import geodes.sms.neo4j.io.entity.RefBounds
 
 
 internal class NodeController private constructor(
     private val mapper: Mapper,
-    private val cache: EMFGraph<NodeController, RelationshipController>,
     id: Long,
     override val label: String,
     override val props: MutableMap<String, Any>,
-    //private val propsDiff: HashMap<String, Value>,
+    val outRefBounds: Map<String, RefBounds>,    //rType --> count
+    //propsDiff: HashMap<String, Value>,
     state: EntityState
-) : INodeController, StateListener.Creatable, StateListener.Updatable, StateListener.Removable {
+) : INodeController, StateListener {
 //:  NodeEntity(id)
 
-    override val _uuid: Int = n++
-    override fun _getState() = state.getState()
+    //override val _uuid: Int = n++
+    override fun getState() = state.getState()
     override var _id: Long = id
         private set
 
@@ -24,25 +25,28 @@ internal class NodeController private constructor(
         EntityState.NEW -> StateNew()
         EntityState.PERSISTED -> StatePersisted()
         EntityState.MODIFIED -> StateModified()
+        EntityState.DETACHED -> StateDetached()
         else -> StateRemoved()
     }
 
     companion object {
-        private var n = 0
-
-        fun createForNewNode(mapper: Mapper,
-            cache: EMFGraph<NodeController, RelationshipController>,
-            id: Long, label: String/*, props: HashMap<String, Value>*/
+        //private var n = 0
+        fun createForNewNode(mapper: Mapper, id: Long, label: String,
+                             outRefBounds: Map<String, RefBounds> = emptyMap()
+            /*, props: HashMap<String, Value>*/
         ): NodeController {
-            return NodeController(mapper, cache, id, label, props = hashMapOf(), /*propsDiff = props,*/
+            return NodeController(mapper, id, label, hashMapOf(),
+                /*propsDiff = props,*/
+                outRefBounds,
                 state = EntityState.NEW)
         }
 
-        fun createForDBNode(mapper: Mapper,
-            cache: EMFGraph<NodeController, RelationshipController>,
-            id: Long, label: String, props: MutableMap<String, Any>
+        fun createForDBNode(mapper: Mapper, id: Long, label: String, props: MutableMap<String, Any>,
+                            outRefBounds: Map<String, RefBounds> = emptyMap()
         ): NodeController {
-            return NodeController(mapper,cache, id, label, props = props, /*propsDiff = hashMapOf(),*/
+            return NodeController(mapper, id, label, props,
+                /*propsDiff = hashMapOf(),*/
+                outRefBounds,
                 state = EntityState.PERSISTED)
         }
     }
@@ -61,9 +65,9 @@ internal class NodeController private constructor(
         state = StateRemoved()
     }
 
-//    override fun onUnload() {
-//
-//    }
+    override fun onDetach() {
+        state = StateDetached()
+    }
 
     //override val props = hashMapOf<String, Any>() // mutable here
     //private val propsDiff = hashMapOf<String, Value>()
@@ -72,111 +76,99 @@ internal class NodeController private constructor(
         TODO("dispatch types here!!")
     }
 
-    override fun createChild(label: String, rType: String): INodeController {
-        return state.createChild(label, rType)
+    override fun putUniqueProperty(name: String, value: Any?) {
+        state.putUniqueProperty(name, value)
     }
 
-    override  fun createOutRef(rType: String, endNode: INodeEntity): IRelationshipController {
-        return state.createOutRef(rType, endNode)
+    override fun createChild(
+        rType: String,
+        label: String,
+        childRefBounds: Map<String, RefBounds>
+    ): INodeController {
+        return state.createChild(label, rType, childRefBounds)
+    }
+
+    override  fun createOutRef(rType: String, endNode: INodeEntity)/*: IRelationshipController*/ {
+        if (endNode is INodeController)
+            state.createOutRef(rType, endNode)
+        else throw Exception("EndNode $endNode must be an instance of INodeController")
     }
 
     override fun remove() {
-        TODO("Not yet implemented")
+        state.remove()
     }
 
     override fun unload() {
-        TODO("Not yet implemented")
+        state.unload()
     }
 
-    override fun removeChild(rType: String, node: INodeEntity) {
-
+    override fun removeChild(rType: String, childNode: INodeEntity) {
+        state.removeChild(rType, childNode)
     }
 
-    override  fun removeOutRef(rType: String, node: INodeEntity) {
-
+    override  fun removeOutRef(rType: String, endNode: INodeEntity) {
+        state.removeOutRef(rType, endNode)
     }
 
     override fun loadChildren(
         rType: String,
         endLabel: String,
-        limit: Int,
-        filter: String
+        outRefBounds: Map<String, RefBounds>,
+        filter: String,
+        limit: Int
     ) : List<INodeController> {
-        return state.loadChildren(rType, endLabel, filter, limit)
+        return state.loadChildren(rType, endLabel, outRefBounds, limit, filter)
     }
 
-    override fun getChildrenFromCache(rType: String): List<INodeController> {
-        TODO()
+    private fun isUpperBoundExceeded(rType: String): Boolean {
+        val b = outRefBounds[rType]
+        return if (b != null) {
+            if (b.upperBound - b.count > 0) {
+                b.count++
+                false
+            } else true
+        } else false
     }
 
-    /*  First true api
-    //-------------------------------------------------------
-    // ---------- Create block ----------
-    /*
-    fun createContainment(rType: String) : INodeController {}*/
-
-    fun createChild(rType: String): INodeController {
-        TODO()
+    private fun isLowerBoundExceeded(rType: String): Boolean {
+        val b = outRefBounds[rType]
+        return if (b != null) {
+            if (b.count - b.lowerBound > 0) {
+                b.count--
+                false
+            } else true
+        } else false
     }
 
-    fun createOutRef(rType: String, end: INodeEntity /*INodeController*/) {
-
-    }
-
-    // ---------- Read block ----------
-    /*fun getContainments(rType: String): List<INodeController> {
-
-    }*/
-
-    // get refController
-    fun getOutRefs(rType: String): List<IRelationshipController> {
-        TODO()
-    }
-
-    // get endNode controller; sync cache
-    fun getChildren(rType: String): List<INodeController> {
-        TODO()
-    }
-
-    fun getChildrenFromCache() {
-
-    }
-
-    // ---------- Remove block ----------
-    /*
-    fun removeContainment(nc: INodeController)/*: Boolean*/ {
-
-    }*/
-
-    fun removeChild(rType: String,/* ":containment" */ nc: INodeController)/*: Boolean*/ {
-
-    }
-
-    fun removeOutRef(rType: String, endNc: INodeEntity /*INodeController*/) {
-
-    }
-    //-------------------------------------------------------
-*/
 
     private interface NodeState {
         fun putProperty(name: String, input: Any?)
-        //fun getProperty(name: String)
+        fun putUniqueProperty(name: String, value: Any?)
+        fun remove()
+        fun unload()
 
-        fun createChild(label: String, rType: String): INodeController
-        fun createOutRef(rType: String, end: INodeEntity): IRelationshipController
-        //fun createInputRef()
+        fun createChild(label: String, rType: String, childRefBounds: Map<String, RefBounds>): INodeController
+        fun createOutRef(rType: String, end: INodeEntity)//: IRelationshipController
 
         fun removeChild(rType: String, n: INodeEntity)
-        fun removeOutRef(rType: String, n: INodeEntity)
+        fun removeOutRef(rType: String, end: INodeEntity)
 
-        fun _createInputRef(rType: String, start: INodeController): IRelationshipController
-        fun _createInputRef(rType: String, start: Long): IRelationshipController
+        //fun removeInputRef(rType: String, startNode: INodeEntity)
+        //fun removeInputRef(rType: String, startID: Long)
+        //fun _createInputRef(rType: String, start: INodeController)//: IRelationshipController
+        //fun _createInputRef(rType: String, start: Long): IRelationshipController
         //fun _createOutputRef(rType: String, end: INodeEntity): IRelationshipController
         //fun _createOutputRef(rType: String, end: Long): IRelationshipController
 
-        fun loadChildren(rType: String, endLabel: String, filter: String = "", limit: Int = 100) : List<INodeController>
-        fun getChildrenFromCache(rType: String): List<INodeController>
+        fun loadChildren(
+            rType: String,
+            endLabel: String,
+            refBounds: Map<String, RefBounds> = emptyMap(),
+            limit: Int = 100,
+            filter: String = ""
+        ): List<INodeController>
 
+        //fun getChildrenFromCache(rType: String): Sequence<INodeController>
         fun getState(): EntityState
     }
 
@@ -186,39 +178,53 @@ internal class NodeController private constructor(
             TODO("Not yet implemented")
         }
 
-        override fun createChild(label: String, rType: String): INodeController {
-            val (node, ref) = mapper.createChild(this@NodeController, rType, label)
-            return node
+        override fun putUniqueProperty(name: String, value: Any?) {
+            val count = mapper.isPropertyUniqueForDB(name, value)
+            if (count == 0) {
+                putProperty(name, value)
+            } else throw Exception("property $name already exists in DB")
         }
 
-        override fun createOutRef(rType: String, end: INodeEntity): IRelationshipController {
-            val endNC = cache.getNode(end._uuid)
-            return endNC?.state?._createInputRef(rType, this@NodeController)
-                ?: throw Exception("Start node was unloaded or removed")
+        override fun createChild(label: String, rType: String, childRefBounds: Map<String, RefBounds>): INodeController {
+            if (isUpperBoundExceeded(rType)) throw Exception("Upper bound exceeded for ref '$rType'")
+            else return mapper.createChild(this@NodeController, rType, label, childRefBounds)
+        }
+
+        override fun createOutRef(rType: String, end: INodeEntity) {
+            if (isUpperBoundExceeded(rType)) throw Exception("Upper bound exceeded for ref '$rType'")
+            else mapper.createRelationship(this@NodeController, rType, end)
+        }
+
+        override fun remove() { //remove from bufferedCreator
+            mapper.removeNode(this@NodeController)
+            state = StateRemoved()
+        }
+
+        override fun unload() { //unload from nodesToCreate map
+            mapper.unload(this@NodeController)
+            state = StateDetached()
         }
 
         override fun removeChild(rType: String, n: INodeEntity) {
-            val endNC = cache.getNode(n._uuid)
+            if (isLowerBoundExceeded(rType)) throw Exception("Lover bound limit for ref '$rType'")
+            else mapper.removeChild(_id, rType, n)
         }
 
-        override fun removeOutRef(rType: String, n: INodeEntity) {
-            TODO("Not yet implemented")
+        override fun removeOutRef(rType: String, end: INodeEntity) {
+            if (isLowerBoundExceeded(rType)) throw Exception("Lover bound limit for ref '$rType'")
+            else if (end is INodeController) {
+                mapper.removeRelationship(_id, rType, end)
+            } else throw Exception("EndNode $end must be instance of INodeController")
         }
 
-        override fun _createInputRef(rType: String, start: INodeController): IRelationshipController {
-            return mapper.createRelationship(rType, start, this@NodeController)
-        }
-
-        override fun _createInputRef(rType: String, start: Long): IRelationshipController {
-            return mapper.createRelationship(rType, start, this@NodeController)
-        }
-
-        override fun loadChildren(rType: String, endLabel: String, filter: String, limit: Int): List<INodeController> {
-            TODO("Not yet implemented")
-        }
-
-        override fun getChildrenFromCache(rType: String): List<INodeController> {
-            TODO("Not yet implemented")
+        override fun loadChildren(
+            rType: String,
+            endLabel: String,
+            refBounds: Map<String, RefBounds>,
+            limit: Int,
+            filter: String
+        ): List<INodeController> {
+            TODO("Not yet implemented for new Node")
         }
 
         override fun getState() = EntityState.NEW
@@ -227,40 +233,63 @@ internal class NodeController private constructor(
     private open inner class StatePersisted : NodeState {
         override fun putProperty(name: String, input: Any?) {
             state = StateModified()
-            TODO()
+            //mapper.
         }
 
-        override fun createChild(label: String, rType: String): INodeController {
-            val (node, ref) = mapper.createChild(_id, rType, label)
-            return node
+        override fun putUniqueProperty(name: String, value: Any?) {
+            mapper.updateNodePropertyImmediately(_id, name, value)
         }
 
-        override fun createOutRef(rType: String, end: INodeEntity): IRelationshipController {
-            TODO("Not yet implemented")
+        override fun createChild(label: String, rType: String, childRefBounds: Map<String, RefBounds>): INodeController {
+            if (isUpperBoundExceeded(rType)) throw Exception("Upper bound exceeded for ref '$rType'")
+            else return mapper.createChild(this@NodeController, rType, label, childRefBounds)
+        }
+
+        override fun createOutRef(rType: String, end: INodeEntity) {
+            if (isUpperBoundExceeded(rType)) throw Exception("Upper bound exceeded for ref '$rType'")
+            else mapper.createRelationship(this@NodeController, rType, end)
+        }
+
+        override fun remove() {
+            mapper.removeNode(_id)
+            state = StateRemoved()
+        }
+
+        override fun unload() {
+            mapper.unload(_id)
+            state = StateDetached()
         }
 
         override fun removeChild(rType: String, n: INodeEntity) {
-            TODO("Not yet implemented")
+            if (isLowerBoundExceeded(rType)) throw Exception("Lover bound limit for ref '$rType'")
+            else if (n is INodeController) {
+                when {
+                    n.getState() == EntityState.NEW -> mapper.removeChild(_id, rType, n)
+                    n.getState() == EntityState.PERSISTED -> mapper.removeChild(_id, rType, n._id)
+                    else -> throw Exception("End node was removed or unloaded")
+                }
+            } else throw Exception("object $n must be instance of INodeController")
         }
 
-        override fun removeOutRef(rType: String, n: INodeEntity) {
-            TODO("Not yet implemented")
+        override fun removeOutRef(rType: String, end: INodeEntity) {
+            if (isLowerBoundExceeded(rType)) throw Exception("Lover bound limit for ref '$rType'")
+            else if (end is INodeController) {
+                when {
+                    end.getState() == EntityState.NEW -> mapper.removeRelationship(_id, rType, end)
+                    end.getState() == EntityState.PERSISTED -> mapper.removeRelationship(_id, rType, end._id)
+                    else -> throw Exception("End node was removed or unloaded")
+                }
+            } else throw Exception("object $end must be instance of INodeController")
         }
 
-        override fun _createInputRef(rType: String, start: INodeController): IRelationshipController {
-            TODO("Not yet implemented")
-        }
-
-        override fun _createInputRef(rType: String, start: Long): IRelationshipController {
-            TODO("Not yet implemented")
-        }
-
-        override fun loadChildren(rType: String, endLabel: String, filter: String, limit: Int): List<INodeController> {
-            TODO("Not yet implemented")
-        }
-
-        override fun getChildrenFromCache(rType: String): List<INodeController> {
-            TODO("Not yet implemented")
+        override fun loadChildren(
+            rType: String,
+            endLabel: String,
+            refBounds: Map<String, RefBounds>,
+            limit: Int,
+            filter: String
+        ): List<INodeController> {
+            return mapper.loadConnectedNodes(_id, rType, endLabel, refBounds, filter, limit)
         }
 
         override fun getState() = EntityState.PERSISTED
@@ -271,52 +300,27 @@ internal class NodeController private constructor(
             TODO()
         }
 
-    /*
-        inherit from StatePersisted class
-        override fun createChild(label: String, rType: String): INodeController {
-            TODO("Not yet implemented")
-        }
-
-        override fun createOutRef(rType: String, end: INodeEntity): IRelationshipController {
-            TODO("Not yet implemented")
-        }
-
-        override fun removeChild(rType: String, n: INodeEntity) {
-            TODO("Not yet implemented")
-        }
-
-        override fun removeOutRef(rType: String, n: INodeEntity) {
-            TODO("Not yet implemented")
-        }
-
-        override fun _createInputRef(
-            rType: String,
-            start: INodeController
-        ): IRelationshipController {
-            TODO("Not yet implemented")
-        }
-
-        override fun _createInputRef(rType: String, start: Long): IRelationshipController {
-            TODO("Not yet implemented")
-        }
-
-        override fun loadChildren(rType: String): List<INodeController> {
-            TODO("Not yet implemented")
-        }
-    */
-
         override fun getState() = EntityState.MODIFIED
     }
 
-    private inner class StateRemoved : NodeState {
-        private val exceptionMsg = "Node was removed. Cannot perform operation on removed node"
+    private abstract inner class StateNotActive(val exceptionMsg: String): NodeState {
         override fun putProperty(name: String, input: Any?) = throw Exception(exceptionMsg)
-
-        override fun createChild(label: String, rType: String): INodeController {
+        override fun putUniqueProperty(name: String, value: Any?) {
             throw Exception(exceptionMsg)
         }
 
-        override fun createOutRef(rType: String, end: INodeEntity): IRelationshipController {
+        override fun remove() = throw Exception(exceptionMsg)
+        override fun unload() = throw Exception(exceptionMsg)
+
+        override fun createChild(
+            label: String,
+            rType: String,
+            childRefBounds: Map<String, RefBounds>
+        ): INodeController {
+            throw Exception(exceptionMsg)
+        }
+
+        override fun createOutRef(rType: String, end: INodeEntity) {
             throw Exception(exceptionMsg)
         }
 
@@ -324,29 +328,30 @@ internal class NodeController private constructor(
             throw Exception(exceptionMsg)
         }
 
-        override fun removeOutRef(rType: String, n: INodeEntity) {
-            throw Exception(exceptionMsg)
-        }
-
-        override fun _createInputRef(rType: String, start: INodeController): IRelationshipController {
-            throw Exception(exceptionMsg)
-        }
-
-        override fun _createInputRef(rType: String, start: Long): IRelationshipController {
+        override fun removeOutRef(rType: String, end: INodeEntity) {
             throw Exception(exceptionMsg)
         }
 
         override fun loadChildren(
-            rType: String, endLabel: String, filter: String, limit: Int
-        ): List<INodeController> = throw Exception(exceptionMsg)
-
-
-        override fun getChildrenFromCache(rType: String): List<INodeController> {
-            TODO("Not yet implemented")
+            rType: String,
+            endLabel: String,
+            refBounds: Map<String, RefBounds>,
+            limit: Int,
+            filter: String
+        ): List<INodeController> {
+            throw Exception(exceptionMsg)
         }
+    }
 
+    private inner class StateRemoved : StateNotActive(
+        "Node '$this' was removed. Cannot perform operation on removed node"
+    ) {
         override fun getState() = EntityState.REMOVED
     }
 
-    //private inner class StateUnloaded
+    private inner class StateDetached : StateNotActive(
+        "Node '$this' was unloaded. Cannot perform operation on unloaded node"
+    ) {
+        override fun getState(): EntityState = EntityState.DETACHED
+    }
 }

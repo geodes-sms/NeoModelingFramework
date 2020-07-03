@@ -20,6 +20,7 @@ object Values {
         is Double ->  FloatValue(input)
         is Float ->   FloatValue(input.toDouble())
         is EEnumLiteral -> StringValue(input.literal)
+        is Enum<*> -> StringValue(input.name)
         is java.util.Date -> DateTimeValue(ZonedDateTime.ofInstant(input.toInstant(), ZoneId.systemDefault()))
         is java.math.BigDecimal -> StringValue(input.toString())
         is java.math.BigInteger -> StringValue(input.toString())
@@ -45,6 +46,7 @@ object Values {
     fun value(input: java.math.BigDecimal) = StringValue(input.toString())
     fun value(input: java.math.BigInteger) = StringValue(input.toString())
     fun value(input: EEnumLiteral) = StringValue(input.literal)
+    fun value(input: Enum<*>) = StringValue(input.name)
     fun value(input: java.util.Date) = DateTimeValue(ZonedDateTime.ofInstant(input.toInstant(), ZoneId.systemDefault()))
     fun value(input: List<*>) = ListValue(*Array<Value?>(input.size) { i -> value(input[i]) })
 }

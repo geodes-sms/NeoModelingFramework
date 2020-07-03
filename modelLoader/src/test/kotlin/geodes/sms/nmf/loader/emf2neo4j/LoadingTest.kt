@@ -1,8 +1,7 @@
 package geodes.sms.nmf.loader.emf2neo4j
 
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.junit.jupiter.api.Test
 import java.io.File

@@ -3,7 +3,7 @@ package geodes.sms.nmf.neo4j.io
 import geodes.sms.nmf.neo4j.DBCredentials
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
-import org.neo4j.driver.Statement
+import org.neo4j.driver.Query
 import org.neo4j.driver.Value
 import org.neo4j.driver.internal.value.*
 
@@ -44,7 +44,7 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
     /** Save nodes from buffer and return count of saved nodes */
     fun saveNodes() : Int {
         session.writeTransaction { tx ->
-            val res = tx.run(Statement("UNWIND \$batch AS row" +
+            val res = tx.run(Query("UNWIND \$batch AS row" +
                     " CALL apoc.create.node([row.label], row.props) YIELD node" +
                     " RETURN row.alias AS alias, ID(node) AS id",
                 MapValue(mapOf("batch" to ListValue(*Array(nodesToCreate.size) { i -> nodesToCreate[i] }))))
@@ -61,7 +61,7 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
 
     fun saveRefs() : Int {
         val count = session.writeTransaction { tx ->
-            val res = tx.run(Statement("UNWIND {batch} AS row" +
+            val res = tx.run(Query("UNWIND {batch} AS row" +
                     " MATCH (from) WHERE ID(from) = row.from" +
                     " MATCH (to) WHERE ID(to) = row.to" +
                     " CALL apoc.create.relationship(from, row.type, row.props, to) YIELD rel" +
@@ -96,7 +96,7 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
 
     fun clearDB() {
         session.writeTransaction {
-            it.run(Statement("CALL apoc.periodic.iterate(\"MATCH (n) return n\"," +
+            it.run(Query("CALL apoc.periodic.iterate(\"MATCH (n) return n\"," +
                     " \"DETACH DELETE n\", {batchSize:8000}) YIELD batches, total" +
                     " RETURN batches, total"))
         }

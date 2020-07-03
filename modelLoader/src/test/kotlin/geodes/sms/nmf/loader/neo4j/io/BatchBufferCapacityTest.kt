@@ -1,7 +1,6 @@
 package geodes.sms.nmf.loader.neo4j.io
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import geodes.sms.nmf.neo4j.DBCredentials
 import geodes.sms.nmf.neo4j.Values
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import geodes.sms.nmf.neo4j.io.IDHolder
@@ -14,7 +13,10 @@ import java.io.File
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) //Enables non-static BeforeAll and AfterAll
 class BatchBufferCapacityTest {
 
-    private val graphWriter = GraphBatchWriter(jacksonObjectMapper().readValue(File("../Neo4jDBCredentials.json")))
+    private val dbUri = "bolt://localhost:7687"
+    private val username = "neo4j"
+    private val password = "admin"
+    private val graphWriter = GraphBatchWriter(DBCredentials(dbUri, username, password))
 
     @Test
     fun nodesTest() {
@@ -152,7 +154,6 @@ class BatchBufferCapacityTest {
                         graphWriter.saveRefs()
                     }
                     val endTime = System.currentTimeMillis()
-
 
                     val time = endTime - startTime
                     val timeSec = time.toDouble() / 1000
