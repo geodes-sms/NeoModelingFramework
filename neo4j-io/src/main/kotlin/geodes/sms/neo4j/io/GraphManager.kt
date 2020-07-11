@@ -1,7 +1,6 @@
 package geodes.sms.neo4j.io
 
 import geodes.sms.neo4j.io.controllers.INodeController
-import geodes.sms.neo4j.io.entity.RefBounds
 import org.neo4j.driver.*
 
 /** Graph proxy */
@@ -20,7 +19,7 @@ class GraphManager(dbUri: String, username: String, password: String) : AutoClos
         session.close()
     }
 
-    fun clearChanges() {}
+    //fun clearChanges() {}
 
     fun clearCache() { mapper.clearCache() }
 
@@ -30,13 +29,17 @@ class GraphManager(dbUri: String, username: String, password: String) : AutoClos
         session.close()
     }
 
-    fun createNode(label: String, outRefBounds: Map<String, RefBounds> = emptyMap()): INodeController {
-        return mapper.createNode(label, outRefBounds)
+    fun createNode(label: String): INodeController {
+        return mapper.createNode(label)
     }
 
-    fun loadNode(id: Long, label: String, outRefBounds: Map<String, RefBounds> = emptyMap()): INodeController {
-        return mapper.loadNodeNode(id, label, outRefBounds)
+    fun loadNode(id: Long, label: String): INodeController {
+        return mapper.loadNode(id, label)
     }
+
+//    fun load(query: String): List<INodeController> {
+//        return mapper.loadWithCustomQuery(query)
+//    }
 
     //also unloads all out/in refs
     fun unload(node: geodes.sms.neo4j.io.entity.INodeEntity) {

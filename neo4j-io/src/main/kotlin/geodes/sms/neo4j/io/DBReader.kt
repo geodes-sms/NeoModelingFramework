@@ -45,9 +45,9 @@ class DBReader(private val driver: Driver) {
         return nodeRes
     }
 
-    fun findRelationshipByID(id: Long) {
-
-    }
+//    fun findRelationshipByID(id: Long) {
+//
+//    }
 
 //    /** return endNode */
 //    fun findConnectedNodes(
@@ -114,7 +114,15 @@ class DBReader(private val driver: Driver) {
         session.close()
     }
 
-    fun getNodeCountWithProperty(propName: String, propValue: Any?): Int {
+    fun loadNodes(query: String) {
+        val session = driver.session()
+        session.readTransaction { tx ->
+            tx.run(query)
+        }
+        session.close()
+    }
+
+    fun getNodeCountWithProperty(propName: String, propValue: Any): Int {
         val session = driver.session()
         val count = session.readTransaction { tx ->
             val res = tx.run(Query("MATCH (n{$propName:\$value}) RETURN count(*) AS count",

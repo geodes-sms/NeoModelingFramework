@@ -94,18 +94,6 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
                     MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() } )))
                 ))
             }
-
-//            session.writeTransaction { tx ->
-//                tx.run(Query("CALL apoc.periodic.iterate(\"UNWIND \$batch AS row" +
-//                        " MATCH (start)-[r]->(end)" +
-//                        " WHERE ID(start)=row.startID AND type(r)=row.rType AND ID(end)=row.endID" +
-//                        " RETURN r \"," +
-//                        "\"DELETE r\"," +
-//                        " {batchSize:10000, parallel:false, params:{batch:\$batch}} ) YIELD batches, total" +
-//                        " RETURN batches, total",
-//                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() } )))
-//                ))
-//            }
         }
 
         for (i in 1..(refsToRemoveByHostNodes.size / refsBatchSize)) {

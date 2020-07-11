@@ -4,7 +4,6 @@ import geodes.sms.neo4j.io.controllers.INodeController
 import geodes.sms.neo4j.io.controllers.IRelationshipController
 import geodes.sms.neo4j.io.controllers.NodeController
 import geodes.sms.neo4j.io.entity.INodeEntity
-import geodes.sms.neo4j.io.entity.RefBounds
 import geodes.sms.neo4j.io.entity.RelationshipEntity
 import org.neo4j.driver.Session
 import org.neo4j.driver.Values
@@ -30,28 +29,28 @@ class Mapper(
     /** DB nodeID --> NodeController */
     private val trackedNodes = hashMapOf<Long, NodeController>()
 
-    fun createNode(label: String, outRefBounds: Map<String, RefBounds> = emptyMap()/*, props: Map<String, Any> = emptyMap()*/): INodeController {
+    fun createNode(label: String, props: Map<String, Any> = emptyMap()): INodeController {
         //val props = hashMapOf<String, Value>()   //create from kotlin map
-        val innerID = creator.createNode(label)
-        val node = NodeController.createForNewNode(this, innerID, label, outRefBounds/*, props*/)
+        val innerID = creator.createNode(label/*, props*/)
+        val node = NodeController.createForNewNode(this, innerID, label/*, props*/)
         nodesToCreate[innerID] = node
         return node
     }
 
     fun createChild(
         parent: INodeEntity,
-        rType: String, childLabel: String,
-        childOutRefBounds: Map<String, RefBounds> = emptyMap()
+        rType: String, childLabel: String
     ): INodeController { //:Pair<IRelationshipController, INodeController> {
         val childAlias = creator.createNode(childLabel)
-        val nc = NodeController.createForNewNode(this, childAlias, childLabel, childOutRefBounds)
+        val nc = NodeController.createForNewNode(this, childAlias, childLabel)
 
         val rAlias = creator.createRelationship(rType, parent, nc,
             mapOf("containment" to Values.value(true)))
         nodesToCreate[nc._id] = nc
 
         adjOutput.getOrPut(parent._id) { hashMapOf() }
-            .getOrPut(rType) { LinkedList() }.add(RelationshipEntity(rAlias, rType, parent, nc))
+            .getOrPut(rType) { LinkedList() }
+            .add(RelationshipEntity(rAlias, rType, parent, nc))
         return nc
     }
 
@@ -61,7 +60,8 @@ class Mapper(
         endNode: INodeEntity
     )/*: IRelationshipController*/ {
         val rAlias = creator.createRelationship(rType, startNode, endNode,
-            mapOf("containment" to Values.value(false)))
+            mapOf("containment" to Values.value(false))
+        )
 
         adjOutput.getOrPut(startNode._id) { hashMapOf() }
             .getOrPut(rType) { LinkedList() }
@@ -69,15 +69,10 @@ class Mapper(
     }
 
     // -------------------- READ section -------------------- //
-    fun loadNodeNode(id: Long, label: String, refBounds: Map<String, RefBounds> = emptyMap()): INodeController {
+    fun loadNode(id: Long, label: String): INodeController {
         val node = reader.findNodeWithOutputsCount(id, label)
-        //merge map of refBounds
-        refBounds.forEach { (type, v) ->
-            v.count = node.outRefCount.getOrDefault(type, 0)
-        }
-
-        val nc = NodeController.createForDBNode(this, node.id, label, node.props, refBounds)
-        trackedNodes.remove(nc._id)?.onDetach()
+        val nc = NodeController.createForDBNode(this, node.id, label, node.props, node.outRefCount)
+        trackedNodes.remove(nc._id)?.onDetach() //unload prev if exist
         trackedNodes[nc._id] = nc  //merge Node if already exist in cache!!
         return nc
     }
@@ -86,22 +81,16 @@ class Mapper(
         startID: Long,
         rType: String,
         endLabel: String,
-        refBounds: Map<String, RefBounds> = emptyMap(),
         filter: String = "",
-        limit: Int = 100
+        limit: Int
     ): List<INodeController> {
         val result = LinkedList<INodeController>()
         reader.findConnectedNodesWithOutputsCount(startID, rType, endLabel, filter, limit) { res ->
             res.forEach {
-                //merge map of refBounds
-                refBounds.forEach { (type, v) ->
-                    v.count = it.outRefCount.getOrDefault(type, 0)
-                }
-
                 val nc = NodeController.createForDBNode(
                     this, it.id, endLabel,
-                    outRefBounds = refBounds,
-                    props = it.props
+                    props = it.props,
+                    outRefCount = it.outRefCount
                 )
                 trackedNodes.remove(nc._id)?.onDetach()
                 trackedNodes[nc._id] = nc
@@ -112,18 +101,23 @@ class Mapper(
         return result
     }
 
-    fun isPropertyUniqueForDB(propName: String, propValue: Any?): Boolean {
+    fun loadWithCustomQuery(query: String) {
+
+    }
+
+    fun isPropertyUniqueForDB(propName: String, propValue: Any): Boolean {
         return reader.getNodeCountWithProperty(propName, propValue) == 0
     }
 
-    fun isPropertyUniqueForCache(propName: String, propValue: Any?): Int {
+    fun isPropertyUniqueForCache(propName: String, propValue: Any): Boolean {
         val iterator = nodesToCreate.iterator()
         while (iterator.hasNext()) {
-            val (k,v) = iterator.next()
+            val (_,v) = iterator.next()
             if (v.props[propName] == propValue) {
-
+                return false
             }
         }
+        return true
     }
     // ------------------ READ section end ------------------- //
 
@@ -132,7 +126,6 @@ class Mapper(
     fun removeNode(node: INodeEntity) {
         creator.popNodeCreate(node._id)
         nodesToCreate.remove(node._id)
-        //graphCache.removeNode(node.uuid)
     }
 
     fun removeNode(id: Long) {
@@ -146,7 +139,7 @@ class Mapper(
 
     //from cache
     fun removeChild(startAlias: Long, rType: String, endNode: INodeEntity) {
-        //TODO("cascade remove on buffer not implemented yet")
+        //TODO("cascade remove on buffer not implemented in this function")
         val refList = adjOutput[startAlias]?.get(rType)
         if (refList != null) {
             val iterator = refList.iterator()
@@ -205,8 +198,8 @@ class Mapper(
 //
 //    }
 
-    fun updateNodePropertyImmediately(nodeID: Long, propName: String, propVal: Any?) {
-        updater.updateNodePropertyImmediately(nodeID, propName, propVal)
+    fun putNodePropertyImmediately(nodeID: Long, propName: String, propVal: Any?) {
+        updater.putNodePropertyImmediately(nodeID, propName, propVal)
     }
 
     fun popNodeUpdate(nodeID: Long) {
@@ -226,6 +219,7 @@ class Mapper(
 
     fun unload(id: Long) {
         trackedNodes.remove(id)
+        updater.popNodeUpdate(id)
     }
     // -------------------- UNLOAD section end ---------------- //
 
@@ -250,7 +244,6 @@ class Mapper(
         }
 
         creator.commitRelationshipsNoIDs(session)
-
         updater.commitNodesUpdate(session)
         nodesToUpdate.forEach{ (_, v) -> v.onUpdate() }
         nodesToUpdate.clear()
@@ -259,7 +252,6 @@ class Mapper(
     }
 
     fun clearCache() {
-        //graphCache.clear()
         trackedNodes.clear()
         adjOutput.clear()
     }

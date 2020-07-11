@@ -32,12 +32,11 @@ class BufferedUpdater(private val driver: Driver, val updateBatchSize: Int = 200
         refsToUpdate.remove(id)
     }
 
-    fun updateNodePropertyImmediately(nodeID: Long, propName: String, propVal: Any?) {
+    fun putNodePropertyImmediately(nodeID: Long, propName: String, propVal: Any?) {
         val params = MapValue(mapOf(
             "id" to IntegerValue(nodeID),
             "props" to MapValue(mapOf(
-                "propName" to StringValue(propName),
-                "propValue" to Values.value(propVal)
+                propName to Values.value(propVal)
             ))
         ))
         val session = driver.session()

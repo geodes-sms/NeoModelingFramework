@@ -4,6 +4,7 @@ import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.Query
 import org.neo4j.driver.Session
 import org.neo4j.driver.Value
+import org.neo4j.driver.Values
 import org.neo4j.driver.internal.value.IntegerValue
 import org.neo4j.driver.internal.value.ListValue
 import org.neo4j.driver.internal.value.MapValue
@@ -31,31 +32,6 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
         return alias
     }
 
-    /*
-    fun createRelationship(
-        rType: String, start: Long, end: INodeEntity,
-        props: Map<String, Value> = mapOf("containment" to Values.value(false))
-    ): Long {
-        val alias = r--
-        refsToCreate[alias] = ReferenceParameter(alias, rType,
-            object : ID { override val _id = start },
-            end,
-            props
-        )
-        return alias
-    }
-
-    fun createRelationship(
-        rType: String, start: INodeEntity, end: Long,
-        props: Map<String, Value> =  mapOf("containment" to Values.value(false))
-    ): Long {
-        val alias = r--
-        refsToCreate[alias] = ReferenceParameter(alias, rType, start,
-            object : ID { override val _id = end }, props
-        )
-        return alias
-    }*/
-
     fun createRelationship(
         rType: String, start: Long, end: Long,
         props: Map<String, Value> = emptyMap()
@@ -63,7 +39,7 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
         val alias = r--
         refsToCreate[alias] = ReferenceParameter(alias, rType,
             object : INodeEntity { override val _id = start },
-            object  : INodeEntity { override val _id = end },
+            object : INodeEntity { override val _id = end },
             props)
         return alias
     }
@@ -72,11 +48,10 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
     fun popRelationshipCreate(alias: Long) { refsToCreate.remove(alias) }
 
     fun commitNodes(session: Session, mapFunction: (Sequence<Pair<Long, Long>>) -> Unit) {
-
         val paramsIterator = nodesToCreate.asSequence().map { (_, v) -> MapValue(mapOf(
             "label" to StringValue(v.label),
             "alias" to IntegerValue(v.alias),
-            "props" to MapValue(v.props)
+            "props" to MapValue(v.props)    //Values.value(v.props)
         )) }.iterator()
 
         fun commit(dataSize: Int) {
@@ -97,7 +72,6 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
 
         //process remaining elements
         if (rem > 0) commit(rem)
-
         nodesToCreate.clear()
         n = 0
     }
@@ -110,15 +84,6 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
             "props" to MapValue(v.props),
             "to" to IntegerValue(v.endNode._id)))
         }.iterator()
-
-//        val s2 = refsToCreate2.asSequence().map { (_, v) -> MapValue(mapOf(
-//            "alias" to IntegerValue(v.alias),
-//            "from" to IntegerValue(v.startID),
-//            "type" to StringValue(v.type),
-//            "props" to MapValue(v.props),
-//            "to" to IntegerValue(v.endID)))
-//        }
-//        val rr = sequenceOf(s1, s2).flatten().iterator()
 
         fun commit(batchSize: Int) {
             session.writeTransaction { tx ->
@@ -138,7 +103,6 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
             commit(refsBatchSize)
         }
         if (rem > 0) commit(rem)
-
         refsToCreate.clear()
         r = 0
     }
@@ -165,7 +129,6 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
                         " RETURN batches, total",
                     MapValue(mapOf("batch" to ListValue(*Array(batchSize) { batchIterator.next() })))
                 ))
-                //process result here
             }
         }
 
@@ -174,50 +137,7 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
             commit(refsBatchSize)
         }
         if (rem > 0) commit(rem)
-
         refsToCreate.clear()
         r = 0
     }
-
-
-
-//    fun commitSubGraph(session: Session ,mapFunction: (Sequence<Pair<Long, Long>>) -> Unit) {
-//        val nodesIterator = Sequence { nodesToCreate.iterator() }.map { (_, v) ->
-//            MapValue(mapOf(
-//                "label" to StringValue(v.label),
-//                "alias" to IntegerValue(v.alias),
-//                "props" to MapValue(v.props)))
-//        }.iterator()
-//
-//        val refsIterator = Sequence { refsToCreate2.iterator() }.map { (_, v) ->
-//            MapValue(mapOf(
-//                "alias" to IntegerValue(v.alias),
-//                "from" to StringValue(v.startAlias),
-//                "type" to StringValue(v.type),
-//                "props" to MapValue(v.props),
-//                "to" to StringValue(v.endAlias)))
-//        }.iterator()
-//
-//        session.writeTransaction { tx ->
-//            val res = tx.run("UNWIND \$nodes as n" +
-//                    " CALL apoc.create.node([n.label], n.props) YIELD node" +
-//                    " WITH apoc.map.fromPairs(collect([n.alias, node])) AS map" +
-//                    " UNWIND \$refs as r" +
-//                    " WITH map[r.from] AS start, map[r.to] AS end, r" +
-//                    " CALL apoc.create.relationship(start, r.type, r.props, end) YIELD rel" +
-//                    " RETURN r.alias AS rAlias, rel, start.alias AS startAlias, end.alias AS endAlias",
-//                MapValue(mapOf(
-//                    "nodes" to ListValue(*Array(nodesToCreate.size) { nodesIterator.next() }),
-//                    "refs" to ListValue(*Array(refsToCreate2.size) { refsIterator.next() })))
-//            )
-//
-////            Sequence { res }.map {
-////                it["rAlias"].asLong()
-////            }
-//
-////            for (record in res) {
-////                println("${record["rAlias"].asLong()} -> ${record["rel"].asRelationship().id()}}")
-////            }
-//        }
-//    }
 }
