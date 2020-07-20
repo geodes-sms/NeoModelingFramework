@@ -1,6 +1,5 @@
 package geodes.sms.neo4j.io
 
-import geodes.sms.neo4j.Values
 import org.neo4j.driver.Driver
 import org.neo4j.driver.Query
 import org.neo4j.driver.Session
@@ -8,20 +7,19 @@ import org.neo4j.driver.Value
 import org.neo4j.driver.internal.value.IntegerValue
 import org.neo4j.driver.internal.value.ListValue
 import org.neo4j.driver.internal.value.MapValue
-import org.neo4j.driver.internal.value.StringValue
 
 /** Update properties of db entities (nodes and refs) */
 class BufferedUpdater(private val driver: Driver, val updateBatchSize: Int = 20000) {
 
-    private val nodesToUpdate = hashMapOf<Long, Map<String, Value>>()
-    private val refsToUpdate = hashMapOf<Long, Map<String, Value>>()
+    private val nodesToUpdate = hashMapOf<Long, HashMap<String, Value>>()
+    private val refsToUpdate = hashMapOf<Long, HashMap<String, Value>>()
 
-    fun updateNode(id: Long, props: Map<String, Value>) {
-        nodesToUpdate[id] = props
+    fun updateNode(id: Long, propName: String, prValue: Value) {
+        nodesToUpdate.getOrPut(id) { hashMapOf() } [propName] = prValue
     }
 
-    fun updateRelationship(id: Long, props: Map<String, Value>) {
-        refsToUpdate[id] = props
+    fun updateRelationship(id: Long, propName: String, prValue: Value) {
+        refsToUpdate.getOrPut(id) { hashMapOf() } [propName] = prValue
     }
 
     fun popNodeUpdate(id: Long) {
@@ -32,12 +30,10 @@ class BufferedUpdater(private val driver: Driver, val updateBatchSize: Int = 200
         refsToUpdate.remove(id)
     }
 
-    fun putNodePropertyImmediately(nodeID: Long, propName: String, propVal: Any?) {
+    fun putNodePropertyImmediately(nodeID: Long, propName: String, propVal: Value) {
         val params = MapValue(mapOf(
             "id" to IntegerValue(nodeID),
-            "props" to MapValue(mapOf(
-                propName to Values.value(propVal)
-            ))
+            "props" to MapValue(mapOf(propName to propVal))
         ))
         val session = driver.session()
         session.writeTransaction { it.run("MATCH (n) WHERE ID(n)=\$id SET n+=\$props", params) }

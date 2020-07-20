@@ -1,9 +1,9 @@
 package geodes.sms.neo4j.io
 
+import geodes.sms.neo4j.Values
 import org.neo4j.driver.Driver
 import org.neo4j.driver.Query
 import org.neo4j.driver.Value
-import org.neo4j.driver.Values
 import org.neo4j.driver.internal.value.IntegerValue
 import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
@@ -32,14 +32,14 @@ class DBReader(private val driver: Driver) {
             val res = tx.run(Query("MATCH (node)" +
                     " WHERE ID(node)=\$id AND labels(node)[0]=\$label" +
                     " OPTIONAL MATCH (node)-[r]->()" +
-                    " WITH node, type(r) AS rType, count(r) AS count" +
-                    " RETURN node, apoc.map.fromPairs(collect([rType, count])) AS count",
+                    " WITH ID(node) AS id, type(r) AS rType, count(r) AS count" +
+                    " RETURN id, apoc.map.fromPairs(collect([rType, count])) AS count",
                 MapValue(mapOf("id" to IntegerValue(id), "label" to StringValue(label)))
             ))
             val record = res.single()
-            val node = record["node"].asNode()
+            val nodeID = record["id"].asLong()
             val outputsCount = record["count"].asMap { it.asInt() }
-            NodeResult(node.id(), node.asMap(), outputsCount)
+            NodeResult(nodeID, outputsCount)
         }
         session.close()
         return nodeRes
@@ -79,7 +79,7 @@ class DBReader(private val driver: Driver) {
 //        }
 //    }
 
-    /** @return endNode plus count of output refs agg by count*/
+    /** @return endNode plus count of output refs aggregated by count*/
     fun findConnectedNodesWithOutputsCount(
         startID: Long, rType: String, endLabel: String,
         filter: String = "",
@@ -102,13 +102,13 @@ class DBReader(private val driver: Driver) {
                     filter +
                     " WITH node LIMIT \$limit" +
                     " OPTIONAL MATCH (node)-[r]->()" +
-                    " WITH node, type(r) AS rType, count(r) AS count" +
-                    " RETURN node, apoc.map.fromPairs(collect([rType, count])) AS count", params)
+                    " WITH ID(node) AS id, type(r) AS rType, count(r) AS count" +
+                    " RETURN id, apoc.map.fromPairs(collect([rType, count])) AS count", params)
             )
             mapFunction(Sequence { res }.map { record ->
-                val node = record["node"].asNode()
+                val nodeID = record["id"].asLong()
                 val outputsCount = record["count"].asMap { it.asInt() }
-                NodeResult(node.id(), node.asMap(), outputsCount)
+                NodeResult(nodeID, outputsCount)
             })
         }
         session.close()
@@ -122,14 +122,39 @@ class DBReader(private val driver: Driver) {
         session.close()
     }
 
-    fun getNodeCountWithProperty(propName: String, propValue: Any): Int {
+    fun getNodeCountWithProperty(label: String, propName: String, propValue: Any): Int {
         val session = driver.session()
         val count = session.readTransaction { tx ->
-            val res = tx.run(Query("MATCH (n{$propName:\$value}) RETURN count(*) AS count",
-                MapValue(mapOf("value" to Values.value(propValue))) ))
+            val res = tx.run(Query("MATCH (n:$label) WHERE n[\$property]=\$value RETURN count(n) AS count",
+                MapValue(mapOf("property" to StringValue(propName), "value" to Values.value(propValue)))
+            ))
             res.single()["count"].asInt()
         }
         session.close()
         return count
+    }
+
+    fun readNodeProperty(id: Long, propName: String): Value {
+        val session = driver.session()
+        val propValue = session.readTransaction { tx ->
+            val res = tx.run(Query("MATCH (n) WHERE ID(n)=\$id RETURN n[\$property] AS prop",
+                MapValue(mapOf("id" to IntegerValue(id), "property" to StringValue(propName)))
+            ))
+            res.single()["prop"]
+        }
+        session.close()
+        return propValue
+    }
+
+    fun readRelationshipProperty(id: Long, propName: String): Value {
+        val session = driver.session()
+        val propValue = session.readTransaction { tx ->
+            val res = tx.run(Query("MATCH ()-[r]-() WHERE ID(r)=\$id RETURN r[\$property] AS prop",
+                MapValue(mapOf("id" to IntegerValue(id), "property" to StringValue(propName)))
+            ))
+            res.single()["prop"]
+        }
+        session.close()
+        return propValue
     }
 }

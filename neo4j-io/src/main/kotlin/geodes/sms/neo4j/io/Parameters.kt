@@ -43,7 +43,7 @@ internal class ReferenceMatchParameter(
 data class NodeResult(
     val id: Long,
     //val label: String,
-    val props: MutableMap<String, Any>,
+    //val props: MutableMap<String, Any>,
     val outRefCount: MutableMap<String, Int> = hashMapOf() //output ref type count
 )
 

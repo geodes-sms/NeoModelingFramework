@@ -2,46 +2,47 @@ package geodes.sms.neo4j.io.controllers
 
 import geodes.sms.neo4j.io.*
 import geodes.sms.neo4j.io.entity.INodeEntity
+import geodes.sms.neo4j.io.entity.IPropertyAccessor
+import org.neo4j.driver.Value
 
 
 internal class NodeController private constructor(
     private val mapper: Mapper,
     id: Long,
     override val label: String,
-    override val props: MutableMap<String, Any>,
+    propsDiff: HashMap<String, Value>,
     override val outRefCount: MutableMap<String, Int>, //rType --> count
-    //propsDiff: HashMap<String, Value>,
     state: EntityState
-) : INodeController, StateListener {
+) : INodeController, StateListener, PropertyAccessor(propsDiff) {
 
     override fun getState() = state.getState()
     override var _id: Long = id
         private set
 
-    private var state: NodeState = when (state) {
+    //private var state: NodeState = when (state) {
+    override var state: NodeState = when(state) {
         EntityState.NEW -> StateNew()
         EntityState.PERSISTED -> StatePersisted()
         EntityState.MODIFIED -> StateModified()
-        EntityState.DETACHED -> StateDetached()
-        else -> StateRemoved()
+        EntityState.DETACHED -> StateDetached
+        else -> StateRemoved
     }
 
     companion object {
-        fun createForNewNode(mapper: Mapper, id: Long, label: String
-            /*, props: HashMap<String, Value>*/
+        fun createForNewNode(mapper: Mapper, id: Long, label: String,
+                             propsDiff: HashMap<String, Value>
         ): NodeController {
-            return NodeController(mapper, id, label, hashMapOf(),
-                /*propsDiff = props,*/
+            return NodeController(mapper, id, label, propsDiff,
                 outRefCount = hashMapOf(),
                 state = EntityState.NEW)
         }
 
-        fun createForDBNode(mapper: Mapper, id: Long, label: String, props: MutableMap<String, Any>,
+        fun createForDBNode(mapper: Mapper, id: Long, label: String,
                             outRefCount: MutableMap<String, Int> = hashMapOf()
         ): NodeController {
-            return NodeController(mapper, id, label, props,
-                /*propsDiff = hashMapOf(),*/
-                outRefCount,
+            return NodeController(mapper, id, label,
+                propsDiff = hashMapOf(),
+                outRefCount = outRefCount,
                 state = EntityState.PERSISTED)
         }
     }
@@ -50,6 +51,7 @@ internal class NodeController private constructor(
     override fun onCreate(id: Long) {
         this._id = id
         this.state = StatePersisted()
+        propsDiff.clear()
     }
 
     override fun onUpdate() {
@@ -58,34 +60,33 @@ internal class NodeController private constructor(
     }
 
     override fun onRemove() {
+        propsDiff.clear()
         props.clear()
         outRefCount.clear()
-        state = StateRemoved()
+        state = StateRemoved
     }
 
     override fun onDetach() {
+        propsDiff.clear()
         props.clear()
         outRefCount.clear()
-        state = StateDetached()
-    }
-    //////////////////////////////////////
-
-    override fun putProperty(name: String, value: Any) {
-        state.putProperty(name, value)
-        TODO("dispatch types here!!")
+        state = StateDetached
     }
 
-    override fun putUniqueProperty(name: String, value: Any) {
-        if (mapper.isPropertyUniqueForCache(name, value) &&
-            mapper.isPropertyUniqueForDB(name, value)
-        ) {
-            state.putUniqueProperty(name, value)
-        } else throw Exception("Property already exists in DB")
+    //////////////////////////////////////////
+    override fun readPropertyFromDB(name: String): Value {
+        return mapper.readNodeProperty(_id, name)
     }
 
-    override fun removeProperty(name: String) {
-        state.removeProperty(name)
+    override fun isPropertyUnique(name: String, value: Any): Boolean {
+        return mapper.isPropertyUniqueForCacheNode(label, name, value) &&
+            mapper.isPropertyUniqueForDBNode(label, name, value)
     }
+
+    override fun putProperty(name: String, value: Value) {
+        mapper.updateNode(_id, name, value)
+    }
+    ////////////////////////////////////////////
 
     override fun createChild(rType: String, label: String): INodeController {
         return state.createChild(label, rType)
@@ -136,10 +137,7 @@ internal class NodeController private constructor(
         return state.loadChildren(rType, endLabel, limit, filter)
     }
 
-    private interface NodeState {
-        fun putProperty(name: String, input: Any)
-        fun removeProperty(propName: String)
-        fun putUniqueProperty(name: String, value: Any)
+    interface NodeState : IPropertyAccessor {
         fun remove()
         fun unload()
 
@@ -173,7 +171,7 @@ internal class NodeController private constructor(
         fun getState(): EntityState
     }
 
-    private abstract inner class StateActive : NodeState {
+    abstract inner class StateActive : NodeState {
         override fun createChild(label: String, rType: String): INodeController {
             return mapper.createChild(this@NodeController, rType, label)
         }
@@ -215,30 +213,15 @@ internal class NodeController private constructor(
         }
     }
 
-    private inner class StateNew : StateActive() {
-        override fun putProperty(name: String, input: Any) {
-            TODO("Not yet implemented")
-        }
-
-        override fun putUniqueProperty(name: String, value: Any) {
-            props[name] = value
-//            if (mapper.isPropertyUniqueForCache(name, value)) {
-//                props[name] = value
-//            } else throw Exception("property $name already exists in DB")
-        }
-
-        override fun removeProperty(propName: String) {
-            props.remove(propName)
-        }
-
+    private inner class StateNew : StateActive(), IPropertyAccessor by NewPropertyAccessor() {
         override fun remove() { //remove from bufferedCreator
             mapper.removeNode(this@NodeController)
-            state = StateRemoved()
+            state = StateRemoved
         }
 
         override fun unload() { //unload from nodesToCreate map
             mapper.unload(this@NodeController)
-            state = StateDetached()
+            state = StateDetached
         }
 
         override fun removeChild(rType: String, n: INodeEntity) {
@@ -263,29 +246,15 @@ internal class NodeController private constructor(
         override fun getState() = EntityState.NEW
     }
 
-    private open inner class StatePersisted : StateActive() {
-        override fun putProperty(name: String, input: Any) {
-            state = StateModified()
-            //mapper.
-        }
-
-        override fun putUniqueProperty(name: String, value: Any) {
-            props[name] = value
-            mapper.putNodePropertyImmediately(_id, name, value)
-        }
-
-        override fun removeProperty(propName: String) {
-            props.remove(propName)
-        }
-
+    private open inner class StatePersisted : StateActive(), IPropertyAccessor by PersistedPropertyAccessor() {
         override fun remove() {
             mapper.removeNode(_id)
-            state = StateRemoved()
+            state = StateRemoved
         }
 
         override fun unload() {
             mapper.unload(_id)
-            state = StateDetached()
+            state = StateDetached
         }
 
         override fun removeChild(rType: String, n: INodeEntity) {
@@ -323,17 +292,10 @@ internal class NodeController private constructor(
     }
 
     private inner class StateModified : StatePersisted() {
-        override fun putProperty(name: String, input: Any) {
-            TODO()
-        }
-
         override fun getState() = EntityState.MODIFIED
     }
 
-    private abstract inner class StateNotActive(val exceptionMsg: String): NodeState {
-        override fun putProperty(name: String, input: Any) = throw Exception(exceptionMsg)
-        override fun putUniqueProperty(name: String, value: Any) = throw Exception(exceptionMsg)
-        override fun removeProperty(propName: String) = throw Exception(exceptionMsg)
+    private abstract class StateNotActive(private val exceptionMsg: String): NotActivePropertyAccessor(exceptionMsg), NodeState {
         override fun remove() = throw Exception(exceptionMsg)
         override fun unload() = throw Exception(exceptionMsg)
         override fun createChild(label: String, rType: String) = throw Exception(exceptionMsg)
@@ -362,15 +324,15 @@ internal class NodeController private constructor(
         }
     }
 
-    private inner class StateRemoved : StateNotActive(
+    private object StateRemoved : StateNotActive(
         "Node '$this' was removed. Cannot perform operation on removed node"
     ) {
         override fun getState() = EntityState.REMOVED
     }
 
-    private inner class StateDetached : StateNotActive(
+    private object StateDetached : StateNotActive(
         "Node '$this' was unloaded. Cannot perform operation on unloaded node"
     ) {
-        override fun getState(): EntityState = EntityState.DETACHED
+        override fun getState() = EntityState.DETACHED
     }
 }
