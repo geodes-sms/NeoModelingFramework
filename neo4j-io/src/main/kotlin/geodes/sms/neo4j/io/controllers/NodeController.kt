@@ -19,7 +19,6 @@ internal class NodeController private constructor(
     override var _id: Long = id
         private set
 
-    //private var state: NodeState = when (state) {
     override var state: NodeState = when(state) {
         EntityState.NEW -> StateNew()
         EntityState.PERSISTED -> StatePersisted()
@@ -55,8 +54,8 @@ internal class NodeController private constructor(
     }
 
     override fun onUpdate() {
-        //propsDiff.clear()
         state = StatePersisted()
+        propsDiff.clear()
     }
 
     override fun onRemove() {
@@ -78,9 +77,9 @@ internal class NodeController private constructor(
         return mapper.readNodeProperty(_id, name)
     }
 
-    override fun isPropertyUnique(name: String, value: Any): Boolean {
+    override fun isPropertyUnique(name: String, value: Any,  dbValue: Value): Boolean {
         return mapper.isPropertyUniqueForCacheNode(label, name, value) &&
-            mapper.isPropertyUniqueForDBNode(label, name, value)
+            mapper.isPropertyUniqueForDBNode(label, name, dbValue)
     }
 
     override fun putProperty(name: String, value: Value) {

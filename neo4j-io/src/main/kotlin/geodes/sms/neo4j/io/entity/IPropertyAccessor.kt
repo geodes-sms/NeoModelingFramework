@@ -5,7 +5,6 @@ import java.math.BigInteger
 import java.time.ZonedDateTime
 
 interface IPropertyAccessor {
-    //val props: Map<String, Any> //readOnly here
     fun getPropertyAsString(name: String): String?
     fun getPropertyAsInt(name: String): Int?
     fun getPropertyAsLong(name: String): Long?
@@ -22,20 +21,20 @@ interface IPropertyAccessor {
     fun getPropertyAsBigInteger(name: String): BigInteger?
     fun getPropertyAsAny(name: String): Any?
 
-    fun putProperty(name: String, value: String)
-    fun putProperty(name: String, value: Int)
-    fun putProperty(name: String, value: Long)
-    fun putProperty(name: String, value: Short)
-    fun putProperty(name: String, value: Boolean)
-    fun putProperty(name: String, value: Byte)
-    fun putProperty(name: String, value: ByteArray)
-    fun putProperty(name: String, value: Char)
-    fun putProperty(name: String, value: Double)
-    fun putProperty(name: String, value: Float)
-    fun <T: Enum<T>> putProperty(name: String, value: Enum<T>)
-    fun putProperty(name: String, value: ZonedDateTime)
-    fun putProperty(name: String, value: BigDecimal)
-    fun putProperty(name: String, value: BigInteger)
+    fun putProperty(name: String, value: String?)
+    fun putProperty(name: String, value: Int?)
+    fun putProperty(name: String, value: Long?)
+    fun putProperty(name: String, value: Short?)
+    fun putProperty(name: String, value: Boolean?)
+    fun putProperty(name: String, value: Byte?)
+    fun putProperty(name: String, value: ByteArray?)
+    fun putProperty(name: String, value: Char?)
+    fun putProperty(name: String, value: Double?)
+    fun putProperty(name: String, value: Float?)
+    fun <T: Enum<T>> putProperty(name: String, value: Enum<T>?)
+    fun putProperty(name: String, value: ZonedDateTime?)
+    fun putProperty(name: String, value: BigDecimal?)
+    fun putProperty(name: String, value: BigInteger?)
 
     fun putUniqueProperty(name: String, value: String)
     fun putUniqueProperty(name: String, value: Int)

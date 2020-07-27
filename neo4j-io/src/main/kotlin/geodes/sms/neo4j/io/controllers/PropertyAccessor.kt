@@ -17,8 +17,8 @@ internal abstract class PropertyAccessor(
     //different for node and relationship
     protected abstract fun readPropertyFromDB(name: String): Value
     protected abstract fun putProperty(name: String, value: Value)
-    protected abstract fun isPropertyUnique(name: String, value: Any): Boolean
-    abstract val state: IPropertyAccessor
+    protected abstract fun isPropertyUnique(name: String, value: Any, dbValue: Value): Boolean
+    protected abstract val state: IPropertyAccessor
 
     override fun getPropertyAsString(name: String): String? = state.getPropertyAsString(name)
     override fun getPropertyAsInt(name: String): Int? = state.getPropertyAsInt(name)
@@ -35,20 +35,20 @@ internal abstract class PropertyAccessor(
     override fun getPropertyAsBigDecimal(name: String): BigDecimal? = state.getPropertyAsBigDecimal(name)
     override fun getPropertyAsBigInteger(name: String): BigInteger? = state.getPropertyAsBigInteger(name)
     override fun getPropertyAsAny(name: String): Any? = state.getPropertyAsAny(name)
-    override fun putProperty(name: String, value: String) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Int) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Long) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Short) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Boolean) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Byte) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: ByteArray) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Char) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Double) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: Float) = state.putProperty(name, value)
-    override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: ZonedDateTime) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: BigDecimal) = state.putProperty(name, value)
-    override fun putProperty(name: String, value: BigInteger) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: String?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Int?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Long?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Short?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Boolean?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Byte?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: ByteArray?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Char?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Double?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: Float?) = state.putProperty(name, value)
+    override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: ZonedDateTime?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: BigDecimal?) = state.putProperty(name, value)
+    override fun putProperty(name: String, value: BigInteger?) = state.putProperty(name, value)
     override fun putUniqueProperty(name: String, value: String) = state.putUniqueProperty(name, value)
     override fun putUniqueProperty(name: String, value: Int) = state.putUniqueProperty(name, value)
     override fun putUniqueProperty(name: String, value: Long) = state.putUniqueProperty(name, value)
@@ -68,167 +68,203 @@ internal abstract class PropertyAccessor(
 
     protected abstract inner class ActivePropertyAccessor : IPropertyAccessor {
         override fun putUniqueProperty(name: String, value: String) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, StringValue(value)))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Int) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, IntegerValue(value.toLong())))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Long) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, IntegerValue(value)))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Short) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, IntegerValue(value.toLong())))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Boolean) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, BooleanValue.fromBoolean(value)))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Byte) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, IntegerValue(value.toLong())))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: ByteArray) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, BytesValue(value)))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Char) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, StringValue("$value")))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Double) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, FloatValue(value)))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: Float) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, FloatValue(value.toDouble())))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun <T : Enum<T>> putUniqueProperty(name: String, value: Enum<T>) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, StringValue(value.name)))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: ZonedDateTime) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, DateTimeValue(value)))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: BigDecimal) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, StringValue(value.toString())))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
         }
 
         override fun putUniqueProperty(name: String, value: BigInteger) {
-            if (isPropertyUnique(name, value))
+            if (isPropertyUnique(name, value, StringValue(value.toString())))
                 putProperty(name, value)
             else throw Exception("Property already exists in DB")
-        }
-
-        override fun removeProperty(name: String) {
-            //propsDiff[name] = NullValue.NULL
-            putProperty(name, NullValue.NULL)
-            props.remove(name)
         }
     }
 
 
     //works ony with cache
     protected open inner class NewPropertyAccessor : ActivePropertyAccessor() {
-        override fun putProperty(name: String, value: String) {
-            props[name] = value
-            propsDiff[name] = StringValue(value)
+        override fun putProperty(name: String, value: String?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = StringValue(value)
+            }
         }
 
-        override fun putProperty(name: String, value: Int) {
-            props[name] = value
-            propsDiff[name] = IntegerValue(value.toLong())
+        override fun putProperty(name: String, value: Int?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = IntegerValue(value.toLong())
+            }
         }
 
-        override fun putProperty(name: String, value: Long) {
-            props[name] = value
-            propsDiff[name] = IntegerValue(value)
+        override fun putProperty(name: String, value: Long?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = IntegerValue(value)
+            }
         }
 
-        override fun putProperty(name: String, value: Short) {
-            props[name] = value
-            propsDiff[name] = IntegerValue(value.toLong())
+        override fun putProperty(name: String, value: Short?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = IntegerValue(value.toLong())
+            }
         }
 
-        override fun putProperty(name: String, value: Boolean) {
-            props[name] = value
-            propsDiff[name] = BooleanValue.fromBoolean(value)
+        override fun putProperty(name: String, value: Boolean?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = BooleanValue.fromBoolean(value)
+            }
         }
 
-        override fun putProperty(name: String, value: Byte) {
-            props[name] = value
-            propsDiff[name] = IntegerValue(value.toLong())
+        override fun putProperty(name: String, value: Byte?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = IntegerValue(value.toLong())
+            }
         }
 
-        override fun putProperty(name: String, value: ByteArray) {
-            props[name] = value
-            propsDiff[name] = BytesValue(value)
+        override fun putProperty(name: String, value: ByteArray?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = BytesValue(value)
+            }
         }
 
-        override fun putProperty(name: String, value: Char) {
-            props[name] = value
-            propsDiff[name] = StringValue("$value")
+        override fun putProperty(name: String, value: Char?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = StringValue("$value")
+            }
         }
 
-        override fun putProperty(name: String, value: Double) {
-            props[name] = value
-            propsDiff[name] = FloatValue(value)
+        override fun putProperty(name: String, value: Double?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = FloatValue(value)
+            }
         }
 
-        override fun putProperty(name: String, value: Float) {
-            props[name] = value
-            propsDiff[name] = FloatValue(value.toDouble())
+        override fun putProperty(name: String, value: Float?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = FloatValue(value.toDouble())
+            }
         }
 
-        override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>) {
-            props[name] = value
-            propsDiff[name] = StringValue(value.name)
+        override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = StringValue(value.name)
+            }
         }
 
-        override fun putProperty(name: String, value: ZonedDateTime) {
-            props[name] = value
-            propsDiff[name] = DateTimeValue(value)
+        override fun putProperty(name: String, value: ZonedDateTime?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = DateTimeValue(value)
+            }
         }
 
-        override fun putProperty(name: String, value: BigDecimal) {
-            props[name] = value
-            propsDiff[name] = StringValue(value.toString())
+        override fun putProperty(name: String, value: BigDecimal?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = StringValue(value.toString())
+            }
         }
 
-        override fun putProperty(name: String, value: BigInteger) {
-            props[name] = value
-            propsDiff[name] = StringValue(value.toString())
+        override fun putProperty(name: String, value: BigInteger?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                propsDiff[name] = StringValue(value.toString())
+            }
         }
 
         override fun getPropertyAsString(name: String): String? {
@@ -244,7 +280,6 @@ internal abstract class PropertyAccessor(
         }
 
         override fun getPropertyAsShort(name: String): Short? {
-            //return props[name]?.asNumber()?.toShort()
             return props[name] as? Short
         }
 
@@ -253,7 +288,6 @@ internal abstract class PropertyAccessor(
         }
 
         override fun getPropertyAsByte(name: String): Byte? {
-            //return props[name]?.asNumber()?.toByte()
             return props[name] as? Byte
         }
 
@@ -292,79 +326,125 @@ internal abstract class PropertyAccessor(
         override fun getPropertyAsAny(name: String): Any? {
             return props[name]
         }
+
+        override fun removeProperty(name: String) {
+            propsDiff[name] = NullValue.NULL
+            props.remove(name)
+        }
     }
 
 
     protected open inner class PersistedPropertyAccessor : ActivePropertyAccessor() {
-
-        override fun putProperty(name: String, value: String) {
-            props[name] = value
-            putProperty(name, StringValue(value))
+        override fun putProperty(name: String, value: String?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, StringValue(value))
+            }
         }
 
-        override fun putProperty(name: String, value: Int) {
-            props[name] = value
-            putProperty(name, IntegerValue(value.toLong()))
+        override fun putProperty(name: String, value: Int?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, IntegerValue(value.toLong()))
+            }
         }
 
-        override fun putProperty(name: String, value: Long) {
-            props[name] = value
-            putProperty(name, IntegerValue(value))
+        override fun putProperty(name: String, value: Long?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, IntegerValue(value))
+            }
         }
 
-        override fun putProperty(name: String, value: Short) {
-            props[name] = value
-            putProperty(name, IntegerValue(value.toLong()))
+        override fun putProperty(name: String, value: Short?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, IntegerValue(value.toLong()))
+            }
         }
 
-        override fun putProperty(name: String, value: Boolean) {
-            props[name] = value
-            putProperty(name, BooleanValue.fromBoolean(value))
+        override fun putProperty(name: String, value: Boolean?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, BooleanValue.fromBoolean(value))
+            }
         }
 
-        override fun putProperty(name: String, value: Byte) {
-            props[name] = value
-            putProperty(name, IntegerValue(value.toLong()))
+        override fun putProperty(name: String, value: Byte?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, IntegerValue(value.toLong()))
+            }
         }
 
-        override fun putProperty(name: String, value: ByteArray) {
-            props[name] = value
-            putProperty(name, BytesValue(value))
+        override fun putProperty(name: String, value: ByteArray?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, BytesValue(value))
+            }
         }
 
-        override fun putProperty(name: String, value: Char) {
-            props[name] = value
-            putProperty(name, StringValue("$value"))
+        override fun putProperty(name: String, value: Char?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, StringValue("$value"))
+            }
         }
 
-        override fun putProperty(name: String, value: Double) {
-            props[name] = value
-            putProperty(name, FloatValue(value))
+        override fun putProperty(name: String, value: Double?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, FloatValue(value))
+            }
         }
 
-        override fun putProperty(name: String, value: Float) {
-            props[name] = value
-            putProperty(name, FloatValue(value.toDouble()))
+        override fun putProperty(name: String, value: Float?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, FloatValue(value.toDouble()))
+            }
         }
 
-        override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>) {
-            props[name] = value
-            putProperty(name, StringValue(value.name))
+        override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, StringValue(value.name))
+            }
         }
 
-        override fun putProperty(name: String, value: ZonedDateTime) {
-            props[name] = value
-            putProperty(name, DateTimeValue(value))
+        override fun putProperty(name: String, value: ZonedDateTime?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, DateTimeValue(value))
+            }
         }
 
-        override fun putProperty(name: String, value: BigDecimal) {
-            props[name] = value
-            putProperty(name, StringValue(value.toString()))
+        override fun putProperty(name: String, value: BigDecimal?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, StringValue(value.toString()))
+            }
         }
 
-        override fun putProperty(name: String, value: BigInteger) {
-            props[name] = value
-            putProperty(name, StringValue(value.toString()))
+        override fun putProperty(name: String, value: BigInteger?) {
+            if (value == null) removeProperty(name)
+            else {
+                props[name] = value
+                putProperty(name, StringValue(value.toString()))
+            }
         }
 
 
@@ -373,13 +453,17 @@ internal abstract class PropertyAccessor(
         }
 
         override fun getPropertyAsInt(name: String): Int? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asInt() } as? Int
-//            val res = props[name]
-//            return if (res != null) {
-//                val read = readPropertyFromDB(name).asInt()
-//                props[name] = read
-//                read
-//            } else res
+            val res = props[name]
+            return if (res != null) {
+                res as? Int
+            } else {
+                val read = readPropertyFromDB(name)
+                if (read.isNull) null else {
+                    val value = read.asInt()
+                    props[name] = value
+                    value
+                }
+            }
         }
 
         override fun getPropertyAsLong(name: String): Long? {
@@ -437,6 +521,11 @@ internal abstract class PropertyAccessor(
         override fun getPropertyAsAny(name: String): Any? {
             return props.getOrPut(name) { readPropertyFromDB(name).asObject() }
         }
+
+        override fun removeProperty(name: String) {
+            putProperty(name, NullValue.NULL)
+            props.remove(name)
+        }
     }
 
     protected abstract class NotActivePropertyAccessor(private val msg: String) : IPropertyAccessor {
@@ -455,20 +544,20 @@ internal abstract class PropertyAccessor(
         override fun getPropertyAsBigDecimal(name: String) = throw Exception(msg)
         override fun getPropertyAsBigInteger(name: String) = throw Exception(msg)
         override fun getPropertyAsAny(name: String) = throw Exception(msg)
-        override fun putProperty(name: String, value: String) = throw Exception(msg)
-        override fun putProperty(name: String, value: Int) = throw Exception(msg)
-        override fun putProperty(name: String, value: Long) = throw Exception(msg)
-        override fun putProperty(name: String, value: Short) = throw Exception(msg)
-        override fun putProperty(name: String, value: Boolean) = throw Exception(msg)
-        override fun putProperty(name: String, value: Byte) = throw Exception(msg)
-        override fun putProperty(name: String, value: ByteArray) = throw Exception(msg)
-        override fun putProperty(name: String, value: Char) = throw Exception(msg)
-        override fun putProperty(name: String, value: Double) = throw Exception(msg)
-        override fun putProperty(name: String, value: Float) = throw Exception(msg)
-        override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>) = throw Exception(msg)
-        override fun putProperty(name: String, value: ZonedDateTime) = throw Exception(msg)
-        override fun putProperty(name: String, value: BigDecimal) = throw Exception(msg)
-        override fun putProperty(name: String, value: BigInteger) = throw Exception(msg)
+        override fun putProperty(name: String, value: String?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Int?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Long?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Short?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Boolean?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Byte?) = throw Exception(msg)
+        override fun putProperty(name: String, value: ByteArray?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Char?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Double?) = throw Exception(msg)
+        override fun putProperty(name: String, value: Float?) = throw Exception(msg)
+        override fun <T : Enum<T>> putProperty(name: String, value: Enum<T>?) = throw Exception(msg)
+        override fun putProperty(name: String, value: ZonedDateTime?) = throw Exception(msg)
+        override fun putProperty(name: String, value: BigDecimal?) = throw Exception(msg)
+        override fun putProperty(name: String, value: BigInteger?) = throw Exception(msg)
         override fun putUniqueProperty(name: String, value: String) = throw Exception(msg)
         override fun putUniqueProperty(name: String, value: Int) = throw Exception(msg)
         override fun putUniqueProperty(name: String, value: Long) = throw Exception(msg)

@@ -1,6 +1,5 @@
 package geodes.sms.neo4j.io
 
-import geodes.sms.neo4j.Values
 import org.neo4j.driver.Driver
 import org.neo4j.driver.Query
 import org.neo4j.driver.Value
@@ -11,7 +10,6 @@ import org.neo4j.driver.types.Node
 
 
 class DBReader(private val driver: Driver) {
-
     fun findNode(id: Long, label: String): Node {
         val session = driver.session()
         val node = session.readTransaction { tx ->
@@ -122,11 +120,11 @@ class DBReader(private val driver: Driver) {
         session.close()
     }
 
-    fun getNodeCountWithProperty(label: String, propName: String, propValue: Any): Int {
+    fun getNodeCountWithProperty(label: String, propName: String, propValue: Value): Int {
         val session = driver.session()
         val count = session.readTransaction { tx ->
             val res = tx.run(Query("MATCH (n:$label) WHERE n[\$property]=\$value RETURN count(n) AS count",
-                MapValue(mapOf("property" to StringValue(propName), "value" to Values.value(propValue)))
+                MapValue(mapOf("property" to StringValue(propName), "value" to propValue))
             ))
             res.single()["count"].asInt()
         }

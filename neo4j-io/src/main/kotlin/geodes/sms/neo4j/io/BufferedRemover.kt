@@ -72,7 +72,6 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
         nodesToRemoveByHost.clear()
     }
 
-    // https://community.neo4j.com/t/parallel-deletes-with-apoc-periodic-iterate/6276
     fun commitRelationshipsRemoveByHost(session: Session) {
         val paramsIterator = refsToRemoveByHostNodes.asSequence().map { MapValue(mapOf(
             "startID" to IntegerValue(it.startID),

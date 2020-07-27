@@ -12,7 +12,7 @@ import java.util.*
 import kotlin.collections.HashMap
 
 
-class Mapper(
+internal class Mapper(
     private val creator: BufferedCreator,
     private val updater: BufferedUpdater,
     private val remover: BufferedRemover,
@@ -49,14 +49,14 @@ class Mapper(
 
         adjOutput.getOrPut(parent._id) { hashMapOf() }
             .getOrPut(rType) { LinkedList() }
-            .add(RelationshipEntity(rAlias, rType, parent, childNode))
+            .add(RelationshipEntity(rAlias, rType, parent, childNode, true))
         return childNode
     }
 
     fun createRelationship(
         startNode: INodeEntity,
         rType: String,
-        endNode: INodeEntity //, props: Map<String, Any> = emptyMap()
+        endNode: INodeEntity
     )/*: IRelationshipController*/ {
         val rAlias = creator.createRelationship(rType, startNode, endNode,
             mapOf("containment" to Values.value(false))
@@ -64,7 +64,7 @@ class Mapper(
 
         adjOutput.getOrPut(startNode._id) { hashMapOf() }
             .getOrPut(rType) { LinkedList() }
-            .add(RelationshipEntity(rAlias, rType, startNode, endNode))
+            .add(RelationshipEntity(rAlias, rType, startNode, endNode, false))
     }
 
     // -------------------- READ section -------------------- //
@@ -101,7 +101,7 @@ class Mapper(
     }
 
     // Two nodes with different labels may have the same property value
-    fun isPropertyUniqueForDBNode(label: String, propName: String, propValue: Any): Boolean {
+    fun isPropertyUniqueForDBNode(label: String, propName: String, propValue: Value): Boolean {
         return reader.getNodeCountWithProperty(label, propName, propValue) == 0
     }
 
@@ -138,20 +138,49 @@ class Mapper(
 
     //from cache
     fun removeChild(startAlias: Long, rType: String, endNode: INodeEntity) {
-        //TODO("cascade remove on buffer not implemented in this function")
+        var removedFl = false
         val refList = adjOutput[startAlias]?.get(rType)
         if (refList != null) {
             val iterator = refList.iterator()
             while (iterator.hasNext()) {
                 val re = iterator.next()
-                if (re.endNode == endNode) {
+                if (re.endNode._id == endNode._id) {    //find nodeToRemove
                     creator.popRelationshipCreate(re._id)
                     creator.popNodeCreate(re.endNode._id)
                     nodesToCreate.remove(endNode._id)
+                    removedFl = true
                     iterator.remove()
+                    if (re.endNode is NodeController)
+                        re.endNode.onRemove()
                     break
                 }
             }
+        }
+        if (removedFl) removeContainmentsCascade(endNode._id)
+    }
+
+    private fun removeContainmentsCascade(id: Long) {
+        val stack = LinkedList<Long>()
+        stack.push(id)
+        while (stack.isNotEmpty()) {
+            val startID = stack.pop()
+            adjOutput[startID]?.let { map ->
+                for ((_, refs) in map) {
+                    while (refs.isNotEmpty()) {
+                        val re = refs.pop()
+                        if (re.isContainment) {
+                            val endID = re.endNode._id
+                            creator.popNodeCreate(endID)
+                            nodesToCreate.remove(endID)
+                            stack.push(endID)
+                            if (re.endNode is NodeController)
+                                re.endNode.onRemove()
+                        }
+                        creator.popRelationshipCreate(re._id)
+                    }
+                }
+            }
+            adjOutput.remove(startID)
         }
     }
 
@@ -228,7 +257,7 @@ class Mapper(
             }
         }
         remover.commitRelationshipsRemoveByHost(session)
-
+        updater.commitNodesUpdate(session)
         creator.commitNodes(session) {
             it.forEach { (alias, id) ->
                 val nc = nodesToCreate[alias]
@@ -239,13 +268,12 @@ class Mapper(
             }
             nodesToCreate.clear()
         }
-
         creator.commitRelationshipsNoIDs(session)
-        updater.commitNodesUpdate(session)
         adjOutput.clear()
     }
 
     fun clearCache() {
+        trackedNodes.forEach { (_, v) -> v.onDetach() }
         trackedNodes.clear()
         adjOutput.clear()
     }

@@ -4,5 +4,6 @@ class RelationshipEntity(
     override val _id: Long,
     override val type: String,
     override val startNode: INodeEntity,
-    override val endNode: INodeEntity
+    override val endNode: INodeEntity,
+    val isContainment: Boolean
 ) : IRelationshipEntity

@@ -1,4 +1,3 @@
-import geodes.sms.neo4j.Values
 import geodes.sms.neo4j.io.BufferedCreator
 import geodes.sms.neo4j.io.BufferedRemover
 import geodes.sms.neo4j.io.DBReader
@@ -7,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
+import org.neo4j.driver.internal.value.IntegerValue
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -23,7 +23,7 @@ class WriterCapacityTest {
 
         val size = 1000000
         for (i in 0L until size) {
-            creator.createNode("A", mapOf("a" to Values.value(i)))
+            creator.createNode("A", mapOf("a" to IntegerValue(i)))
         }
 
         val session = driver.session()

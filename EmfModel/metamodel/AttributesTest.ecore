@@ -7,7 +7,7 @@
         defaultValueLiteral="996"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="bigIntegerDefValWrong"
         eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBigInteger"
-        defaultValueLiteral="996q"/>
+        defaultValueLiteral="996"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="boolPrimitive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="boolObj" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBooleanObject"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="bytePrimitive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EByte"
@@ -19,7 +19,7 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="charPrimitive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EChar"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="charObj" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ECharacterObject"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="charObjDefVal" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ECharacterObject"
-        defaultValueLiteral="wwe"/>
+        defaultValueLiteral="w"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="doublePrimitive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDouble"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="doubleObj" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EDoubleObject"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="floatPrimitive" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EFloat"
