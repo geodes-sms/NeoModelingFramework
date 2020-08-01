@@ -11,6 +11,7 @@ import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl
 import java.io.File
 
+
 fun main() {
     //val model = "./EmfModel/instance/Document.xmi"
     val model = "./EmfModel/metamodel/Library.ecore"

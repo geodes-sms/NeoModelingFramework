@@ -5,10 +5,7 @@ import geodes.sms.domain.graph.Vertex
 import geodes.sms.neo4j.io.controllers.INodeController
 
 
-class CompositeVertexNeo4jImpl(nc: INodeController): CompositeVertex,
-    VertexNeo4jImpl(nc)
-    //INodeEntity by nc
-{
+class CompositeVertexNeo4jImpl(nc: INodeController) : CompositeVertex, VertexNeo4jImpl(nc) {
     override fun setCapacity(v: Int?) {
         putProperty("capacity", v)
     }
@@ -48,6 +45,9 @@ class CompositeVertexNeo4jImpl(nc: INodeController): CompositeVertex,
     }
 
     override fun getCompositeVertices(): List<CompositeVertex> {
-        return (loadChildren("sub_vertices", "CompositeVertex").map { CompositeVertexNeo4jImpl(it) })
+        return (loadChildren(
+            "sub_vertices",
+            "CompositeVertex"
+        ).map { CompositeVertexNeo4jImpl(it) })
     }
 }

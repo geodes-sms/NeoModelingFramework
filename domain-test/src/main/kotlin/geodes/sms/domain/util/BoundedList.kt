@@ -1,4 +1,4 @@
-package util
+package geodes.sms.domain.util
 
 /**
  * Modifiable list with maximum size
