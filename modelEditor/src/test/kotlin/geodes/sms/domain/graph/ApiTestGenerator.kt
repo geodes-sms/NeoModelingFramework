@@ -1,5 +1,6 @@
 package geodes.sms.domain.graph
 
+import java.io.File
 import java.util.*
 
 /*
@@ -43,29 +44,43 @@ private class ApiTestGenerator(val g: Int, val s: Int, val v: Int, val cv: Int, 
     private var id = 1  //for Vertex and CompositeVertex
     private var graphID = 1
     private val cvAliasStack = LinkedList<String>()
+    private val vAlias = mutableListOf<String>()    //all vertices aliases
+    private val resWriter = File("./api.txt").bufferedWriter()
 
     fun addVertexToGraph(g: String) {
-        println("""
+        resWriter.write("""
             val v$id = $g.addVertex()
             v$id.addEdge(v$id)
-            v$id.setId(${id++})
+            v$id.setId($id)
         """.trimIndent())
+        resWriter.newLine()
+        vAlias.add("v${id++}")
     }
 
     fun addVertexToCompositeVertex(root: String) {
-        println("""
+        resWriter.write("""
             val v$id = $root.addSubVertex()
             v$id.addEdge(v$id)
-            v$id.setId(${id++})
+            v$id.setId($id)
         """.trimIndent())
+        resWriter.newLine()
+        vAlias.add("v${id++}")
     }
 
     fun addCompositeVertex(root: String) {
-        println("""
+        resWriter.write("""
             val cv$id = $root.addCompositeVertex()
+            cv$id.addEdge(cv$id)
             cv$id.setId($id)
         """.trimIndent())
+        resWriter.newLine()
+        vAlias.add("cv$id")
         cvAliasStack.add("cv${id++}")
+    }
+
+    fun genEdges() {
+        for (i in 1..e)
+            resWriter.write("${vAlias.random()}.addEdge(${vAlias.random()})\n")
     }
 
     fun genSForGraph(g: String) {
@@ -86,7 +101,7 @@ private class ApiTestGenerator(val g: Int, val s: Int, val v: Int, val cv: Int, 
 
     fun genGraph() {
         val root = "g${graphID++}"
-        println("val $root = manager.createGraph()")
+        resWriter.write("val $root = manager.createGraph()\n")
         for (i in 1..s)
             genSForGraph(root)
 
@@ -103,16 +118,31 @@ private class ApiTestGenerator(val g: Int, val s: Int, val v: Int, val cv: Int, 
         for (i in 1..g) {
             genGraph()
             cvAliasStack.clear()
+            genEdges()
         }
+        vAlias.clear()
+        resWriter.close()
     }
 }
 
 fun main() {
     // cv on each depth level = (s * cv)^d
-    // dv = #cv
+    // v on each depth level = (s * v)^d
+    // all cv and v contains 1 self referenced edge
 
-    //ApiTestGenerator(1, 2, 1, 2, 3, 0).gen()    //64
-    ApiTestGenerator(1, 2, 1, 2, 4, 0).gen()
+    //--- Vertex500 -----
+    //ApiTestGenerator(1, 2, 1, 2, 4,0).gen() //v=170 cv=340 total=510 edge=510
+    //ApiTestGenerator(1, 2, 1, 2, 4,490).gen() //v=170 cv=340 total=510 edge=1000
+    //ApiTestGenerator(1, 2, 1, 2, 4,9490).gen() //... edge=10000
+    //ApiTestGenerator(1, 2, 1, 2, 4,99490).gen() //... edge=100000
 
-
+    //--- Vertex1000 -----
+    ApiTestGenerator(1, 2, 1, 2, 4,0).gen() //v=170 cv=340 total=510 edge=510
 }
+
+/* query for counts check
+MATCH (v:Vertex) WITH count(v) AS v
+MATCH (cv:CompositeVertex) WITH v, count(cv) AS cv
+MATCH ()-[e:edge]->()
+RETURN v,cv, v+cv+1 AS total, count(e) AS e
+ */

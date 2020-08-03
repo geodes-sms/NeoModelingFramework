@@ -7,9 +7,9 @@ import geodes.sms.neo4j.io.entity.RefBounds
 
 open class VertexNeo4jImpl(nc: INodeController) : Vertex, INodeController by nc {
 
-    companion object {
-        val edgeBounds = RefBounds(1,5)
-    }
+//    companion object {
+//        val edgeBounds = RefBounds(1,5)
+//    }
 
     override fun setName(v: String?) {
         putProperty("name", v)
@@ -36,11 +36,13 @@ open class VertexNeo4jImpl(nc: INodeController) : Vertex, INodeController by nc 
     }
 
     override fun addEdge(v: Vertex) {
-        createOutRef("edge", v, edgeBounds.upperBound)
+        //createOutRef("edge", v, edgeBounds.upperBound)
+        createOutRef("edge", v)
     }
 
     override fun removeEdge(v: Vertex) {
-        removeOutRef("edge", v, edgeBounds.lowerBound)
+        //removeOutRef("edge", v, edgeBounds.lowerBound)
+        removeOutRef("edge", v)
     }
 
     override fun loadEdges(limit: Int): List<Vertex> {

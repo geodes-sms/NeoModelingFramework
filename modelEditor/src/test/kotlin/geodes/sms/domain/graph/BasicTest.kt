@@ -22,8 +22,8 @@ class BasicTest {
 
         val sv = v2.addSubVertex()
         val cv1 = v2.addCompositeVertex()
-        val cv2 = v2.addCompositeVertex()
-        val cv3 = v2.addCompositeVertex()
+        v2.addCompositeVertex()
+        v2.addCompositeVertex()
 
         val cv4 = cv1.addCompositeVertex()
         val cv5 = cv1.addCompositeVertex()
@@ -121,7 +121,7 @@ class BasicTest {
         val graph = manager.createGraph()
         val cv1 = graph.addCompositeVertex()
         val cv2 = graph.addCompositeVertex()
-        val cv3 = graph.addCompositeVertex()
+                graph.addCompositeVertex()
 
         cv1.setCapacity(10)
         val c1 = cv1.addCompositeVertex()
@@ -136,9 +136,9 @@ class BasicTest {
         graph.removeVertex(cv1)
         manager.saveChanges()
 
-        val exceptionMsg = assertThrows<Exception> { c1.addSubVertex() }
-//        Assertions.assertEquals(exceptionMsg,
-//            "Node '$c1' was removed. Cannot perform operation on removed node")
+        //val exceptionMsg = assertThrows<Exception> { c1.addSubVertex() }
+        //Assertions.assertEquals(exceptionMsg, "Node '$c1' was removed. Cannot perform operation on removed node")
+        assertThrows<Exception> { c1.addSubVertex() }
     }
 
     @Test fun lowerBoundTest() {
@@ -166,13 +166,13 @@ class BasicTest {
         val graph = manager.createGraph()
         val cv1 = graph.addCompositeVertex()
         val cv2 = graph.addCompositeVertex()
-        val cv3 = graph.addCompositeVertex()
+                  graph.addCompositeVertex()
         cv1.setCapacity(88)
 
-        val v1 = graph.addVertex()
-        val v2 = graph.addVertex()
-        val v3 = graph.addVertex()
-        val v4 = graph.addVertex()
+        graph.addVertex()
+        graph.addVertex()
+        graph.addVertex()
+        graph.addVertex()
 
         cv1.addSubVertex()
         cv1.addSubVertex()

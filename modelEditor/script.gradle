@@ -1,1 +1,1 @@
-// ./gradlew :modelEditor:cleanTest :modelEditor:test --tests ApiComplexModelTest
+// ./gradlew :modelEditor:cleanTest :modelEditor:test --tests Vertex500.test1 --stacktrace
