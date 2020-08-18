@@ -143,16 +143,9 @@ class DBReader(private val driver: Driver) {
         session.close()
         return propValue
     }
+}
 
-    fun readRelationshipProperty(id: Long, propName: String): Value {
-        val session = driver.session()
-        val propValue = session.readTransaction { tx ->
-            val res = tx.run(Query("MATCH ()-[r]-() WHERE ID(r)=\$id RETURN r[\$property] AS prop",
-                MapValue(mapOf("id" to IntegerValue(id), "property" to StringValue(propName)))
-            ))
-            res.single()["prop"]
-        }
-        session.close()
-        return propValue
-    }
+inline fun <T> DBReader.readNodeProperty(id: Long, propName: String, mapFunction: (v: Value) -> T): T? {
+    val value = readNodeProperty(id, propName)
+    return if (value.isNull) null else mapFunction(value)
 }

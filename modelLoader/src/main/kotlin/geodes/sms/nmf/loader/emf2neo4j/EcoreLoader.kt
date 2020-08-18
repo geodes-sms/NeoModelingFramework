@@ -1,75 +1,116 @@
 package geodes.sms.nmf.loader.emf2neo4j
 
-import geodes.sms.nmf.neo4j.Values
-import geodes.sms.nmf.neo4j.io.IGraph
-import geodes.sms.nmf.neo4j.io.INode
+import geodes.sms.nmf.neo4j.io.DeferredRelationship
+import geodes.sms.nmf.neo4j.io.GraphBatchWriter
+import geodes.sms.nmf.neo4j.io.Entity
+import geodes.sms.nmf.neo4j.io.Values
+import org.eclipse.emf.common.util.AbstractTreeIterator
+import org.eclipse.emf.common.util.TreeIterator
 import org.eclipse.emf.ecore.*
+import org.neo4j.driver.Value
+import org.neo4j.driver.internal.value.StringValue
+import java.util.*
+import kotlin.collections.HashMap
 
 
-class EcoreLoader(private val writer: IGraph) {
+class EcoreLoader(private val writer: GraphBatchWriter) {
+    private val nodes = hashMapOf<EObject, Entity>()
+    private val deferredRefs = hashMapOf<Entity, List<DeferredRelationship>>()
 
-    private val map = hashMapOf<EObject, INode>()
+    private companion object {
+        const val eLITERAL_REF = "eLiterals"
+        const val eCLASSIFIER_REF = "eClassifiers"
+        const val eSUBPACKAGE_REF = "eSubpackages"
+        const val eSUPERTYPE_REF = "eSuperTypes"
+        const val eREFERENCE_REF = "eReferences"
+        const val eATTRIBUTE_REF = "eAttributes"
+    }
 
-    fun load(ePackage: EPackage) {
-        val ePackNode = writer.createNode("EPackage", getProps(ePackage))
+    private fun getIterator(eObj: EObject): TreeIterator<EObject> {
+        return object : AbstractTreeIterator<EObject>(eObj, true) {
+            override fun getChildren(obj: Any?): MutableIterator<EObject> {
+                return (obj as EObject).eContents().iterator()
+            }
+        }
+    }
 
-        ePackage.eClassifiers.forEach { eObj ->
-            val node = connect(ePackNode, eObj, "eClassifiers")
-            when (eObj) {
-                is EClass -> {
-                    eObj.eAttributes.forEach { load(node, it) }
-                    eObj.eReferences.forEach { load(node, it) }
-                    eObj.eSuperTypes.forEach { connect(node, it, "eSuperTypes") }
-                }
-                is EEnum -> {
-                    eObj.eLiterals.forEach { connect(node, it, "eLiterals") }
-                }
+    fun load(ePackage: EPackage): Pair<Int, Int> {
+        for (eObject in getIterator(ePackage)) {
+            when (eObject) {
+                is EClass -> load(eObject)
+                is EReference -> load(eObject)
+                is EAttribute -> load(eObject)
+                is EEnumLiteral -> loadContainment(eLITERAL_REF, "EEnumLiteral", eObject)
+                is EEnum -> loadContainment(eCLASSIFIER_REF, "EEnum", eObject)
+                is EPackage -> loadContainment(eSUBPACKAGE_REF, "EPackage", eObject)
+//                is EGenericType -> {}
+//                else -> println("Skipping the element $eObject")
             }
         }
 
-        ePackage.eAllContents().asSequence().filterIsInstance<EPackage>().forEach {
-            connect(startNode = map.getOrDefault(it.eSuperPackage, ePackNode),
-                endEObj = it,
-                refType = "eSubpackages")
+        //load deferred refs
+        for ((start, refList) in deferredRefs) {
+            for (ref in refList) {
+                val end = nodes[ref.end]
+                if (end != null)
+                    writer.createRef(ref.rType, start, end, false)
+            }
         }
 
-        writer.save()
-        map.clear()
+        nodes.clear()
+        return writer.saveNodes() to writer.saveRefs()
     }
 
-    private fun getProps(eObj: EObject) = eObj.eClass().eAllAttributes
-        .asSequence()
-        //.filter { eObj.eIsSet(it) }
-        .associateBy({ it.name }, { Values.value(eObj.eGet(it, true)) })
+    private fun loadContainment(
+        containingRefName: String,
+        metaClassName: String,
+        eObject: EObject
+    ): Entity {
+        val node = writer.createNode(metaClassName, getProps(eObject))
+        nodes[eObject] = node
 
-    private fun load(eClassNode: INode, eAttr: EAttribute) {
-        val attrNode = writer.createPath(eClassNode, "eAttributes", "EAttribute", getProps(eAttr))
-        attrNode.setProperty("eType", eAttr.eType.name)
+        val parent = nodes[eObject.eContainer()]
+        if (parent != null)
+            writer.createRef(containingRefName, parent, node, true)
+        return node
+    }
+
+    private fun load(eClass: EClass) {
+        val node = loadContainment(eCLASSIFIER_REF, "EClass", eClass)
+        val list = eClass.eSuperTypes.map { DeferredRelationship(eSUPERTYPE_REF, it) }
+        if (list.isNotEmpty())
+            deferredRefs[node] = list
+    }
+
+    private fun load(eAttr: EAttribute) {
+//        val node = load("eAttribute","EAttribute", eAttr)
+//        node.setProperty() //"eType", StringValue(eAttr.eType.name)
+        val attrNode = writer.createNode("EAttribute",
+            getProps(eAttr).apply { put("eType", StringValue(eAttr.eType.name)) }
+        )
+        nodes[eAttr.eContainingClass]?.let { writer.createRef(eATTRIBUTE_REF, it, attrNode, true) }
+        nodes[eAttr] = attrNode
+
+        //check if DataType is defined in the same EPackage
         if (eAttr.eType.eContainer() == eAttr.eContainingClass.eContainer()) {
-            connect(attrNode, eAttr.eType, "eAttributeType")
+            deferredRefs[attrNode] = listOf(DeferredRelationship("eAttributeType", eAttr.eAttributeType))
         }
     }
 
-    private fun load(eClassNode: INode, eRef: EReference) {
-        val refNode = writer.createPath(eClassNode, "eReferences", "EReference", getProps(eRef))
-        connect(refNode, eRef.eType, "eReferenceType")
-        eRef.eOpposite?.let { eOpposite -> connect(refNode, eOpposite, "eOpposite") }
+    private fun load(eRef: EReference) {
+        val node = loadContainment(eREFERENCE_REF, "EReference", eRef)
+        deferredRefs[node] = LinkedList<DeferredRelationship>().apply {
+            add(DeferredRelationship("eReferenceType", eRef.eReferenceType))
+            eRef.eOpposite?.let { add(DeferredRelationship("eOpposite", it)) }
+        }
     }
 
-    private fun connect(startNode: INode, endEObj: EObject, refType: String): INode {
-        val endNode = map[endEObj]
-        return if (endNode != null) {
-            writer.createRelation(start = startNode, refType = refType, end = endNode)
-            endNode
-        } else {
-            val node = writer.createPath(
-                start = startNode,
-                refType = refType,
-                endLabel = endEObj.eClass().name,
-                props = getProps(endEObj)
-            )
-            map[endEObj] = node
-            node
+    private fun getProps(eObj: EObject): HashMap<String, Value> {
+        val res = hashMapOf<String, Value>()
+        for (eAttr in eObj.eClass().eAllAttributes) {
+            val value = Values.value(eObj.eGet(eAttr, true))
+            if (!value.isNull) res[eAttr.name] = value
         }
+        return res
     }
 }

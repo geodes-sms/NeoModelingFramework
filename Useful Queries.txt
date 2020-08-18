@@ -82,7 +82,3 @@ CREATE CONSTRAINT [constraint_name] ON (n:LabelName) ASSERT n.$propertyName IS U
 DROP CONSTRAINT $constraintName
 
 //List constraints -->  CALL db.constraints
-
-//graph model (Graph.ecore) constraints:
-CREATE CONSTRAINT vertexID ON (n:Vertex) ASSERT n.id IS UNIQUE
-CREATE CONSTRAINT compositeVertexID ON (c:CompositeVertex) ASSERT c.id IS UNIQUE

@@ -77,7 +77,7 @@ internal class NodeController private constructor(
         return mapper.readNodeProperty(_id, name)
     }
 
-    override fun isPropertyUnique(name: String, value: Any,  dbValue: Value): Boolean {
+    override fun isPropertyUnique(name: String, value: Any, dbValue: Value): Boolean {
         return mapper.isPropertyUniqueForCacheNode(label, name, value) &&
             mapper.isPropertyUniqueForDBNode(label, name, dbValue)
     }

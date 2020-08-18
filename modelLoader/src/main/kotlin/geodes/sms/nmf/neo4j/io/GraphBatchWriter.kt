@@ -1,48 +1,43 @@
 package geodes.sms.nmf.neo4j.io
 
-import geodes.sms.nmf.neo4j.DBCredentials
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.GraphDatabase
 import org.neo4j.driver.Query
 import org.neo4j.driver.Value
 import org.neo4j.driver.internal.value.*
+import java.util.*
 
 
-class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
-    private val driver = GraphDatabase.driver(cr.dbUri, AuthTokens.basic(cr.username, cr.password))
+class GraphBatchWriter(dbUri: String, username: String, password: String) : AutoCloseable {
+    private val driver = GraphDatabase.driver(dbUri, AuthTokens.basic(username, password))
     private val session = driver.session()
 
-    private var n = 0   // alias creator
-    private val onCreateListeners = hashMapOf<String, IDHolder>()
+    private var n: Long = 0   // alias creator
+    private val onCreateListeners = hashMapOf<Long, Entity>()
 
     /** Buffers used as parameters for query */
-    private val nodesToCreate = mutableListOf<MapValue>()
-    private val refsToCreate = mutableListOf<MapValue>()
-    //private val nodesToRemove = mutableListOf<MapValue>()
+    private val nodesToCreate = LinkedList<MapValue>()
+    private val refsToCreate = LinkedList<ReferenceParameter>()
 
-    fun createNode(label: String, props: Map<String, Value> = emptyMap()) : IDHolder {
-        val alias = "n${n++}"
+    fun createNode(label: String, props: Map<String, Value> = emptyMap()): Entity {
+        val alias = n--
         nodesToCreate.add(MapValue(mapOf(
             "label" to StringValue(label),
-            "alias" to StringValue(alias),
+            "alias" to IntegerValue(alias),
             "props" to MapValue(props)
         )))
-        val node = IDHolder()
+        val node = Entity()
         onCreateListeners[alias] = node
         return node
     }
 
-    fun createRef(startID: Long, endID: Long, type: String, props: Map<String, Value> = emptyMap()) {
-        refsToCreate.add(MapValue(mapOf(
-            "from" to IntegerValue(startID),
-            "type" to StringValue(type),
-            "props" to MapValue(props),
-            "to" to IntegerValue(endID)
-        )))
+    fun createRef(rType: String, start: Entity, end: Entity, isContainment: Boolean) {
+        refsToCreate.add(ReferenceParameter(rType, start, end,
+            mapOf("containment" to BooleanValue.fromBoolean(isContainment))))
     }
 
     /** Save nodes from buffer and return count of saved nodes */
-    fun saveNodes() : Int {
+    fun saveNodes(): Int {
         session.writeTransaction { tx ->
             val res = tx.run(Query("UNWIND \$batch AS row" +
                     " CALL apoc.create.node([row.label], row.props) YIELD node" +
@@ -50,7 +45,7 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
                 MapValue(mapOf("batch" to ListValue(*Array(nodesToCreate.size) { i -> nodesToCreate[i] }))))
             )
             for (record in res) {
-                onCreateListeners[record["alias"].asString()]!!.id = record["id"].asLong()
+                onCreateListeners[record["alias"].asLong()]!!.id = record["id"].asLong()
             }
         }
         val count = onCreateListeners.size
@@ -59,47 +54,27 @@ class GraphBatchWriter(cr: DBCredentials) : AutoCloseable {
         return count
     }
 
-    fun saveRefs() : Int {
+    fun saveRefs(): Int {
+        val paramsIterator = refsToCreate.asSequence().map { MapValue(mapOf(
+            "from" to IntegerValue(it.startNode.id),
+            "type" to StringValue(it.type),
+            "props" to MapValue(it.props),
+            "to" to IntegerValue(it.endNode.id)))
+        }.iterator()
+
         val count = session.writeTransaction { tx ->
-            val res = tx.run(Query("UNWIND {batch} AS row" +
+            val res = tx.run(Query("UNWIND \$batch AS row" +
                     " MATCH (from) WHERE ID(from) = row.from" +
                     " MATCH (to) WHERE ID(to) = row.to" +
                     " CALL apoc.create.relationship(from, row.type, row.props, to) YIELD rel" +
                     " RETURN COUNT(rel) AS count",     // Query cannot conclude with CALL statement
-                MapValue(mapOf("batch" to ListValue(*Array(refsToCreate.size) { i -> refsToCreate[i]}))))
-            )
+                MapValue(mapOf("batch" to ListValue(*Array(refsToCreate.size) { paramsIterator.next() })))
+            ))
             res.single()["count"].asInt()
         }
+
         refsToCreate.clear()
         return count
-    }
-
-    /*
-    //update props
-    fun updateNodes() {
-        //batch = MapValue(mapOf("id" to Long() , "props" to ...))
-        val query = "UNWIND {batch} AS row" +
-                " MATCH (node) WHERE ID(node) = row.id" +
-                " SET node += row.props"
-    }
-
-    fun removeNodes() {
-        val query = "UNWIND {batch} AS row" +
-                " MATCH (node) WHERE ID(node) = row.id" +
-                " DETACH DELETE node"
-    }
-
-    /** Save all changes in the buffer */
-    fun save() {
-
-    }*/
-
-    fun clearDB() {
-        session.writeTransaction {
-            it.run(Query("CALL apoc.periodic.iterate(\"MATCH (n) return n\"," +
-                    " \"DETACH DELETE n\", {batchSize:8000}) YIELD batches, total" +
-                    " RETURN batches, total"))
-        }
     }
 
     override fun close() {

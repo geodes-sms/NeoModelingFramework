@@ -447,55 +447,63 @@ internal abstract class PropertyAccessor(
             }
         }
 
+        private inline fun <T: Any> read(name: String, mapFunction: (Value) -> T): T? {
+            val res = readPropertyFromDB(name)
+            return if (res.isNull) null else {
+                val value = mapFunction(res)
+                props[name] = value
+                value
+            }
+        }
 
         override fun getPropertyAsString(name: String): String? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asString() } as? String
+            val res = props[name]
+            return if (res != null) res as? String else read(name) { it.asString() }
         }
 
         override fun getPropertyAsInt(name: String): Int? {
             val res = props[name]
-            return if (res != null) {
-                res as? Int
-            } else {
-                val read = readPropertyFromDB(name)
-                if (read.isNull) null else {
-                    val value = read.asInt()
-                    props[name] = value
-                    value
-                }
-            }
+            return if (res != null) res as? Int else read(name) { it.asInt() }
         }
 
         override fun getPropertyAsLong(name: String): Long? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asLong() } as? Long
+            val res = props[name]
+            return if (res != null) res as? Long else read(name) { it.asLong() }
         }
 
         override fun getPropertyAsShort(name: String): Short? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asNumber().toShort() } as? Short
+            val res = props[name]
+            return if (res != null) res as? Short else read(name) { it.asNumber().toShort() }
         }
 
         override fun getPropertyAsBoolean(name: String): Boolean? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asBoolean() } as? Boolean
+            val res = props[name]
+            return if (res != null) res as? Boolean else read(name) { it.asBoolean() }
         }
 
         override fun getPropertyAsByte(name: String): Byte? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asNumber().toByte() } as? Byte
+            val res = props[name]
+            return if (res != null) res as? Byte else read(name) { it.asNumber().toByte() }
         }
 
         override fun getPropertyAsByteArray(name: String): ByteArray? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asByteArray() } as? ByteArray
+            val res = props[name]
+            return if (res != null) res as? ByteArray else read(name) { it.asByteArray() }
         }
 
         override fun getPropertyAsChar(name: String): Char? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asString()[0] } as? Char
+            val res = props[name]
+            return if (res != null) res as? Char else read(name) { it.asString()[0] }
         }
 
         override fun getPropertyAsDouble(name: String): Double? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asDouble() } as? Double
+            val res = props[name]
+            return if (res != null) res as? Double else read(name) { it.asDouble() }
         }
 
         override fun getPropertyAsFloat(name: String): Float? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asFloat() } as? Float
+            val res = props[name]
+            return if (res != null) res as? Float else read(name) { it.asFloat() }
         }
 
         override fun <T : Enum<T>> getPropertyAsEnum(name: String): T? {
@@ -507,15 +515,22 @@ internal abstract class PropertyAccessor(
         }
 
         override fun getPropertyAsDate(name: String): ZonedDateTime? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asZonedDateTime() } as? ZonedDateTime
+            val res = props[name]
+            return if (res != null) res as? ZonedDateTime else read(name) { it.asZonedDateTime() }
         }
 
         override fun getPropertyAsBigDecimal(name: String): BigDecimal? {
-            return props.getOrPut(name) { BigDecimal(readPropertyFromDB(name).asString()) } as? BigDecimal
+            val res = props[name]
+            return if (res != null) res as? BigDecimal else read(name) {
+                BigDecimal(readPropertyFromDB(name).asString())
+            }
         }
 
         override fun getPropertyAsBigInteger(name: String): BigInteger? {
-            return props.getOrPut(name) { BigInteger(readPropertyFromDB(name).asString()) } as? BigInteger
+            val res = props[name]
+            return if (res != null) res as? BigInteger else read(name) {
+                BigInteger(readPropertyFromDB(name).asString())
+            }
         }
 
         override fun getPropertyAsAny(name: String): Any? {

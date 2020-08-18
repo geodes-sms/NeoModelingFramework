@@ -4,14 +4,13 @@ import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.Query
 import org.neo4j.driver.Session
 import org.neo4j.driver.Value
-import org.neo4j.driver.Values
 import org.neo4j.driver.internal.value.IntegerValue
 import org.neo4j.driver.internal.value.ListValue
 import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
 
 
-class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 75000) {
+class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 10000) {
     private val nodesToCreate = hashMapOf<Long, NodeParameter>()
     private val refsToCreate = hashMapOf<Long, ReferenceParameter>()
     private var n: Long = 0
@@ -29,18 +28,6 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
     ): Long {
         val alias = r--
         refsToCreate[alias] = ReferenceParameter(alias, rType, start, end, props)
-        return alias
-    }
-
-    fun createRelationship(
-        rType: String, start: Long, end: Long,
-        props: Map<String, Value> = emptyMap()
-    ): Long {
-        val alias = r--
-        refsToCreate[alias] = ReferenceParameter(alias, rType,
-            object : INodeEntity { override val _id = start },
-            object : INodeEntity { override val _id = end },
-            props)
         return alias
     }
 
@@ -108,7 +95,7 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
     }
 
     fun commitRelationshipsNoIDs(session: Session) {
-        val batchIterator = refsToCreate.asSequence().map { (_, v) -> MapValue(mapOf(
+        val paramsIterator = refsToCreate.asSequence().map { (_, v) -> MapValue(mapOf(
             //"alias" to IntegerValue(v.alias),
             "from" to IntegerValue(v.startNode._id),
             "type" to StringValue(v.type),
@@ -118,17 +105,23 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
 
         fun commit(batchSize: Int) {
             session.writeTransaction { tx ->
-                tx.run(Query("CALL apoc.periodic.iterate(\"UNWIND \$batch AS row" +
+                tx.run(Query("UNWIND \$batch AS row" +
                         " MATCH (from) WHERE ID(from) = row.from" +
                         " MATCH (to) WHERE ID(to) = row.to" +
-                        " RETURN from, to, row.type AS rType, row.props AS props\"," +
-                        "\"CALL apoc.create.relationship(from, rType, props, to) YIELD rel " +
-                        " RETURN count(*)\"," +
-                        //"\" CREATE (from)-[:r]->(to) \"," +
-                        " {batchSize:10000, parallel:false, params:{batch:\$batch}} ) YIELD batches, total" +
-                        " RETURN batches, total",
-                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { batchIterator.next() })))
+                        " CALL apoc.create.relationship(from, row.type, row.props, to) YIELD rel" +
+                        " RETURN row.alias AS alias, ID(rel) AS id",
+                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
                 ))
+//                tx.run(Query("CALL apoc.periodic.iterate(\"UNWIND \$batch AS row" +
+//                        " MATCH (from) WHERE ID(from) = row.from" +
+//                        " MATCH (to) WHERE ID(to) = row.to" +
+//                        " RETURN from, to, row.type AS rType, row.props AS props\"," +
+//                        "\"CALL apoc.create.relationship(from, rType, props, to) YIELD rel " +
+//                        " RETURN count(*)\"," +
+//                        " {batchSize:10000, parallel:false, params:{batch:\$batch}} ) YIELD batches, total" +
+//                        " RETURN batches, total",
+//                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
+//                ))
             }
         }
 

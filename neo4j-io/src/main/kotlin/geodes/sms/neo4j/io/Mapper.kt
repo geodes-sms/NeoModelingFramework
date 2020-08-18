@@ -115,9 +115,13 @@ internal class Mapper(
         return reader.readNodeProperty(id, propName)
     }
 
-    fun readRelationshipProperty(id: Long, propName: String): Value {
-        return reader.readRelationshipProperty(id, propName)
+    inline fun <T> readNodeProperty(id: Long, propName: String, mapFunction: (Value) -> T): T? {
+        return reader.readNodeProperty(id, propName, mapFunction)
     }
+
+//    fun readRelationshipProperty(id: Long, propName: String): Value {
+//        return reader.readRelationshipProperty(id, propName)
+//    }
     // ------------------ READ section end ------------------- //
 
 

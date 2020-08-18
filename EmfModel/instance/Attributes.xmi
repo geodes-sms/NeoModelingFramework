@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<attributes:Root
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:attributes="attributes"
+    xsi:schemaLocation="attributes ../metamodel/Attributes.ecore"
+    bigDecimal="22"
+    boolPrimitive="true"
+    boolObj="false"
+    byteObj="127"
+    charObj="113">
+  <listShort>2</listShort>
+  <listShort>22</listShort>
+  <listShort>4</listShort>
+</attributes:Root>

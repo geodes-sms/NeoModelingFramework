@@ -4,7 +4,7 @@ import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.Value
 
 
-class NodeParameter(val alias: Long, val label: String, val props: Map<String, Value>)
+internal class NodeParameter(val alias: Long, val label: String, val props: Map<String, Value>)
 
 internal class ReferenceParameter(
     val alias: Long,

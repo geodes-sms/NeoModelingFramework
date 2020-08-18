@@ -4,7 +4,6 @@ import org.eclipse.emf.ecore.impl.EcoreFactoryImpl
 
 /** Creates visitable instances */
 class EcoreFactory : EcoreFactoryImpl() {
-
     override fun createEPackage() = EPackageImpl()
     override fun createEClass() = EClassImpl()
     override fun createEAnnotation() = EAnnotationImpl()

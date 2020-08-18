@@ -1,60 +1,71 @@
 package geodes.sms.nmf.loader.emf2neo4j
 
-import geodes.sms.nmf.neo4j.Values
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
-import geodes.sms.nmf.neo4j.io.IDHolder
+import geodes.sms.nmf.neo4j.io.Entity
+import geodes.sms.nmf.neo4j.io.Values
+import org.eclipse.emf.common.util.AbstractTreeIterator
+import org.eclipse.emf.common.util.TreeIterator
+import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
+import org.neo4j.driver.Value
 
 
-class ReflectiveBatchLoader(private val resource: Resource, private val writer: GraphBatchWriter) {
+class ReflectiveBatchLoader(private val writer: GraphBatchWriter) {
 
-    private val nodes = hashMapOf<EObject, IDHolder>()
+    private val nodes = hashMapOf<EObject, Entity>()
+    private fun getIterator(eObj: EObject): TreeIterator<EObject> {
+        return object : AbstractTreeIterator<EObject>(eObj, true) {
+            override fun getChildren(obj: Any?): Iterator<EObject> {
+                return (obj as EObject).eContents().iterator()
+            }
+        }
+    }
 
-    fun load(): Pair<Int, Int> {
-        val nodeCount = loadNodes()
+    fun load(rootEObj: EObject): Pair<Int, Int> {
+        val nodeCount = loadNodes(rootEObj)
         val refCount = loadRefs()
-
         return (nodeCount to refCount)
     }
 
-    private fun loadNodes(): Int {
-        val nodeStep = 20000
-        var cursor = 0
+    private fun getProps(eObj: EObject): HashMap<String, Value> {
+        val res = hashMapOf<String, Value>()
+        for (eAttr in eObj.eClass().eAllAttributes) {
+            val value = Values.value(eObj.eGet(eAttr, true))
+            if (!value.isNull) res[eAttr.name] = value
+        }
+        return res
+    }
+
+    private fun loadNodes(rootEObj: EObject): Int {
+        val nodeStep = 25000
+        var index = 0
         var nodeCount = 0
 
-        for (eObject in resource.allContents) {
-            val eClass = eObject.eClass()
-
-            val props = eClass.eAllAttributes
-                .asSequence()
-                .filter { eObject.eIsSet(it) }
-                .associateBy ({ it.name }, { Values.value(eObject.eGet(it, true)) })
-
-            nodes[eObject] = writer.createNode(label = eClass.name, props = props)
-
-            if (++cursor == nodeStep) {
+        for (eObject in getIterator(rootEObj)) {
+            nodes[eObject] = writer.createNode(eObject.eClass().name, getProps(eObject))
+            if (++index == nodeStep) {
                 nodeCount += writer.saveNodes()
-                cursor = 0
+                index = 0
             }
         }
-        if (cursor > 0) nodeCount += writer.saveNodes()
+        if (index > 0) nodeCount += writer.saveNodes()
         return nodeCount
     }
 
     private fun loadRefs(): Int {
         val refStep = 10000
-        var cursor = 0
+        var index = 0
         var refCount = 0
 
         fun save() {
-            if (++cursor == refStep) {
+            if (++index == refStep) {
                 refCount += writer.saveRefs()
-                cursor = 0
+                index = 0
             }
         }
 
-        nodes.forEach { (eObject, idHolder) ->
+        for ((eObject, nodeEntity) in nodes) {
             eObject.eClass().eAllReferences
                 .asSequence()
                 .filter { eObject.eIsSet(it) }
@@ -62,26 +73,28 @@ class ReflectiveBatchLoader(private val resource: Resource, private val writer: 
                     when (val value = eObject.eGet(eRef, true)) {
                         is List<*> -> value.forEach {
                             writer.createRef(
-                                startID = idHolder.id,
-                                type = eRef.name,
-                                endID = nodes.getOrDefault(it as EObject, IDHolder()).id
+                                start = nodeEntity,
+                                rType = eRef.name,
+                                end = nodes.getOrDefault(it as EObject, Entity()),
+                                isContainment = eRef.isContainment
                             )
                             save()
                         }
                         is EObject -> {
                             writer.createRef(
-                                startID = idHolder.id,
-                                type = eRef.name,
-                                endID = nodes.getOrDefault(value, IDHolder()).id
+                                start = nodeEntity,
+                                rType = eRef.name,
+                                end = nodes.getOrDefault(value, Entity()),
+                                isContainment = eRef.isContainment
                             )
                             save()
                         }
-                        else -> throw Exception("cannot parse EReference ${eRef.name}")
+                        else -> println("cannot parse EReference ${eRef.name}")
                     }
                 }
         }
         nodes.clear()
-        if (cursor > 0) refCount += writer.saveRefs()
+        if (index > 0) refCount += writer.saveRefs()
         return refCount
     }
 }
