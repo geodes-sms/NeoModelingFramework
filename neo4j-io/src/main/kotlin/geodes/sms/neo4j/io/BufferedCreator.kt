@@ -9,7 +9,6 @@ import org.neo4j.driver.internal.value.ListValue
 import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
 
-
 class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 10000) {
     private val nodesToCreate = hashMapOf<Long, NodeParameter>()
     private val refsToCreate = hashMapOf<Long, ReferenceParameter>()
@@ -64,12 +63,13 @@ class BufferedCreator(val nodesBatchSize: Int = 35000, val refsBatchSize: Int = 
     }
 
     fun commitRelationships(session: Session, mapFunction: (Sequence<Pair<Long, Long>>) -> Unit) {
-        val paramsIterator = refsToCreate.asSequence().map { (_, v) -> MapValue(mapOf(
-            "alias" to IntegerValue(v.alias),
-            "from" to IntegerValue(v.startNode._id),
-            "type" to StringValue(v.type),
-            "props" to MapValue(v.props),
-            "to" to IntegerValue(v.endNode._id)))
+        val paramsIterator = refsToCreate.asSequence().map { (_, v) ->
+            MapValue(mapOf(
+                "alias" to IntegerValue(v.alias),
+                "from" to IntegerValue(v.startNode._id),
+                "type" to StringValue(v.type),
+                "props" to MapValue(v.props),
+                "to" to IntegerValue(v.endNode._id)))
         }.iterator()
 
         fun commit(batchSize: Int) {

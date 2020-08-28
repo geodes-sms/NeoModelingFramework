@@ -8,7 +8,7 @@ class GraphManager(dbUri: String, username: String, password: String) : AutoClos
     private val driver = GraphDatabase.driver(dbUri, AuthTokens.basic(username, password))
 
     private val creator = BufferedCreator()
-    private val updater = BufferedUpdater(driver)
+    private val updater = BufferedUpdater()
     private val remover = BufferedRemover()
     private val reader = DBReader(driver)
     private val mapper = Mapper(creator, updater, remover, reader)
@@ -21,7 +21,7 @@ class GraphManager(dbUri: String, username: String, password: String) : AutoClos
 
     //fun clearChanges() {}
 
-    fun clearCache() { mapper.clearCache() }
+    fun clearCache() = mapper.clearCache()
 
     fun clearDB() {
         val session = driver.session()

@@ -11,7 +11,6 @@ import org.neo4j.driver.Values
 import java.util.*
 import kotlin.collections.HashMap
 
-
 internal class Mapper(
     private val creator: BufferedCreator,
     private val updater: BufferedUpdater,
@@ -19,6 +18,7 @@ internal class Mapper(
     private val reader: DBReader
 ) {
     private val nodesToCreate = hashMapOf<Long, NodeController>()
+    private val nodesToUpdate = hashMapOf<Long, NodeController>()
     //private val refsToCreate = hashMapOf<Long, RelationshipController>()
 
     /** Cache startNode alias (or ID for persisted node) --> (out ref type --> RelationshipEntity) */
@@ -28,25 +28,18 @@ internal class Mapper(
     private val trackedNodes = hashMapOf<Long, NodeController>()
 
     fun createNode(label: String): INodeController {
-        val propsDiff = hashMapOf<String, Value>() //props.entries.associateBy({ it.key }, { Values.value(it.value) })
+        val propsDiff = hashMapOf<String, Value>()
         val innerID = creator.createNode(label, propsDiff)
         val node = NodeController.createForNewNode(this, innerID, label, propsDiff)
         nodesToCreate[innerID] = node
         return node
     }
 
-    fun createChild(
-        parent: INodeEntity,
-        rType: String, childLabel: String
-    ): INodeController {
-        val propsDiff = hashMapOf<String, Value>()
-        val childAlias = creator.createNode(childLabel, propsDiff)
-        val childNode = NodeController.createForNewNode(this, childAlias, childLabel, propsDiff)
-
+    fun createChild(parent: INodeEntity, rType: String, childLabel: String): INodeController {
+        val childNode = createNode(childLabel)
         val rAlias = creator.createRelationship(rType, parent, childNode,
-            mapOf("containment" to Values.value(true)))
-        nodesToCreate[childNode._id] = childNode
-
+            mapOf("containment" to Values.value(true))
+        )
         adjOutput.getOrPut(parent._id) { hashMapOf() }
             .getOrPut(rType) { LinkedList() }
             .add(RelationshipEntity(rAlias, rType, parent, childNode, true))
@@ -61,7 +54,6 @@ internal class Mapper(
         val rAlias = creator.createRelationship(rType, startNode, endNode,
             mapOf("containment" to Values.value(false))
         )
-
         adjOutput.getOrPut(startNode._id) { hashMapOf() }
             .getOrPut(rType) { LinkedList() }
             .add(RelationshipEntity(rAlias, rType, startNode, endNode, false))
@@ -84,13 +76,12 @@ internal class Mapper(
         limit: Int
     ): List<INodeController> {
         val result = LinkedList<INodeController>()
-        reader.findConnectedNodesWithOutputsCount(startID, rType, endLabel, filter, limit) { res ->
-            res.forEach {
-                val nc = NodeController.createForDBNode(this, it.id, endLabel, it.outRefCount)
+        reader.findConnectedNodesWithOutputsCount(startID, rType, endLabel, filter, limit) { record ->
+            for (res in record) {
+                val nc = NodeController.createForDBNode(this, res.id, endLabel, res.outRefCount)
                 trackedNodes.remove(nc._id)?.onDetach()
                 trackedNodes[nc._id] = nc
                 result.add(nc)
-                //nc
             }
         }
         return result
@@ -170,18 +161,21 @@ internal class Mapper(
             val startID = stack.pop()
             adjOutput[startID]?.let { map ->
                 for ((_, refs) in map) {
-                    while (refs.isNotEmpty()) {
-                        val re = refs.pop()
+                    for (re in refs) {
                         if (re.isContainment) {
-                            val endID = re.endNode._id
-                            creator.popNodeCreate(endID)
-                            nodesToCreate.remove(endID)
-                            stack.push(endID)
-                            if (re.endNode is NodeController)
-                                re.endNode.onRemove()
+                            val endNode = re.endNode
+                            creator.popNodeCreate(endNode._id)
+                            nodesToCreate.remove(endNode._id)
+                            stack.push(endNode._id)
+                            if (endNode is NodeController) {
+                                endNode.onRemove()
+                                if (endNode.getState() == EntityState.MODIFIED)
+                                    updater.popNodeUpdate(endNode._id)
+                            }
                         }
                         creator.popRelationshipCreate(re._id)
                     }
+                    refs.clear()
                 }
             }
             adjOutput.remove(startID)
@@ -213,24 +207,16 @@ internal class Mapper(
         remover.removeRelationship(start, rType, end)
     }
 
-
 //    fun popNodeRemove(id: Long) {}
 //    fun popRelationshipRemove(id: Long) {}
     // -------------------- REMOVE section end ---------------- //
 
 
     // -------------------- UPDATE section -------------------- //
-    fun updateNode(id: Long, propName: String, prValue: Value) {
-        updater.updateNode(id, propName, prValue)
+    fun updateNode(id: Long, props: Map<String, Value>) {
+        updater.updateNode(id, props)
+        trackedNodes[id]?.let { nc -> nodesToUpdate[id] = nc }
     }
-
-//    fun updateRelationship(rc: RelationshipController) {
-//
-//    }
-
-//    fun putNodePropertyImmediately(nodeID: Long, propName: String, propVal: Value) {
-//        updater.putNodePropertyImmediately(nodeID, propName, propVal)
-//    }
 
     fun popNodeUpdate(nodeID: Long) {
         updater.popNodeUpdate(nodeID)
@@ -257,13 +243,22 @@ internal class Mapper(
     fun saveChanges(session: Session) {
         remover.commitContainmentsRemove(session) { ids ->
             for (id in ids) {
-                trackedNodes.remove(id)?.onRemove()
+                val node = trackedNodes.remove(id)
+                if (node != null) {
+                    node.onRemove()
+                    if (node.getState() == EntityState.MODIFIED)
+                        updater.popNodeUpdate(node._id)
+                }
             }
         }
         remover.commitRelationshipsRemoveByHost(session)
         updater.commitNodesUpdate(session)
-        creator.commitNodes(session) {
-            it.forEach { (alias, id) ->
+            for ((_, nc) in nodesToUpdate)
+                nc.onUpdate()
+        nodesToUpdate.clear()
+
+        creator.commitNodes(session) { res ->
+            for ((alias, id) in res) {
                 val nc = nodesToCreate[alias]
                 if (nc != null) {
                     nc.onCreate(id)

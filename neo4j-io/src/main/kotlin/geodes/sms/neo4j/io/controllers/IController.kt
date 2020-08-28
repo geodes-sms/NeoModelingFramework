@@ -5,13 +5,7 @@ import geodes.sms.neo4j.io.entity.INodeEntity
 import geodes.sms.neo4j.io.entity.IPropertyAccessor
 import geodes.sms.neo4j.io.entity.IRelationshipEntity
 
-
 interface IController : IPropertyAccessor {
-//    val props: Map<String, Any>   //immutable here
-//    fun putProperty(name: String, value: Any)
-//    fun putUniqueProperty(name: String, value: Any)
-//    fun removeProperty(name: String)
-
     fun remove()
     fun unload()
     fun getState(): EntityState

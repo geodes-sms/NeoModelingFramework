@@ -3,8 +3,9 @@ package geodes.sms.neo4j.io.controllers
 import geodes.sms.neo4j.io.*
 import geodes.sms.neo4j.io.entity.INodeEntity
 import geodes.sms.neo4j.io.entity.IPropertyAccessor
+import geodes.sms.neo4j.io.exception.LoverBoundExceedException
+import geodes.sms.neo4j.io.exception.UpperBoundExceedException
 import org.neo4j.driver.Value
-
 
 internal class NodeController private constructor(
     private val mapper: Mapper,
@@ -28,22 +29,24 @@ internal class NodeController private constructor(
     }
 
     companion object {
-        fun createForNewNode(mapper: Mapper, id: Long, label: String,
-                             propsDiff: HashMap<String, Value>
-        ): NodeController {
-            return NodeController(mapper, id, label, propsDiff,
-                outRefCount = hashMapOf(),
-                state = EntityState.NEW)
-        }
+        fun createForNewNode(
+            mapper: Mapper, id: Long, label: String,
+            propsDiff: HashMap<String, Value>
+        ): NodeController = NodeController(
+            mapper, id, label, propsDiff,
+            outRefCount = hashMapOf(),
+            state = EntityState.NEW
+        )
 
-        fun createForDBNode(mapper: Mapper, id: Long, label: String,
-                            outRefCount: MutableMap<String, Int> = hashMapOf()
-        ): NodeController {
-            return NodeController(mapper, id, label,
-                propsDiff = hashMapOf(),
-                outRefCount = outRefCount,
-                state = EntityState.PERSISTED)
-        }
+        fun createForDBNode(
+            mapper: Mapper, id: Long, label: String,
+            outRefCount: MutableMap<String, Int> = hashMapOf()
+        ): NodeController = NodeController(
+            mapper, id, label,
+            propsDiff = hashMapOf(),
+            outRefCount = outRefCount,
+            state = EntityState.PERSISTED
+        )
     }
 
     /////////////////////////////////////
@@ -82,8 +85,9 @@ internal class NodeController private constructor(
             mapper.isPropertyUniqueForDBNode(label, name, dbValue)
     }
 
-    override fun putProperty(name: String, value: Value) {
-        mapper.updateNode(_id, name, value)
+    override fun updateEntity() {
+        mapper.updateNode(_id, propsDiff)
+        state = StateModified()
     }
     ////////////////////////////////////////////
 
@@ -147,10 +151,10 @@ internal class NodeController private constructor(
         fun createOutRef(rType: String, end: INodeEntity, upperBound: Int)
 
         fun removeChild(rType: String, n: INodeEntity)
-        fun removeChild(rType: String, n: INodeEntity, lowerBound: Int)
+        fun removeChild(rType: String, n: INodeEntity, loverBound: Int)
 
         fun removeOutRef(rType: String, end: INodeEntity)
-        fun removeOutRef(rType: String, end: INodeEntity, lowerBound: Int)
+        fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int)
 
         //fun removeInputRef(rType: String, startNode: INodeEntity)
         //fun removeInputRef(rType: String, startID: Long)
@@ -170,7 +174,7 @@ internal class NodeController private constructor(
         fun getState(): EntityState
     }
 
-    abstract inner class StateActive : NodeState {
+    private abstract inner class StateActive : NodeState {
         override fun createChild(label: String, rType: String): INodeController {
             return mapper.createChild(this@NodeController, rType, label)
         }
@@ -180,7 +184,7 @@ internal class NodeController private constructor(
             return if (upperBound - count > 0) {
                 outRefCount[rType] = count + 1
                 mapper.createChild(this@NodeController, rType, label)
-            } else throw Exception("Upper bound '$upperBound' exceeded for relationship '$rType'")
+            } else throw UpperBoundExceedException(upperBound, rType)
         }
 
         override fun createOutRef(rType: String, end: INodeEntity) {
@@ -192,23 +196,23 @@ internal class NodeController private constructor(
             if (upperBound - count > 0) {
                 outRefCount[rType] = count + 1
                 createOutRef(rType, end)
-            } else throw Exception("Upper bound '$upperBound' exceeded for relationship '$rType'")
+            } else throw UpperBoundExceedException(upperBound, rType)
         }
 
-        override fun removeChild(rType: String, n: INodeEntity, lowerBound: Int) {
+        override fun removeChild(rType: String, n: INodeEntity, loverBound: Int) {
             val count = outRefCount.getOrDefault(rType, 0)
-            if (count - lowerBound > 0) {
+            if (count - loverBound > 0) {
                 outRefCount[rType] = count - 1
                 removeChild(rType, n)
-            } else throw Exception("Lower bound '$lowerBound' exceeded for relationship '$rType'")
+            } else throw LoverBoundExceedException(loverBound, rType)
         }
 
-        override fun removeOutRef(rType: String, end: INodeEntity, lowerBound: Int) {
+        override fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int) {
             val count = outRefCount.getOrDefault(rType, 0)
-            if (count - lowerBound > 0) {
+            if (count - loverBound > 0) {
                 outRefCount[rType] = count - 1
                 removeOutRef(rType, end)
-            } else throw Exception("Lower bound '$lowerBound' exceeded for relationship '$rType'")
+            } else throw LoverBoundExceedException(loverBound, rType)
         }
     }
 
@@ -306,11 +310,11 @@ internal class NodeController private constructor(
             throw Exception(exceptionMsg)
 
         override fun removeChild(rType: String, n: INodeEntity) = throw Exception(exceptionMsg)
-        override fun removeChild(rType: String, n: INodeEntity, lowerBound: Int) =
+        override fun removeChild(rType: String, n: INodeEntity, loverBound: Int) =
             throw Exception(exceptionMsg)
 
         override fun removeOutRef(rType: String, end: INodeEntity) = throw Exception(exceptionMsg)
-        override fun removeOutRef(rType: String, end: INodeEntity, lowerBound: Int) =
+        override fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int) =
             throw Exception(exceptionMsg)
 
         override fun loadChildren(

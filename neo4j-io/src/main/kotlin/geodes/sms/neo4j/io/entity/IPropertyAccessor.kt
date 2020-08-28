@@ -19,6 +19,7 @@ interface IPropertyAccessor {
     fun getPropertyAsDate(name: String): ZonedDateTime?
     fun getPropertyAsBigDecimal(name: String): BigDecimal?
     fun getPropertyAsBigInteger(name: String): BigInteger?
+    fun <T> getPropertyAsListOf(name: String): List<T>?
     fun getPropertyAsAny(name: String): Any?
 
     fun putProperty(name: String, value: String?)
@@ -35,6 +36,7 @@ interface IPropertyAccessor {
     fun putProperty(name: String, value: ZonedDateTime?)
     fun putProperty(name: String, value: BigDecimal?)
     fun putProperty(name: String, value: BigInteger?)
+    fun <T> putProperty(name: String, value: List<T>?)
 
     fun putUniqueProperty(name: String, value: String)
     fun putUniqueProperty(name: String, value: Int)
