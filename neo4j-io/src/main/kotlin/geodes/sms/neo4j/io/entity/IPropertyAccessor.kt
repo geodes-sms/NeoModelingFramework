@@ -1,26 +1,13 @@
 package geodes.sms.neo4j.io.entity
 
+import geodes.sms.neo4j.io.type.MapFunction
+import org.neo4j.driver.Value
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.ZonedDateTime
 
 interface IPropertyAccessor {
-    fun getPropertyAsString(name: String): String?
-    fun getPropertyAsInt(name: String): Int?
-    fun getPropertyAsLong(name: String): Long?
-    fun getPropertyAsShort(name: String): Short?
-    fun getPropertyAsBoolean(name: String): Boolean?
-    fun getPropertyAsByte(name: String): Byte?
-    fun getPropertyAsByteArray(name: String): ByteArray?
-    fun getPropertyAsChar(name: String): Char?
-    fun getPropertyAsDouble(name: String): Double?
-    fun getPropertyAsFloat(name: String): Float?
-    fun <T: Enum<T>> getPropertyAsEnum(name: String): T?
-    fun getPropertyAsDate(name: String): ZonedDateTime?
-    fun getPropertyAsBigDecimal(name: String): BigDecimal?
-    fun getPropertyAsBigInteger(name: String): BigInteger?
-    fun <T> getPropertyAsListOf(name: String): List<T>?
-    fun getPropertyAsAny(name: String): Any?
+    fun <T: Any> getProperty(name: String, mapFunc: MapFunction<T>): T?
 
     fun putProperty(name: String, value: String?)
     fun putProperty(name: String, value: Int?)

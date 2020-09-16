@@ -2,20 +2,15 @@ package geodes.sms.nmf.editor.graph.neo4jImpl
 
 import geodes.sms.nmf.editor.graph.Vertex
 import geodes.sms.neo4j.io.controllers.INodeController
-
+import geodes.sms.neo4j.io.type.*
 
 open class VertexNeo4jImpl(nc: INodeController) : Vertex, INodeController by nc {
-
-//    companion object {
-//        val edgeBounds = RefBounds(1,5)
-//    }
-
     override fun setName(v: String?) {
         putProperty("name", v)
     }
 
     override fun getName(): String? {
-        return getPropertyAsString("name")
+        return getProperty("name", AsString)
     }
 
     override fun setId(v: Int) {
@@ -23,7 +18,7 @@ open class VertexNeo4jImpl(nc: INodeController) : Vertex, INodeController by nc 
     }
 
     override fun getId(): Int? {
-        return getPropertyAsInt("id")
+        return getProperty("id", AsInt)
     }
 
     override fun setIsInitial(v: Boolean?) {
@@ -31,16 +26,16 @@ open class VertexNeo4jImpl(nc: INodeController) : Vertex, INodeController by nc 
     }
 
     override fun getIsInitial(): Boolean? {
-        return getPropertyAsBoolean("isInitial")
+        return getProperty("isInitial", AsBoolean)
     }
 
     override fun addEdge(v: Vertex) {
-        //createOutRef("edge", v, edgeBounds.upperBound)
+        //createOutRef("edge", v, upperBound = 5)
         createOutRef("edge", v)
     }
 
-    override fun removeEdge(v: Vertex) {
-        //removeOutRef("edge", v, edgeBounds.lowerBound)
+    override fun unsetEdge(v: Vertex) {
+        //removeOutRef("edge", v, lowerBound = 1)
         removeOutRef("edge", v)
     }
 

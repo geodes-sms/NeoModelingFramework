@@ -5,6 +5,7 @@ import geodes.sms.neo4j.io.controllers.IRelationshipController
 import geodes.sms.neo4j.io.controllers.NodeController
 import geodes.sms.neo4j.io.entity.INodeEntity
 import geodes.sms.neo4j.io.entity.RelationshipEntity
+import geodes.sms.neo4j.io.type.AsObject
 import org.neo4j.driver.Session
 import org.neo4j.driver.Value
 import org.neo4j.driver.Values
@@ -98,7 +99,7 @@ internal class Mapper(
 
     fun isPropertyUniqueForCacheNode(label: String, propName: String, propValue: Any): Boolean {
         for ((_, v) in nodesToCreate)
-            if (v.label == label && v.getPropertyAsAny(propName) == propValue) return false
+            if (v.label == label && v.getProperty(propName, AsObject) == propValue) return false
         return true
     }
 
@@ -246,8 +247,10 @@ internal class Mapper(
                 val node = trackedNodes.remove(id)
                 if (node != null) {
                     node.onRemove()
-                    if (node.getState() == EntityState.MODIFIED)
+                    if (node.getState() == EntityState.MODIFIED) {
                         updater.popNodeUpdate(node._id)
+                        nodesToUpdate.remove(node._id)
+                    }
                 }
             }
         }

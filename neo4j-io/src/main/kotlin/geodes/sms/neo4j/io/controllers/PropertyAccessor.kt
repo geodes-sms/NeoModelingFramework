@@ -1,6 +1,7 @@
 package geodes.sms.neo4j.io.controllers
 
 import geodes.sms.neo4j.io.entity.IPropertyAccessor
+import geodes.sms.neo4j.io.type.MapFunction
 import org.neo4j.driver.Value
 import org.neo4j.driver.Values
 import org.neo4j.driver.internal.value.*
@@ -20,22 +21,7 @@ internal abstract class PropertyAccessor(
     protected abstract fun isPropertyUnique(name: String, value: Any, dbValue: Value): Boolean
     protected abstract val state: IPropertyAccessor
 
-    override fun getPropertyAsString(name: String): String? = state.getPropertyAsString(name)
-    override fun getPropertyAsInt(name: String): Int? = state.getPropertyAsInt(name)
-    override fun getPropertyAsLong(name: String): Long? = state.getPropertyAsLong(name)
-    override fun getPropertyAsShort(name: String): Short? = state.getPropertyAsShort(name)
-    override fun getPropertyAsBoolean(name: String): Boolean? = state.getPropertyAsBoolean(name)
-    override fun getPropertyAsByte(name: String): Byte? = state.getPropertyAsByte(name)
-    override fun getPropertyAsByteArray(name: String): ByteArray? = state.getPropertyAsByteArray(name)
-    override fun getPropertyAsChar(name: String): Char? = state.getPropertyAsChar(name)
-    override fun getPropertyAsDouble(name: String): Double? = state.getPropertyAsDouble(name)
-    override fun getPropertyAsFloat(name: String): Float? = state.getPropertyAsFloat(name)
-    override fun <T : Enum<T>> getPropertyAsEnum(name: String): T? =  state.getPropertyAsEnum<T>(name)
-    override fun getPropertyAsDate(name: String): ZonedDateTime? = state.getPropertyAsDate(name)
-    override fun getPropertyAsBigDecimal(name: String): BigDecimal? = state.getPropertyAsBigDecimal(name)
-    override fun getPropertyAsBigInteger(name: String): BigInteger? = state.getPropertyAsBigInteger(name)
-    override fun <T> getPropertyAsListOf(name: String): List<T>? = state.getPropertyAsListOf(name)
-    override fun getPropertyAsAny(name: String): Any? = state.getPropertyAsAny(name)
+    override fun <T : Any> getProperty(name: String, mapFunc: MapFunction<T>) = state.getProperty(name, mapFunc)
     override fun putProperty(name: String, value: String?) = state.putProperty(name, value)
     override fun putProperty(name: String, value: Int?) = state.putProperty(name, value)
     override fun putProperty(name: String, value: Long?) = state.putProperty(name, value)
@@ -260,68 +246,8 @@ internal abstract class PropertyAccessor(
 
     //works ony with cache
     protected open inner class NewPropertyAccessor : ActivePropertyAccessor() {
-        override fun getPropertyAsString(name: String): String? {
-            return props[name] as? String
-        }
-
-        override fun getPropertyAsInt(name: String): Int? {
-            return props[name] as? Int
-        }
-
-        override fun getPropertyAsLong(name: String): Long? {
-            return props[name] as? Long
-        }
-
-        override fun getPropertyAsShort(name: String): Short? {
-            return props[name] as? Short
-        }
-
-        override fun getPropertyAsBoolean(name: String): Boolean? {
-            return props[name] as? Boolean
-        }
-
-        override fun getPropertyAsByte(name: String): Byte? {
-            return props[name] as? Byte
-        }
-
-        override fun getPropertyAsByteArray(name: String): ByteArray? {
-            return props[name] as? ByteArray
-        }
-
-        override fun getPropertyAsChar(name: String): Char? {
-            return props[name] as? Char
-        }
-
-        override fun getPropertyAsDouble(name: String): Double? {
-            return props[name] as? Double
-        }
-
-        override fun getPropertyAsFloat(name: String): Float? {
-            return props[name] as? Float
-        }
-
-        override fun <T : Enum<T>> getPropertyAsEnum(name: String): T? {
+        override fun <T : Any> getProperty(name: String, mapFunc: MapFunction<T>): T? {
             return props[name] as? T
-        }
-
-        override fun getPropertyAsDate(name: String): ZonedDateTime? {
-            return props[name] as? ZonedDateTime
-        }
-
-        override fun getPropertyAsBigDecimal(name: String): BigDecimal? {
-            return props[name] as? BigDecimal
-        }
-
-        override fun getPropertyAsBigInteger(name: String): BigInteger? {
-            return props[name] as? BigInteger
-        }
-
-        override fun <T> getPropertyAsListOf(name: String): List<T>? {
-            return props[name] as? List<T>
-        }
-
-        override fun getPropertyAsAny(name: String): Any? {
-            return props[name]
         }
     }
 
@@ -478,117 +404,21 @@ internal abstract class PropertyAccessor(
     }
 
     protected open inner class ModifiedPropertyAccessor : ActivePropertyAccessor() {
-        private inline fun <T: Any> read(name: String, mapFunction: (Value) -> T): T? {
-            val res = readPropertyFromDB(name)
-            return if (res.isNull) null else {
-                val value = mapFunction(res)
-                props[name] = value
-                value
+        override fun <T : Any> getProperty(name: String, mapFunc: MapFunction<T>): T? {
+            val resCached = props[name]
+            return if (resCached != null) resCached as? T else {
+                val res = readPropertyFromDB(name)
+                return if (res.isNull) null else {
+                    val value = mapFunc.apply(res)
+                    props[name] = value
+                    value
+                }
             }
-        }
-
-        override fun getPropertyAsString(name: String): String? {
-            val res = props[name]
-            return if (res != null) res as? String else read(name) { it.asString() }
-        }
-
-        override fun getPropertyAsInt(name: String): Int? {
-            val res = props[name]
-            return if (res != null) res as? Int else read(name) { it.asInt() }
-        }
-
-        override fun getPropertyAsLong(name: String): Long? {
-            val res = props[name]
-            return if (res != null) res as? Long else read(name) { it.asLong() }
-        }
-
-        override fun getPropertyAsShort(name: String): Short? {
-            val res = props[name]
-            return if (res != null) res as? Short else read(name) { it.asNumber().toShort() }
-        }
-
-        override fun getPropertyAsBoolean(name: String): Boolean? {
-            val res = props[name]
-            return if (res != null) res as? Boolean else read(name) { it.asBoolean() }
-        }
-
-        override fun getPropertyAsByte(name: String): Byte? {
-            val res = props[name]
-            return if (res != null) res as? Byte else read(name) { it.asNumber().toByte() }
-        }
-
-        override fun getPropertyAsByteArray(name: String): ByteArray? {
-            val res = props[name]
-            return if (res != null) res as? ByteArray else read(name) { it.asByteArray() }
-        }
-
-        override fun getPropertyAsChar(name: String): Char? {
-            val res = props[name]
-            return if (res != null) res as? Char else read(name) { it.asString()[0] }
-        }
-
-        override fun getPropertyAsDouble(name: String): Double? {
-            val res = props[name]
-            return if (res != null) res as? Double else read(name) { it.asDouble() }
-        }
-
-        override fun getPropertyAsFloat(name: String): Float? {
-            val res = props[name]
-            return if (res != null) res as? Float else read(name) { it.asFloat() }
-        }
-
-        override fun <T : Enum<T>> getPropertyAsEnum(name: String): T? {
-            TODO()
-//            return props.getOrPut(name) {
-//                val res = readPropertyFromDB(name).asString()
-//                enumValueOf<T>(res)
-//            } as? T
-        }
-
-        override fun getPropertyAsDate(name: String): ZonedDateTime? {
-            val res = props[name]
-            return if (res != null) res as? ZonedDateTime else read(name) { it.asZonedDateTime() }
-        }
-
-        override fun getPropertyAsBigDecimal(name: String): BigDecimal? {
-            val res = props[name]
-            return if (res != null) res as? BigDecimal else read(name) { BigDecimal(it.asString()) }
-        }
-
-        override fun getPropertyAsBigInteger(name: String): BigInteger? {
-            val res = props[name]
-            return if (res != null) res as? BigInteger else read(name) { BigInteger(it.asString()) }
-        }
-
-        override fun <T> getPropertyAsListOf(name: String): List<T>? {
-            val res = props[name]
-            return if (res != null) res as? List<T> else read(name) {
-                it.asList { v -> v.asObject() as T }
-            }
-        }
-
-        override fun getPropertyAsAny(name: String): Any? {
-            return props.getOrPut(name) { readPropertyFromDB(name).asObject() }
         }
     }
 
     protected abstract class NotActivePropertyAccessor(private val msg: String) : IPropertyAccessor {
-        override fun getPropertyAsString(name: String) = throw Exception(msg)
-        override fun getPropertyAsInt(name: String) = throw Exception(msg)
-        override fun getPropertyAsLong(name: String) = throw Exception(msg)
-        override fun getPropertyAsShort(name: String) = throw Exception(msg)
-        override fun getPropertyAsBoolean(name: String) = throw Exception(msg)
-        override fun getPropertyAsByte(name: String) = throw Exception(msg)
-        override fun getPropertyAsByteArray(name: String) = throw Exception(msg)
-        override fun getPropertyAsChar(name: String) = throw Exception(msg)
-        override fun getPropertyAsDouble(name: String) = throw Exception(msg)
-        override fun getPropertyAsFloat(name: String) = throw Exception(msg)
-        override fun <T : Enum<T>> getPropertyAsEnum(name: String) = throw Exception(msg)
-        override fun getPropertyAsDate(name: String) = throw Exception(msg)
-        override fun getPropertyAsBigDecimal(name: String) = throw Exception(msg)
-        override fun getPropertyAsBigInteger(name: String) = throw Exception(msg)
-        override fun <T> getPropertyAsListOf(name: String) = throw Exception(msg)
-        override fun getPropertyAsAny(name: String) = throw Exception(msg)
+        override fun <T : Any> getProperty(name: String, mapFunc: MapFunction<T>) = throw Exception(msg)
         override fun putProperty(name: String, value: String?) = throw Exception(msg)
         override fun putProperty(name: String, value: Int?) = throw Exception(msg)
         override fun putProperty(name: String, value: Long?) = throw Exception(msg)

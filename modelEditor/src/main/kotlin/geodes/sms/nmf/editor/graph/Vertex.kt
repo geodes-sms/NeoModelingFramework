@@ -13,6 +13,6 @@ interface Vertex: INodeEntity {
     fun getIsInitial(): Boolean?
 
     fun addEdge(v: Vertex)
-    fun removeEdge(v: Vertex)
+    fun unsetEdge(v: Vertex)
     fun loadEdges(limit: Int = 100): List<Vertex>
 }

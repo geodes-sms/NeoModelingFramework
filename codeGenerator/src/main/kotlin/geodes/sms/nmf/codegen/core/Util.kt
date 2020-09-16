@@ -1,11 +1,8 @@
-package geodes.sms.nmf.codegen.template.kotlin
+package geodes.sms.nmf.codegen.core
 
-import org.eclipse.emf.ecore.EAttribute
-import org.eclipse.emf.ecore.EEnum
-import org.eclipse.emf.ecore.EReference
+import org.eclipse.emf.ecore.*
 
 object Util {
-
     val type = mapOf(
         "EBigDecimal"       to "java.math.BigDecimal",
         "EBigInteger"       to "java.math.BigInteger",
@@ -43,6 +40,33 @@ object Util {
             else -> "Any"
         }
     }
+
+    val mapFunc = mapOf(
+        "EBigDecimal"       to "AsBigDecimal",
+        "EBigInteger"       to "AsBigInteger",
+        "EBoolean"          to "AsBoolean",
+        "EBooleanObject"    to "AsBoolean",
+        "EByte"             to "AsByte",
+        "EByteObject"       to "AsByte",
+        "EByteArray"        to "AsByteArray",
+        "EChar"             to "AsChar",
+        "ECharacterObject"  to "AsChar",
+        "EDate"             to "AsZonedDateTime",
+        "EDouble"           to "AsDouble",
+        "EDoubleObject"     to "AsDouble",
+        "EEList"            to "AsList(AsObject)",
+        "EFloat"            to "AsFloat",
+        "EFloatObject"      to "AsFloat",
+        "EInt"              to "AsInt",
+        "EIntegerObject"    to "AsInt",
+        "EJavaObject"       to "AsObject",
+        "EJavaClass"        to "AsObject",
+        "ELong"             to "AsLong",
+        "ELongObject"       to "AsLong",
+        "EShort"            to "AsShort",
+        "EShortObject"      to "AsShort",
+        "EString"           to "AsString"
+    )
 
     fun EReference.eType(): String = this.eType.name.capitalize()
 

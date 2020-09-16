@@ -1,5 +1,7 @@
 package geodes.sms.neo4j.io
 
+import geodes.sms.neo4j.io.type.AsBoolean
+
 fun main() {
     val dbUri = "bolt://localhost:7687"
     val username = "neo4j"
@@ -47,7 +49,7 @@ fun main() {
         graphManager.saveChanges()
 
         //n1.unload()
-        val res = n1.getPropertyAsBoolean("pr1")
+        val res = n1.getProperty("pr1", AsBoolean)
 
         println(res)
     }
