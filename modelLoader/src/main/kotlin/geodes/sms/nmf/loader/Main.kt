@@ -4,16 +4,14 @@ import geodes.sms.nmf.loader.emf2neo4j.EmfModelLoader
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.apache.commons.cli.*
 
-
 fun main(args: Array<String>) {
     val options = Options()
     Option("h", true, "Database host address with port")
     options.addOption(Option.builder("h")
         .longOpt("host")
-        .argName("HOSTADDR:port")
+        .argName("HOST:PORT")
         .desc("Database host address with port used to create bolt connection. Example: -h 127.0.0.1:7687")
         .hasArg()
-        .required()
         .build())
 
     options.addOption(Option.builder("u")
@@ -42,8 +40,8 @@ fun main(args: Array<String>) {
         val parser: CommandLineParser = DefaultParser()
         val cmd = parser.parse(options, args)
 
-        val host = cmd.getOptionValue("host")
-        val user = cmd.getOptionValue("user")
+        val host = cmd.getOptionValue("host", "127.0.0.1:7687")
+        val user = cmd.getOptionValue("user", "neo4j")
         val pwd = cmd.getOptionValue("password")
         val model = cmd.getOptionValue("model")
 
@@ -54,7 +52,7 @@ fun main(args: Array<String>) {
         }
     } catch (e: ParseException) {
         val formatter = HelpFormatter()
-        formatter.printHelp("loader", options)
+        formatter.printHelp("Loader", options)
     } catch (e: Exception) {
         println("Cannot load the model")
         e.printStackTrace()

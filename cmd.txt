@@ -1,0 +1,3 @@
+./gradlew :modelLoader:clean  :modelLoader:fatJar
+
+java -jar ./modelLoader/build/libs/modelLoader.jar -h 127.0.0.1:7687 -u neo4j -p admin -m ./EmfModel/instance/Document.xmi
