@@ -36,6 +36,12 @@ CALL apoc.create.node([row.label], row.props) YIELD node
 RETURN row.alias AS alias, id(node) AS id
 
 
+// find all startNode - nodes that don't have inputs
+Match (n)
+optional match (m)-[r]->(n)
+WITH n, count(r) AS count WHERE count = 0
+return n
+
 // ref setter  upperBound == 1
 MATCH (c:MindMap) WHERE ID(c)=811
 MATCH (e:CentralTopic) WHERE ID(e)=813

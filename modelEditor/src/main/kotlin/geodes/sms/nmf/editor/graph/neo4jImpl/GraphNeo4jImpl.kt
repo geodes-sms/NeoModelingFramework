@@ -4,6 +4,7 @@ import geodes.sms.nmf.editor.graph.CompositeVertex
 import geodes.sms.nmf.editor.graph.Graph
 import geodes.sms.nmf.editor.graph.Vertex
 import geodes.sms.neo4j.io.controllers.INodeController
+import geodes.sms.neo4j.io.type.AsString
 
 
 class GraphNeo4jImpl(nc: INodeController): Graph, INodeController by nc {
@@ -12,7 +13,7 @@ class GraphNeo4jImpl(nc: INodeController): Graph, INodeController by nc {
     }
 
     override fun getName(): String? {
-        return getPropertyAsString("name")
+        return getProperty("name", AsString)
     }
 
     override fun addVertex(): Vertex {
@@ -24,7 +25,7 @@ class GraphNeo4jImpl(nc: INodeController): Graph, INodeController by nc {
     }
 
     override fun getVertices(): List<Vertex> {
-        return loadChildren("vertices", "Vertex").map { VertexNeo4jImpl(it) }
+        return loadOutConnectedNodes("vertices", "Vertex").map { VertexNeo4jImpl(it) }
     }
 
     override fun addCompositeVertex(): CompositeVertex {
@@ -32,6 +33,6 @@ class GraphNeo4jImpl(nc: INodeController): Graph, INodeController by nc {
     }
 
     override fun getCompositeVertices(): List<CompositeVertex> {
-        return loadChildren("vertices", "CompositeVertex").map { CompositeVertexNeo4jImpl(it) }
+        return loadOutConnectedNodes("vertices", "CompositeVertex").map { CompositeVertexNeo4jImpl(it) }
     }
 }

@@ -1,14 +1,11 @@
 package geodes.sms.neo4j.io.entity
 
 import geodes.sms.neo4j.io.type.MapFunction
-import org.neo4j.driver.Value
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.ZonedDateTime
 
 interface IPropertyAccessor {
-    fun <T: Any> getProperty(name: String, mapFunc: MapFunction<T>): T?
-
     fun putProperty(name: String, value: String?)
     fun putProperty(name: String, value: Int?)
     fun putProperty(name: String, value: Long?)
@@ -40,5 +37,6 @@ interface IPropertyAccessor {
     fun putUniqueProperty(name: String, value: BigDecimal)
     fun putUniqueProperty(name: String, value: BigInteger)
 
+    fun <T: Any> getProperty(name: String, mapFunc: MapFunction<T>): T?
     fun removeProperty(name: String)
 }

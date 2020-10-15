@@ -12,7 +12,7 @@ internal class NodeController private constructor(
     id: Long,
     override val label: String,
     propsDiff: HashMap<String, Value>,
-    override val outRefCount: MutableMap<String, Int>, //rType --> count
+    override val outRefCount: HashMap<String, Int>, //rType --> count
     state: EntityState
 ) : INodeController, StateListener, PropertyAccessor(propsDiff) {
 
@@ -20,7 +20,7 @@ internal class NodeController private constructor(
     override var _id: Long = id
         private set
 
-    override var state: NodeState = when(state) {
+    override var state: INodeState = when(state) {
         EntityState.NEW -> StateNew()
         EntityState.PERSISTED -> StatePersisted()
         EntityState.MODIFIED -> StateModified()
@@ -40,7 +40,7 @@ internal class NodeController private constructor(
 
         fun createForDBNode(
             mapper: Mapper, id: Long, label: String,
-            outRefCount: MutableMap<String, Int> = hashMapOf()
+            outRefCount: HashMap<String, Int> = hashMapOf()
         ): NodeController = NodeController(
             mapper, id, label,
             propsDiff = hashMapOf(),
@@ -131,50 +131,26 @@ internal class NodeController private constructor(
         state.removeOutRef(rType, endNode, lowerBound)
     }
 
-    override fun loadChildren(
+    override fun loadOutConnectedNodes(
         rType: String,
-        endLabel: String,
+        endLabel: String?,
+        limit: Int,
+        filter: String
+    ): List<INodeController> {
+        return state.loadOutConnectedNodes(rType, endLabel, limit, filter)
+    }
+
+    override fun <R> loadOutConnectedNodes(
+        rType: String,
+        endLabel: String?,
+        limit: Int,
         filter: String,
-        limit: Int
-    ) : List<INodeController> {
-        return state.loadChildren(rType, endLabel, limit, filter)
+        mapFunction: (INodeController) -> R
+    ): List<R> {
+        return state.loadOutConnectedNodes(rType, endLabel, limit, filter, mapFunction)
     }
 
-    interface NodeState : IPropertyAccessor {
-        fun remove()
-        fun unload()
-
-        fun createChild(label: String, rType: String): INodeController
-        fun createChild(label: String, rType: String, upperBound: Int): INodeController
-
-        fun createOutRef(rType: String, end: INodeEntity)
-        fun createOutRef(rType: String, end: INodeEntity, upperBound: Int)
-
-        fun removeChild(rType: String, n: INodeEntity)
-        fun removeChild(rType: String, n: INodeEntity, loverBound: Int)
-
-        fun removeOutRef(rType: String, end: INodeEntity)
-        fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int)
-
-        //fun removeInputRef(rType: String, startNode: INodeEntity)
-        //fun removeInputRef(rType: String, startID: Long)
-        //fun _createInputRef(rType: String, start: INodeController)//: IRelationshipController
-        //fun _createInputRef(rType: String, start: Long): IRelationshipController
-        //fun _createOutputRef(rType: String, end: INodeEntity): IRelationshipController
-        //fun _createOutputRef(rType: String, end: Long): IRelationshipController
-
-        fun loadChildren(
-            rType: String,
-            endLabel: String,
-            limit: Int = 100,
-            filter: String = ""
-        ): List<INodeController>
-
-        //fun getChildrenFromCache(rType: String): Sequence<INodeController>
-        fun getState(): EntityState
-    }
-
-    private abstract inner class StateActive : NodeState {
+    private abstract inner class StateActive : INodeState {
         override fun createChild(label: String, rType: String): INodeController {
             return mapper.createChild(this@NodeController, rType, label)
         }
@@ -237,13 +213,24 @@ internal class NodeController private constructor(
             } else throw Exception("EndNode $end must be instance of INodeController")
         }
 
-        override fun loadChildren(
+        override fun loadOutConnectedNodes(
             rType: String,
-            endLabel: String,
+            endLabel: String?,
             limit: Int,
             filter: String
         ): List<INodeController> {
-            TODO("Not yet implemented for new Node")
+            return mapper.loadCachedOutConnectedNodes(_id, rType, limit) { it }
+        }
+
+        @Suppress("OVERRIDE_BY_INLINE")
+        override inline fun <R> loadOutConnectedNodes(
+            rType: String,
+            endLabel: String?,
+            limit: Int,
+            filter: String,
+            mapFunction: (INodeController) -> R
+        ): List<R> {
+            return mapper.loadCachedOutConnectedNodes(_id, rType, limit, mapFunction)
         }
 
         override fun getState() = EntityState.NEW
@@ -282,13 +269,24 @@ internal class NodeController private constructor(
             } else throw Exception("object $end must be instance of INodeController")
         }
 
-        override fun loadChildren(
+        override fun loadOutConnectedNodes(
             rType: String,
-            endLabel: String,
+            endLabel: String?,
             limit: Int,
             filter: String
         ): List<INodeController> {
-            return mapper.loadConnectedNodes(_id, rType, endLabel, filter, limit)
+            return mapper.loadOutConnectedNodes(_id, rType, endLabel, filter, limit) { it }
+        }
+
+        @Suppress("OVERRIDE_BY_INLINE")
+        final override inline fun <R> loadOutConnectedNodes(
+            rType: String,
+            endLabel: String?,
+            limit: Int,
+            filter: String,
+            crossinline mapFunction: (INodeController) -> R
+        ): List<R> {
+            return mapper.loadOutConnectedNodes(_id, rType, endLabel, filter, limit, mapFunction)
         }
 
         override fun getState() = EntityState.PERSISTED
@@ -298,7 +296,8 @@ internal class NodeController private constructor(
         override fun getState() = EntityState.MODIFIED
     }
 
-    private abstract class StateNotActive(private val exceptionMsg: String): NotActivePropertyAccessor(exceptionMsg), NodeState {
+    private abstract class StateNotActive(private val exceptionMsg: String) : NotActivePropertyAccessor(exceptionMsg),
+        INodeState {
         override fun remove() = throw Exception(exceptionMsg)
         override fun unload() = throw Exception(exceptionMsg)
         override fun createChild(label: String, rType: String) = throw Exception(exceptionMsg)
@@ -317,14 +316,17 @@ internal class NodeController private constructor(
         override fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int) =
             throw Exception(exceptionMsg)
 
-        override fun loadChildren(
-            rType: String,
-            endLabel: String,
-            limit: Int,
-            filter: String
-        ): List<INodeController> {
+        override fun loadOutConnectedNodes(rType: String, endLabel: String?, limit: Int, filter: String) =
             throw Exception(exceptionMsg)
-        }
+
+        @Suppress("OVERRIDE_BY_INLINE")
+        final override inline fun <R> loadOutConnectedNodes(
+            rType: String,
+            endLabel: String?,
+            limit: Int,
+            filter: String,
+            mapFunction: (INodeController) -> R
+        ) = throw Exception(exceptionMsg)
     }
 
     private object StateRemoved : StateNotActive(

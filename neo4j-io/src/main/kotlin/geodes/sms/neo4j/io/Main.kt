@@ -28,7 +28,7 @@ fun main() {
         val c = graphManager.loadNode(1000027, "C")
         val a = graphManager.loadNode(1000023, "A")
 
-        val outputs = a.loadChildren("b", "B")
+        val outputs = a.loadOutConnectedNodes("b", "B")
         println(outputs.size)
 
         val b = outputs.first { it._id == 1000026L }
@@ -53,7 +53,6 @@ fun main() {
 
         println(res)
     }
-
     userAction3()
 
     graphManager.close()

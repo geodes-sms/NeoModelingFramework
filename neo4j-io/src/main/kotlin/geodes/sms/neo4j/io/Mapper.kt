@@ -60,37 +60,46 @@ internal class Mapper(
             .add(RelationshipEntity(rAlias, rType, startNode, endNode, false))
     }
 
+    private fun startTracking(nc: NodeController) {
+        trackedNodes.remove(nc._id)?.onDetach() //unload prev if exist
+        trackedNodes[nc._id] = nc  //merge Node if already exist in cache!!
+    }
+
     // -------------------- READ section -------------------- //
     fun loadNode(id: Long, label: String): INodeController {
         val node = reader.findNodeWithOutputsCount(id, label)
         val nc = NodeController.createForDBNode(this, node.id, label, node.outRefCount)
-        trackedNodes.remove(nc._id)?.onDetach() //unload prev if exist
-        trackedNodes[nc._id] = nc  //merge Node if already exist in cache!!
+        startTracking(nc)
         return nc
     }
 
-    fun loadConnectedNodes(
+    inline fun <R> loadOutConnectedNodes(
         startID: Long,
         rType: String,
-        endLabel: String,
+        endLabel: String?,
         filter: String = "",
-        limit: Int
-    ): List<INodeController> {
-        val result = LinkedList<INodeController>()
-        reader.findConnectedNodesWithOutputsCount(startID, rType, endLabel, filter, limit) { record ->
-            for (res in record) {
-                val nc = NodeController.createForDBNode(this, res.id, endLabel, res.outRefCount)
-                trackedNodes.remove(nc._id)?.onDetach()
-                trackedNodes[nc._id] = nc
-                result.add(nc)
-            }
+        limit: Int,
+        crossinline mapFunction: (INodeController) -> R
+    ): List<R> {
+        return reader.findConnectedNodesWithOutputsCount(startID, rType, endLabel, filter, limit) { res ->
+            val nc = NodeController.createForDBNode(this, res.id, res.label, res.outRefCount)
+            startTracking(nc)
+            mapFunction(nc)
         }
-        return result
     }
 
-    fun loadWithCustomQuery(query: String) {
+    inline fun <R> loadCachedOutConnectedNodes(
+        startAlias: Long,
+        rType: String,
+        //endLabel: String?,
+        limit: Int,
+        mapFunction: (INodeController) -> R
+    ): List<R> = adjOutput[startAlias]?.get(rType)
+        //?.filter { it.endNode.label == endLabel }
+        ?.take(limit)
+        ?.map { mapFunction(it.endNode as INodeController) } ?: emptyList()
 
-    }
+//    fun loadWithCustomQuery(query: String) {}
 
     // Two nodes with different labels may have the same property value
     fun isPropertyUniqueForDBNode(label: String, propName: String, propValue: Value): Boolean {
@@ -106,14 +115,6 @@ internal class Mapper(
     fun readNodeProperty(id: Long, propName: String): Value {
         return reader.readNodeProperty(id, propName)
     }
-
-    inline fun <T> readNodeProperty(id: Long, propName: String, mapFunction: (Value) -> T): T? {
-        return reader.readNodeProperty(id, propName, mapFunction)
-    }
-
-//    fun readRelationshipProperty(id: Long, propName: String): Value {
-//        return reader.readRelationshipProperty(id, propName)
-//    }
     // ------------------ READ section end ------------------- //
 
 
@@ -239,7 +240,6 @@ internal class Mapper(
         updater.popNodeUpdate(id)
     }
     // -------------------- UNLOAD section end ---------------- //
-
 
     fun saveChanges(session: Session) {
         remover.commitContainmentsRemove(session) { ids ->

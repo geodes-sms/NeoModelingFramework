@@ -1,4 +1,4 @@
-package geodes.sms.nmf.codegen.template.kotlin
+package geodes.sms.nmf.codegen.template.ogm
 
 import org.eclipse.emf.ecore.EAttribute
 
@@ -8,9 +8,9 @@ interface IAttributeGenerator {
 
     companion object {
         fun getInstance(upb: Int) = when {
-            upb == 1 -> SingleAttributeGenerator
-            upb  > 1 -> CollectionBoundedAttributeGenerator
-            upb == -1 -> CollectionUnboundedAttributeGenerator
+            upb == 1 -> SingleAttributeTemplate
+            upb  > 1 -> CollectionBoundedAttributeTemplate
+            upb == -1 -> CollectionUnboundedAttributeTemplate
             else -> object : IAttributeGenerator {
                 override fun genInterface(eAttr: EAttribute, type: String) = ""
                 override fun genImpl(eAttr: EAttribute, type: String) = ""

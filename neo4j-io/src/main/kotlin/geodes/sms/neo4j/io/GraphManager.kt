@@ -1,6 +1,7 @@
 package geodes.sms.neo4j.io
 
 import geodes.sms.neo4j.io.controllers.INodeController
+import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.*
 
 /** Graph proxy */
@@ -42,8 +43,13 @@ class GraphManager(dbUri: String, username: String, password: String) : AutoClos
 //    }
 
     //also unloads all out/in refs
-    fun unload(node: geodes.sms.neo4j.io.entity.INodeEntity) {
+    fun unload(node: INodeEntity) {
         if (node is INodeController) node.unload()
+        else throw Exception("object $node must be instance of INodeController")
+    }
+
+    fun remove(node: INodeEntity) {
+        if (node is INodeController) node.remove()
         else throw Exception("object $node must be instance of INodeController")
     }
 

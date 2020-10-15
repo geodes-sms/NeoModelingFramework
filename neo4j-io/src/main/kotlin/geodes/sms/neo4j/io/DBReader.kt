@@ -1,15 +1,15 @@
 package geodes.sms.neo4j.io
 
-import org.neo4j.driver.Driver
-import org.neo4j.driver.Query
-import org.neo4j.driver.Value
+import org.neo4j.driver.*
 import org.neo4j.driver.internal.value.IntegerValue
 import org.neo4j.driver.internal.value.MapValue
+import org.neo4j.driver.internal.value.NullValue
 import org.neo4j.driver.internal.value.StringValue
 import org.neo4j.driver.types.Node
+import java.util.*
+import kotlin.collections.HashMap
 
-
-class DBReader(private val driver: Driver) {
+class DBReader(val driver: Driver) {
     fun findNode(id: Long, label: String): Node {
         val session = driver.session()
         val node = session.readTransaction { tx ->
@@ -35,9 +35,8 @@ class DBReader(private val driver: Driver) {
                 MapValue(mapOf("id" to IntegerValue(id), "label" to StringValue(label)))
             ))
             val record = res.single()
-            val nodeID = record["id"].asLong()
-            val outputsCount = record["count"].asMap { it.asInt() }
-            NodeResult(nodeID, outputsCount)
+            NodeResult(record["id"].asLong(), label,
+                outRefCount = HashMap(record["count"].asMap { it.asInt() }))
         }
         session.close()
         return nodeRes
@@ -78,21 +77,20 @@ class DBReader(private val driver: Driver) {
 //    }
 
     /** @return endNode plus count of output refs aggregated by count*/
-    fun findConnectedNodesWithOutputsCount(
-        startID: Long, rType: String, endLabel: String,
+    inline fun <R> findConnectedNodesWithOutputsCount(
+        startID: Long, rType: String, endLabel: String?,
         filter: String = "",
         limit: Int = 100,
-        mapFunction: (Sequence<NodeResult>) -> Unit
-    ) {
+        crossinline mapFunction: (NodeResult) -> R
+    ): List<R> {
         val params = MapValue(mapOf(
             "startID" to IntegerValue(startID),
-            "labelFilter" to StringValue("+$endLabel"),
+            "labelFilter" to if (endLabel != null) StringValue("+$endLabel") else NullValue.NULL,
             "refPattern" to StringValue("$rType>"),
             "limit" to IntegerValue(limit.toLong())
         ))
-
         val session = driver.session()
-        session.readTransaction { tx ->
+        val data = session.readTransaction { tx ->
             val res = tx.run(Query("MATCH (start) WHERE ID(start)=\$startID" +
                     " CALL apoc.path.subgraphNodes(start, {" +
                     "  relationshipFilter: \$refPattern, labelFilter: \$labelFilter," +
@@ -100,16 +98,34 @@ class DBReader(private val driver: Driver) {
                     filter +
                     " WITH node LIMIT \$limit" +
                     " OPTIONAL MATCH (node)-[r]->()" +
-                    " WITH ID(node) AS id, type(r) AS rType, count(r) AS count" +
-                    " RETURN id, apoc.map.fromPairs(collect([rType, count])) AS count", params)
+                    " WITH ID(node) AS id, labels(node)[0] AS label, type(r) AS rType, count(r) AS count" +
+                    " RETURN id, label, apoc.map.fromPairs(collect([rType, count])) AS count", params)
             )
+            val data = LinkedList<R>()
+            for (record in res) {
+                data.add(mapFunction(
+                    NodeResult(
+                        id = record["id"].asLong(),
+                        label = record["label"].asString(),
+                        outRefCount = HashMap(record["count"].asMap { it.asInt() }) )
+                ))
+            }
+            data
+        }
+        /*
+        val data = session.readTransaction { tx ->
+            Sequence { res }.map { record ->
+                mapFunction(NodeResult(record["id"].asLong(), record["count"].asMap { it.asInt() }))
+            }.toList()
+
             mapFunction(Sequence { res }.map { record ->
                 val nodeID = record["id"].asLong()
                 val outputsCount = record["count"].asMap { it.asInt() }
                 NodeResult(nodeID, outputsCount)
             })
-        }
+        } */
         session.close()
+        return data
     }
 
     fun loadNodes(query: String) {
@@ -143,9 +159,4 @@ class DBReader(private val driver: Driver) {
         session.close()
         return propValue
     }
-}
-
-inline fun <T> DBReader.readNodeProperty(id: Long, propName: String, mapFunction: (v: Value) -> T): T? {
-    val value = readNodeProperty(id, propName)
-    return if (value.isNull) null else mapFunction(value)
 }

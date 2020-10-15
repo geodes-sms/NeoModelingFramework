@@ -14,8 +14,6 @@ interface IController : IPropertyAccessor {
 interface IRelationshipController : IController, IRelationshipEntity
 
 interface INodeController : IController, INodeEntity {
-    //addLabel(l: String); //removeLabel(l: String)
-    val label: String
     val outRefCount: Map<String, Int>
 
     fun createChild(rType: String, label: String): INodeController
@@ -32,11 +30,18 @@ interface INodeController : IController, INodeEntity {
     fun removeOutRef(rType: String, endNode: INodeEntity, lowerBound: Int)
     //fun removeInputRef(rType: String, startNode: INodeEntity)
 
-    //fun getChildrenFromCache(rType: String): Sequence<INodeController>
-    fun loadChildren(
+    fun loadOutConnectedNodes(
         rType: String,
-        endLabel: String,
-        filter: String = "",
-        limit: Int = 100
+        endLabel: String?,
+        limit: Int = 100,
+        filter: String = ""
     ): List<INodeController>
+
+    fun <R> loadOutConnectedNodes(
+        rType: String,
+        endLabel: String?,
+        limit: Int,
+        filter: String,
+        mapFunction: (INodeController) -> R
+    ): List<R>
 }

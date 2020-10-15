@@ -10,7 +10,7 @@ fun main(args: Array<String>) {
     options.addOption(Option.builder("h")
         .longOpt("host")
         .argName("HOST:PORT")
-        .desc("Database host address with port used to create bolt connection. Example: -h 127.0.0.1:7687")
+        .desc("Database host address with port used to create bolt connection. Default: -h 127.0.0.1:7687")
         .hasArg()
         .build())
 
