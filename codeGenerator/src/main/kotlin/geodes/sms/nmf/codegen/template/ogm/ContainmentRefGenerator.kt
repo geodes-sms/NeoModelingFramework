@@ -1,7 +1,7 @@
-package geodes.sms.nmf.codegen.template.kotlin
+package geodes.sms.nmf.codegen.template.ogm
 
 import org.eclipse.emf.ecore.EReference
-import geodes.sms.nmf.codegen.template.kotlin.Util.eType
+import geodes.sms.nmf.codegen.core.Util.eType
 
 
 object ContainmentRefGenerator {

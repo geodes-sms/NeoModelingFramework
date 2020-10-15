@@ -1,10 +1,9 @@
-package geodes.sms.nmf.codegen.template.kotlin
+package geodes.sms.nmf.codegen.template.ogm
 
+import geodes.sms.nmf.codegen.core.Util
 import org.eclipse.emf.ecore.EAttribute
 
-
-object SingleAttributeGenerator : IAttributeGenerator {
-
+object SingleAttributeTemplate : IAttributeGenerator {
     override fun genInterface(eAttr: EAttribute, type: String): String {
         return "    var ${eAttr.name}: $type?\n"
     }
@@ -20,8 +19,7 @@ object SingleAttributeGenerator : IAttributeGenerator {
     }
 }
 
-object CollectionUnboundedAttributeGenerator : IAttributeGenerator {
-
+object CollectionUnboundedAttributeTemplate : IAttributeGenerator {
     override fun genInterface(eAttr: EAttribute, type: String): String {
         return "    val ${eAttr.name}: ArrayList<$type>\n"
     }
@@ -31,8 +29,7 @@ object CollectionUnboundedAttributeGenerator : IAttributeGenerator {
     }
 }
 
-object CollectionBoundedAttributeGenerator : IAttributeGenerator {
-
+object CollectionBoundedAttributeTemplate : IAttributeGenerator {
     override fun genInterface(eAttr: EAttribute, type: String): String {
         return "    val ${eAttr.name}: util.BoundedList<$type>\n"
     }

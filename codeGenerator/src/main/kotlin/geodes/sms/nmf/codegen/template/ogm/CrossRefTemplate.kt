@@ -1,12 +1,9 @@
-package geodes.sms.nmf.codegen.template.kotlin
+package geodes.sms.nmf.codegen.template.ogm
 
 import org.eclipse.emf.ecore.EReference
 
-
-object CrossRefGenerator {
-
-    object SingleReferenceGenerator : IReferenceGenerator {
-
+object CrossRefTemplate {
+    object SingleReferenceTemplate : IReferenceGenerator {
         override fun genInterface(eRef: EReference): String {
             return "    var ${eRef.name}: ${eRef.eType.name.capitalize()}?\n"
         }
@@ -17,8 +14,7 @@ object CrossRefGenerator {
         """.replaceIndent("\t").plus("\n\n")
     }
 
-    object CollectionUnboundedReferenceGenerator : IReferenceGenerator {
-
+    object CollectionUnboundedReferenceTemplate : IReferenceGenerator {
         override fun genInterface(eRef: EReference): String {
             return "    val ${eRef.name}: HashSet<${eRef.eType.name.capitalize()}>\n"
         }
@@ -29,8 +25,7 @@ object CrossRefGenerator {
         """.replaceIndent("\t").plus("\n\n")
     }
 
-    object CollectionBoundedReferenceGenerator : IReferenceGenerator {
-
+    object CollectionBoundedReferenceTemplate : IReferenceGenerator {
         override fun genInterface(eRef: EReference): String {
             return "    val ${eRef.name}: util.BoundedList<${eRef.eType.name.capitalize()}>\n"
         }

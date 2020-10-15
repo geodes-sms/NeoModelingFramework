@@ -8,17 +8,15 @@ import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
 import java.util.*
 
-
 class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 50000) {
-
     /** endNode ID --> input ref type */
-    private val nodesToRemove = hashSetOf<Long>()
-    private val nodesToRemoveByHost = LinkedList<PathMatchParameter>()
+    private val nodesToRemoveByID = hashSetOf<Long>()
     private val refsToRemoveByID = hashSetOf<Long>()
+    private val nodesToRemoveByHost = LinkedList<PathMatchParameter>()
     private val refsToRemoveByHostNodes = hashSetOf<ReferenceMatchParameter>()
 
     fun removeNode(id: Long) {
-        nodesToRemove.add(id)
+        nodesToRemoveByID.add(id)
     }
 
     fun removeChild(startID: Long, rType: String, endID: Long) {
@@ -90,7 +88,7 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
                         "  WITH r LIMIT \$l DELETE r'," +
                         " {start:start,rType:row.rType,endID:row.endID,l:row.limit}) YIELD value" +
                         " RETURN value", //return nothing
-                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() } )))
+                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
                 ))
             }
         }
@@ -103,26 +101,24 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
         refsToRemoveByHostNodes.clear()
     }
 
-    fun commitNodesRemoveByID() {
-
-    }
-
-    fun commitRelationshipsRemoveByID(session: Session): Sequence<Long> {
-        if (refsToRemoveByID.isEmpty()) return emptySequence()
-
-        val batchData = refsToRemoveByID.map { IntegerValue(it) }
-        return session.writeTransaction { tx ->
-            val res = tx.run(Query("UNWIND \$batch AS id" +
-                    " MATCH ()-[r]->()" +
-                    " WHERE ID(r)=id" +
-                    " WITH ID(r) AS removedIDs" +
-                    " DELETE d" +
-                    " RETURN removedIDs",
-                MapValue(mapOf("batch" to ListValue(*Array(batchData.size) {i -> batchData[i]} )))
-            ))
-            Sequence { res }.map { it["removedIDs"].asLong() }
-        }
-    }
+    //fun commitNodesRemoveByID() {}
+//  do not work like this!!!
+//    fun commitRelationshipsRemoveByID(session: Session): Sequence<Long> {
+//        if (refsToRemoveByID.isEmpty()) return emptySequence()
+//
+//        val batchData = refsToRemoveByID.map { IntegerValue(it) }
+//        return session.writeTransaction { tx ->
+//            val res = tx.run(Query("UNWIND \$batch AS id" +
+//                    " MATCH ()-[r]->()" +
+//                    " WHERE ID(r)=id" +
+//                    " WITH ID(r) AS removedIDs" +
+//                    " DELETE d" +
+//                    " RETURN removedIDs",
+//                MapValue(mapOf("batch" to ListValue(*Array(batchData.size) {i -> batchData[i]} )))
+//            ))
+//            Sequence { res }.map { it["removedIDs"].asLong() }
+//        }
+//    }
 
     fun removeAll(session: Session) {
         session.writeTransaction { tx ->

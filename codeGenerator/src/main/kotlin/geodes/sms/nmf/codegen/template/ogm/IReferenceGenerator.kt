@@ -1,4 +1,4 @@
-package geodes.sms.nmf.codegen.template.kotlin
+package geodes.sms.nmf.codegen.template.ogm
 
 import org.eclipse.emf.ecore.EReference
 
@@ -10,13 +10,13 @@ interface IReferenceGenerator {
     companion object {
         fun getInstance(ctm: Boolean, upb: Int): IReferenceGenerator = when {
             upb == 1 -> if(ctm) ContainmentRefGenerator.SingleReferenceGenerator
-                        else CrossRefGenerator.SingleReferenceGenerator
+                        else CrossRefTemplate.SingleReferenceTemplate
 
             upb > 1 -> if(ctm) ContainmentRefGenerator.CollectionBoundedReferenceGenerator
-                        else CrossRefGenerator.CollectionBoundedReferenceGenerator
+                        else CrossRefTemplate.CollectionBoundedReferenceTemplate
 
             upb == -1 -> if(ctm) ContainmentRefGenerator.CollectionUnboundedReferenceGenerator
-                        else CrossRefGenerator.CollectionUnboundedReferenceGenerator
+                        else CrossRefTemplate.CollectionUnboundedReferenceTemplate
 
             else -> object : IReferenceGenerator {
                 override fun genInterface(eRef: EReference) = ""
