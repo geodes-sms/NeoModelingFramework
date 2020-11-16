@@ -48,9 +48,19 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
 
         fun commit(batchSize: Int) {
             session.writeTransaction { tx ->
+//                val res = tx.run(Query("UNWIND \$batch AS row" +
+//                        " MATCH (start)-[r{containment:true}]->(end)" +
+//                        " WHERE ID(start)=row.startID AND type(r)=row.rType AND ID(end)=row.endID" +
+//                        " WITH end LIMIT 1" +
+//                        " MATCH (end)-[*0..{containment:true}]->(d)" +
+//                        " WITH d, ID(d) AS removedIDs" +
+//                        " DETACH DELETE d" +
+//                        " RETURN removedIDs",
+//                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
+//                ))
                 val res = tx.run(Query("UNWIND \$batch AS row" +
-                        " MATCH (start)-[r{containment:true}]->(end)" +
-                        " WHERE ID(start)=row.startID AND type(r)=row.rType AND ID(end)=row.endID" +
+                        " MATCH (start) WHERE ID(start)=row.startID" +
+                        " MATCH (start)-[r{containment:true}]->(end) WHERE type(r)=row.rType AND ID(end)=row.endID" +
                         " WITH end LIMIT 1" +
                         " MATCH (end)-[*0..{containment:true}]->(d)" +
                         " WITH d, ID(d) AS removedIDs" +

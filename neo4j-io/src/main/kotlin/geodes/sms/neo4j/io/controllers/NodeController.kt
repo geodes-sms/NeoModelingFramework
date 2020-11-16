@@ -52,7 +52,7 @@ internal class NodeController private constructor(
     /////////////////////////////////////
     override fun onCreate(id: Long) {
         this._id = id
-        this.state = StatePersisted()
+        state = StatePersisted()
         propsDiff.clear()
     }
 
