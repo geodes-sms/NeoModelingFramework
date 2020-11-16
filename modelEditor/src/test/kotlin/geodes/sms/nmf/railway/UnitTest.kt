@@ -36,7 +36,7 @@ class UnitTest {
 
         for (i in sizes) {
             val times = mutableListOf<Double>()
-            for (k in 1..1) {    //repeat 20 times to calibrate
+            for (k in 1..20) {    //repeat 20 times to calibrate
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
                     manager.createSwitch()
@@ -58,7 +58,7 @@ class UnitTest {
         val resWriter = File(resDirectory,"CreateContainments.csv").bufferedWriter()
         for (i in sizes) {
             val times = mutableListOf<Double>()
-            for (k in 1..1) {    //repeat 20 times to calibrate
+            for (k in 1..20) {    //repeat 20 times to calibrate
                 val container = manager.createRailwayContainer()
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
@@ -92,7 +92,7 @@ class UnitTest {
 
         for (i in sizes) {
             val times = mutableListOf<Double>()
-            for (k in 1..1) {
+            for (k in 1..20) {
                 val startTime = System.currentTimeMillis()
                 for (segment in segments) {
                     segment.setLength(999)
@@ -122,7 +122,7 @@ class UnitTest {
 
         for (i in sizes) {
             val times = mutableListOf<Double>()
-            for (k in 1..1) {    //calibrate
+            for (k in 1..20) {    //calibrate
                 val startTime = System.currentTimeMillis()
                 /*val regions = */container.loadRegions(i)
 
