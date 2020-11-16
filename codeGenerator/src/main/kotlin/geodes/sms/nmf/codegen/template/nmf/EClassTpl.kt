@@ -42,7 +42,11 @@ class EClassTpl(val eClass: EClass, val subClassed: Boolean, val basePackagePath
             import $basePackagePath.*
             
             ${abstract}class ${className}Neo4jImpl(nc: INodeController) : $className$superTypes {
-            ${if (eClass.eSuperTypes.size > 1) "\toverride val _id = nc._id" else ""}
-        """.trimIndent()
+            
+        """.trimIndent() + if (eClass.eSuperTypes.size > 1 || (eClass.eSuperTypes.size == 1 && !eClass.eSuperTypes[0].isAbstract)) """
+            override val _id = nc._id
+            override val label = nc.label
+        """.replaceIndent("\t").plus("\n") else ""
     }
 }
+

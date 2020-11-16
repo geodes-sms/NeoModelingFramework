@@ -36,7 +36,8 @@ class EAttributeTpl(val eAttr: EAttribute) : AbstractFeatureTemplate(eAttr) {
 
             return """
                 override fun set$featureNameCapitalized(v: $type?) {
-                    put${unique}Property("${eAttr.name}", v)
+                    if (v == null) removeProperty("${eAttr.name}")
+                    else put${unique}Property("${eAttr.name}", v)
                 }
                 override fun get$featureNameCapitalized(): $type? {
                     $tpl
@@ -60,9 +61,11 @@ class EAttributeTpl(val eAttr: EAttribute) : AbstractFeatureTemplate(eAttr) {
 
             return """
                 override fun set$featureNameCapitalized(v: List<$type>?) {
-                    if (v.size in ${eAttr.lowerBound}..${eAttr.upperBound})
-                        putProperty("${eAttr.name}", v)
-                    else throw Exception(bound limits: list size must be in ${eAttr.lowerBound}..${eAttr.upperBound})
+                    when {
+                        v == null || v.isEmpty() -> removeProperty("${eAttr.name}")
+                        v.size in ${eAttr.lowerBound}..${eAttr.upperBound} -> putProperty("${eAttr.name}", v)
+                        throw Exception("bound limits: list size must be in ${eAttr.lowerBound}..${eAttr.upperBound}")
+                    }
                 }
                 override fun get$featureNameCapitalized(): $type? {
                     return $tpl
@@ -86,7 +89,8 @@ class EAttributeTpl(val eAttr: EAttribute) : AbstractFeatureTemplate(eAttr) {
 
             return """
                 override fun set$featureNameCapitalized(v: List<$type>?) {
-                    putProperty("${eAttr.name}", v)
+                    if (v == null || v.isEmpty()) removeProperty("${eAttr.name}")
+                    else putProperty("${eAttr.name}", v)
                 }
                 override fun get$featureNameCapitalized(): $type? {
                     return $tpl

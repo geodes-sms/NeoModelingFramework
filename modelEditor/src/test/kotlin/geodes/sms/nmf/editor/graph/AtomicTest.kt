@@ -29,7 +29,7 @@ class AtomicTest {
             for (k in 1..20) {    //repeat 20 times to callibrate
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
-                    graph.addCompositeVertex()
+                    graph.addCompositeVertexVertices()
                 }
 
                 //val startTime = System.currentTimeMillis()
@@ -62,9 +62,9 @@ class AtomicTest {
                 val parents = LinkedList<CompositeVertex>()
 
                 val startTime = System.currentTimeMillis()
-                    parents.add(graph.addCompositeVertex())
+                    parents.add(graph.addCompositeVertexVertices())
                     for (j in 1..i) {
-                        parents.add(parents.last.addCompositeVertex())
+                        parents.add(parents.last.addCompositeVertexSub_vertices())
                     }
                     manager.saveChanges()
                 val endTime = System.currentTimeMillis()

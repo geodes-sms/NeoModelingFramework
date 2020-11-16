@@ -15,7 +15,7 @@ class NMFGenerator(context: Context) : AbstractGenerator(context) {
 
     override fun generate(eClass: EClass) {
         if (!eClass.isInterface && !eClass.isAbstract)
-            managerWriter.genClass(eClass.name)
+            managerWriter.genClass(eClass.name.capitalize())
         val subClasses = context.getSubClasses(eClass)
         val eClassTpl = EClassTpl(eClass, subClasses.isNotEmpty(), context.basePackagePath)
 
