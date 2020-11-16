@@ -23,7 +23,7 @@ class UnitTest {
     private val maxSize = sizes.maxOrNull()!!
 
     init {
-        resDirectory.createNewFile()
+        resDirectory.mkdirs()
     }
 
     @BeforeEach fun clear() {
