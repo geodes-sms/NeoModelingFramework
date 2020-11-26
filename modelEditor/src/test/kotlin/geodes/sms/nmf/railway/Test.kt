@@ -3,6 +3,7 @@ package geodes.sms.nmf.railway
 import geodes.sms.nmf.editor.railway.Region
 import geodes.sms.nmf.editor.railway.Segment
 import geodes.sms.nmf.editor.railway.Switch
+import geodes.sms.nmf.editor.railway.TrackElementType
 import geodes.sms.nmf.editor.railway.neo4jImpl.ModelManagerImpl
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -32,14 +33,12 @@ class Test {
         val rc = manager.createRailwayContainer()
         val region = rc.addRegions()
         val sensor1 = region.addSensors()
-        val sensor2 = region.addSensors()
-        val segment1 = region.addSegmentElements()
-        val segment2 = region.addSegmentElements()
+        region.addSensors()
+        val segment1 = region.addElements(TrackElementType.Segment)
         segment1.setMonitoredBy(sensor1)
-
         manager.saveChanges()
-        rc.removeRegions(region)
 
+        rc.removeRegions(region)
         manager.saveChanges()
     }
 
@@ -69,24 +68,6 @@ class Test {
                 else -> println("NOT determined")
             }
         }
-    }
-
-    @Test fun removeContainmentTest() {
-        val regions = LinkedList<Region>()
-        val container = manager.createRailwayContainer()
-        for (i in 1..10) {
-            regions.add(container.addRegions())
-        }
-        manager.saveChanges()
-
-        for (i in 1..4) {
-            val region = regions.pop()
-            println(region._id)
-            container.removeRegions(region)
-        }
-        manager.saveChanges()
-
-        println("Size: ${regions.size}")
     }
 
     @AfterAll fun close() {

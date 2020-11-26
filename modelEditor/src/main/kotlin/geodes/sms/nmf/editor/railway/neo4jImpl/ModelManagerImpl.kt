@@ -22,6 +22,7 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
     override fun close() {
         manager.close()
     }
+    
 	fun createRailwayContainer(): RailwayContainer {
 	    return RailwayContainerNeo4jImpl(manager.createNode("RailwayContainer"))
 	}

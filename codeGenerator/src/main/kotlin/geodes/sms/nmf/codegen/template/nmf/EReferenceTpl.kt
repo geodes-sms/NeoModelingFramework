@@ -107,18 +107,6 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
             .appendLine()
             .append(loadTpl.genImpl())
             .toString()
-
-//            return "\n" + loadTpl.genImpl() + """
-//
-//                override fun set$featureNameCapitalized(v: $type) {
-//                    createOutRef("${eRef.name}", v$upperBound)
-//                }
-//
-//                override fun unset$featureNameCapitalized(v: $type) {
-//                    removeOutRef("${eRef.name}", v$lowerBound)
-//                }
-//            """.replaceIndent("\t").plus("\n")
-//        }
     }
 
     private inner class ContainmentRefTemplate(private val loadTpl: LoadTemplate) : IFeatureTemplate {

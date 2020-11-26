@@ -22,6 +22,7 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
     override fun close() {
         manager.close()
     }
+    
 	fun createGraph(): Graph {
 	    return GraphNeo4jImpl(manager.createNode("Graph"))
 	}

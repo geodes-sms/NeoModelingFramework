@@ -7,6 +7,5 @@ interface Switch : TrackElement {
 	fun getCurrentPosition(): Position?
 	fun setPositions(v: SwitchPosition)
 	fun unsetPositions(v: SwitchPosition)
-		fun loadPositions(limit: Int = 100): List<SwitchPosition>
-	
+	fun loadPositions(limit: Int = 100): List<SwitchPosition>
 }
