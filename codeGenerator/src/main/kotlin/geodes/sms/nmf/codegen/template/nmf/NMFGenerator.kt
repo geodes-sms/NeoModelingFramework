@@ -8,65 +8,70 @@ import java.io.File
 
 class NMFGenerator(context: Context) : AbstractGenerator(context) {
     private val managerWriter = ModelManagerWriter(context)
+    private val subClassEnumWriter = SubclassEnumWriter(context)
 
     override fun postProcessing() {
         managerWriter.close()
+        subClassEnumWriter.close()
     }
 
     override fun generate(eClass: EClass) {
-        if (!eClass.isInterface && !eClass.isAbstract)
-            managerWriter.genClass(eClass.name.capitalize())
-        val subClasses = context.getSubClasses(eClass)
-        val eClassTpl = EClassTpl(eClass, subClasses.isNotEmpty(), context.basePackagePath)
-
-        val writer = if (eClass.isInterface)
-            InterfaceWriter(context, eClassTpl.className)
-        else ImplementationWriter(context, eClassTpl.className)
-
+        val eClassTpl = EClassTpl(eClass, context.basePackagePath)
+        val writer = Writer(context, eClassTpl.className)
         writer.writeHeader(eClassTpl)
         for (eAttr in eClass.eAttributes) {
             writer.writeFeature(EAttributeTpl(eAttr))
         }
         for (eRef in eClass.eReferences) {
-            writer.writeFeature(EReferenceTpl(eRef, context.getSubClasses(eRef.eReferenceType)))
+            writer.writeFeature(EReferenceTpl(eRef, context))
         }
         writer.close()
+
+        if (!eClass.isInterface && !eClass.isAbstract)
+            managerWriter.genClass(eClassTpl.className)
+        subClassEnumWriter.writeEnumFor(eClass)
     }
 
-    private open class InterfaceWriter(context: Context, className: String) {
-        private val writer = File(context.interfaceDir, "${className}.kt").bufferedWriter()
+    private class SubclassEnumWriter(val context: Context) {
+        private val str = StringBuilder()
 
-        open fun writeHeader(tpl: EClassTpl) {
-            writer.write(tpl.genInterfaceHeader())
+        fun writeEnumFor(eClass: EClass) {
+            val subClasses = context.getSubClasses(eClass)
+            if (subClasses.isNotEmpty()) {
+                val className = eClass.name.capitalize()
+                val list = if (eClass.isAbstract || eClass.isInterface) subClasses else subClasses.plus(className)
+                str.append("\nenum class ${className}Type { " + list.joinToString { it.capitalize() } + " }")
+            }
         }
 
-        open fun writeFeature(tpl: AbstractFeatureTemplate) {
-            writer.write(tpl.genInterface())
-        }
-
-        open fun close() {
-            writer.write("}")
+        fun close() {
+            if (str.isEmpty()) return
+            val writer = File(context.interfaceDir, "SubClass.kt").bufferedWriter()
+            writer.write("package ${context.basePackagePath}\n")
+            writer.write(str.toString())
             writer.close()
         }
     }
 
-    private class ImplementationWriter(context: Context, className: String): InterfaceWriter(context, className) {
+    private class Writer(context: Context, className: String) {
+        private val interfaceWriter = File(context.interfaceDir, "${className}.kt").bufferedWriter()
         private val implWriter = File(context.implDir, "${className}Neo4jImpl.kt").bufferedWriter()
 
-        override fun writeHeader(tpl: EClassTpl) {
+        fun writeHeader(tpl: EClassTpl) {
+            interfaceWriter.write(tpl.genInterfaceHeader())
             implWriter.write(tpl.genImplHeader())
-            super.writeHeader(tpl)
         }
 
-        override fun writeFeature(tpl: AbstractFeatureTemplate) {
+        fun writeFeature(tpl: AbstractFeatureTemplate) {
+            interfaceWriter.write(tpl.genInterface())
             implWriter.write(tpl.genImplementation())
-            super.writeFeature(tpl)
         }
 
-        override fun close() {
+        fun close() {
+            interfaceWriter.write("}")
             implWriter.write("}")
             implWriter.close()
-            super.close()
+            interfaceWriter.close()
         }
     }
 }

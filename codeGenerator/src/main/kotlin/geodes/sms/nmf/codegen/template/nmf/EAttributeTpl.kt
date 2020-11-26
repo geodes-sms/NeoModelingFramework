@@ -20,39 +20,35 @@ class EAttributeTpl(val eAttr: EAttribute) : AbstractFeatureTemplate(eAttr) {
     }
 
     private inner class SingleAttributeTemplate : IFeatureTemplate {
-        override fun genInterface(): String {
-            return """
-                fun set$featureNameCapitalized(v: $type?)
-                fun get$featureNameCapitalized(): $type?
-            """.replaceIndent("\t").plus("\n")
-        }
+        override fun genInterface() = StringBuilder()
+            .append("\tfun set$featureNameCapitalized(v: $type?)\n")
+            .append("\tfun get$featureNameCapitalized(): $type?\n")
+            .toString()
 
         override fun genImplementation(): String {
             val unique = if (eAttr.isID) "Unique" else ""
-            val tpl = if (eAttr.eAttributeType is EEnum)
-                """val res = getProperty("${eAttr.name}", AsString)
-                    return if (res != null) enumValueOf<$type>(res) else null"""
-            else "return getProperty(\"${eAttr.name}\", $mapFunc)"
+            val str = StringBuilder().appendLine()
+                .append("\toverride fun set$featureNameCapitalized(v: $type?) {\n")
+                .append("\t\tif (v == null) removeProperty(\"${eAttr.name}\")\n")
+                .append("\t\telse put${unique}Property(\"${eAttr.name}\", v)\n")
+                .append("\t}\n")
 
-            return """
-                override fun set$featureNameCapitalized(v: $type?) {
-                    if (v == null) removeProperty("${eAttr.name}")
-                    else put${unique}Property("${eAttr.name}", v)
-                }
-                override fun get$featureNameCapitalized(): $type? {
-                    $tpl
-                }
-            """.replaceIndent("\t").plus("\n")
+                .appendLine()
+                .append("\toverride fun get$featureNameCapitalized(): $type? {\n")
+            if (eAttr.eAttributeType is EEnum) {
+                str.append("\t\tval res = getProperty(\"${eAttr.name}\", AsString)\n")
+                str.append("\t\treturn if (res != null) enumValueOf<$type>(res) else null\n")
+            } else str.append("\t\treturn getProperty(\"${eAttr.name}\", $mapFunc)\n")
+
+            return str.append("\t}\n").toString()
         }
     }
 
     private inner class CollectionBoundedAttributeTemplate : IFeatureTemplate {
-        override fun genInterface(): String {
-            return """
-                fun set$featureNameCapitalized(v: List<$type>?)
-                fun get$featureNameCapitalized(): List<$type>?
-            """.replaceIndent("\t").plus("\n")
-        }
+        override fun genInterface() = StringBuilder()
+            .append("\tfun set$featureNameCapitalized(v: List<$type>?)\n")
+            .append("\tfun get$featureNameCapitalized(): List<$type>?\n")
+            .toString()
 
         override fun genImplementation(): String {
             val tpl = if (eAttr.eAttributeType is EEnum) {
@@ -60,14 +56,16 @@ class EAttributeTpl(val eAttr: EAttribute) : AbstractFeatureTemplate(eAttr) {
             } else "getProperty(\"${eAttr.name}\", AsList($mapFunc))"
 
             return """
+                
                 override fun set$featureNameCapitalized(v: List<$type>?) {
                     when {
                         v == null || v.isEmpty() -> removeProperty("${eAttr.name}")
                         v.size in ${eAttr.lowerBound}..${eAttr.upperBound} -> putProperty("${eAttr.name}", v)
-                        throw Exception("bound limits: list size must be in ${eAttr.lowerBound}..${eAttr.upperBound}")
+                        else -> throw Exception("bound limits: list size must be in ${eAttr.lowerBound}..${eAttr.upperBound}")
                     }
                 }
-                override fun get$featureNameCapitalized(): $type? {
+                
+                override fun get$featureNameCapitalized(): List<$type>? {
                     return $tpl
                 }
             """.replaceIndent("\t").plus("\n")
@@ -75,12 +73,10 @@ class EAttributeTpl(val eAttr: EAttribute) : AbstractFeatureTemplate(eAttr) {
     }
 
     private inner class CollectionUnboundedAttributeTemplate : IFeatureTemplate {
-        override fun genInterface(): String {
-            return """
-                fun set$featureNameCapitalized(v: List<$type>?)
-                fun get$featureNameCapitalized(): List<$type>?
-            """.replaceIndent("\t").plus("\n")
-        }
+        override fun genInterface() = StringBuilder()
+            .append("\tfun set$featureNameCapitalized(v: List<$type>?)\n")
+            .append("\tfun get$featureNameCapitalized(): List<$type>?\n")
+            .toString()
 
         override fun genImplementation(): String {
             val tpl = if (eAttr.eAttributeType is EEnum) {
@@ -88,11 +84,13 @@ class EAttributeTpl(val eAttr: EAttribute) : AbstractFeatureTemplate(eAttr) {
             } else "getProperty(\"${eAttr.name}\", AsList($mapFunc))"
 
             return """
+                
                 override fun set$featureNameCapitalized(v: List<$type>?) {
                     if (v == null || v.isEmpty()) removeProperty("${eAttr.name}")
                     else putProperty("${eAttr.name}", v)
                 }
-                override fun get$featureNameCapitalized(): $type? {
+                
+                override fun get$featureNameCapitalized(): List<$type>? {
                     return $tpl
                 }
             """.replaceIndent("\t").plus("\n")

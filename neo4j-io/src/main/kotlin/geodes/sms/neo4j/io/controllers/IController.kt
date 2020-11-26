@@ -41,7 +41,7 @@ interface INodeController : IController, INodeEntity {
         rType: String,
         endLabel: String?,
         limit: Int,
-        filter: String,
+        filter: String = "",
         mapFunction: (INodeController) -> R
     ): List<R>
 }

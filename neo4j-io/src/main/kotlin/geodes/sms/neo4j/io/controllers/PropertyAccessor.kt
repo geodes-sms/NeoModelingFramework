@@ -13,7 +13,7 @@ import java.time.ZonedDateTime
 internal abstract class PropertyAccessor(
     protected val propsDiff: HashMap<String, Value>
 ) : IPropertyAccessor {
-    protected val props: HashMap<String, Any> = hashMapOf()
+    protected val props: HashMap<String, Any> = hashMapOf() //for primitives props only !!!
 
     //different for node and relationship
     protected abstract fun readPropertyFromDB(name: String): Value
@@ -59,7 +59,7 @@ internal abstract class PropertyAccessor(
                 props[name] = value
                 propsDiff[name] = neo4jValue
             }
-            else throw Exception("Property already exists in DB")
+            else throw Exception("Property must be unique. Property with '$name' : $value already exists in DB")
         }
 
         override fun putProperty(name: String, value: String) {

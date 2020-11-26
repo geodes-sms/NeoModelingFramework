@@ -7,7 +7,7 @@ import geodes.sms.neo4j.io.exception.LoverBoundExceedException
 import geodes.sms.neo4j.io.exception.UpperBoundExceedException
 import org.neo4j.driver.Value
 
-internal class NodeController private constructor(
+internal class NodeController constructor(
     private val mapper: Mapper,
     id: Long,
     override val label: String,
@@ -28,26 +28,26 @@ internal class NodeController private constructor(
         else -> StateRemoved
     }
 
-    companion object {
-        fun createForNewNode(
-            mapper: Mapper, id: Long, label: String,
-            propsDiff: HashMap<String, Value>
-        ): NodeController = NodeController(
-            mapper, id, label, propsDiff,
-            outRefCount = hashMapOf(),
-            state = EntityState.NEW
-        )
-
-        fun createForDBNode(
-            mapper: Mapper, id: Long, label: String,
-            outRefCount: HashMap<String, Int> = hashMapOf()
-        ): NodeController = NodeController(
-            mapper, id, label,
-            propsDiff = hashMapOf(),
-            outRefCount = outRefCount,
-            state = EntityState.PERSISTED
-        )
-    }
+    companion object;
+//        fun createForNewNode(
+//            mapper: Mapper, id: Long, label: String,
+//            propsDiff: HashMap<String, Value>
+//        ): NodeController = NodeController(
+//            mapper, id, label, propsDiff,
+//            outRefCount = hashMapOf(),
+//            state = EntityState.NEW
+//        )
+//
+//        fun createForDBNode(
+//            mapper: Mapper, id: Long, label: String,
+//            outRefCount: HashMap<String, Int> = hashMapOf()
+//        ): NodeController = NodeController(
+//            mapper, id, label,
+//            propsDiff = hashMapOf(),
+//            outRefCount = outRefCount,
+//            state = EntityState.PERSISTED
+//        )
+//    }
 
     /////////////////////////////////////
     override fun onCreate(id: Long) {
@@ -208,9 +208,7 @@ internal class NodeController private constructor(
         }
 
         override fun removeOutRef(rType: String, end: INodeEntity) {
-            if (end is INodeController) {
-                mapper.removeRelationship(_id, rType, end)
-            } else throw Exception("EndNode $end must be instance of INodeController")
+            mapper.removeRelationship(_id, rType, end)
         }
 
         override fun loadOutConnectedNodes(
@@ -301,20 +299,16 @@ internal class NodeController private constructor(
         override fun remove() = throw Exception(exceptionMsg)
         override fun unload() = throw Exception(exceptionMsg)
         override fun createChild(label: String, rType: String) = throw Exception(exceptionMsg)
-        override fun createChild(label: String, rType: String, upperBound: Int) =
-            throw Exception(exceptionMsg)
+        override fun createChild(label: String, rType: String, upperBound: Int) = throw Exception(exceptionMsg)
 
         override fun createOutRef(rType: String, end: INodeEntity) = throw Exception(exceptionMsg)
-        override fun createOutRef(rType: String, end: INodeEntity, upperBound: Int) =
-            throw Exception(exceptionMsg)
+        override fun createOutRef(rType: String, end: INodeEntity, upperBound: Int) = throw Exception(exceptionMsg)
 
         override fun removeChild(rType: String, n: INodeEntity) = throw Exception(exceptionMsg)
-        override fun removeChild(rType: String, n: INodeEntity, loverBound: Int) =
-            throw Exception(exceptionMsg)
+        override fun removeChild(rType: String, n: INodeEntity, loverBound: Int) = throw Exception(exceptionMsg)
 
         override fun removeOutRef(rType: String, end: INodeEntity) = throw Exception(exceptionMsg)
-        override fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int) =
-            throw Exception(exceptionMsg)
+        override fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int) = throw Exception(exceptionMsg)
 
         override fun loadOutConnectedNodes(rType: String, endLabel: String?, limit: Int, filter: String) =
             throw Exception(exceptionMsg)

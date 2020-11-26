@@ -18,7 +18,8 @@ internal class Mapper(
     private val remover: BufferedRemover,
     private val reader: DBReader
 ) {
-    private val nodesToCreate = hashMapOf<Long, NodeController>()
+    private class TrackedNode(val node: NodeController, var isTracked: Boolean)
+    private val nodesToCreate = hashMapOf<Long, TrackedNode>()
     private val nodesToUpdate = hashMapOf<Long, NodeController>()
     //private val refsToCreate = hashMapOf<Long, RelationshipController>()
 
@@ -28,11 +29,15 @@ internal class Mapper(
     /** DB nodeID --> NodeController */
     private val trackedNodes = hashMapOf<Long, NodeController>()
 
-    fun createNode(label: String): INodeController {
+    fun createNode(label: String/*, isTracked: Boolean = true*/): INodeController {
         val propsDiff = hashMapOf<String, Value>()
         val innerID = creator.createNode(label, propsDiff)
-        val node = NodeController.createForNewNode(this, innerID, label, propsDiff)
-        nodesToCreate[innerID] = node
+        //val node = NodeController.createForNewNode(this, innerID, label, propsDiff)
+        val node = NodeController(this, innerID, label, propsDiff,
+            outRefCount = hashMapOf(),
+            state = EntityState.NEW
+        )
+        nodesToCreate[innerID] = TrackedNode(node, true)
         return node
     }
 
@@ -62,13 +67,18 @@ internal class Mapper(
 
     private fun startTracking(nc: NodeController) {
         trackedNodes.remove(nc._id)?.onDetach() //unload prev if exist
-        trackedNodes[nc._id] = nc  //merge Node if already exist in cache!!
+        trackedNodes[nc._id] = nc  //merge Node if it already exists in cache
     }
 
     // -------------------- READ section -------------------- //
     fun loadNode(id: Long, label: String): INodeController {
         val node = reader.findNodeWithOutputsCount(id, label)
-        val nc = NodeController.createForDBNode(this, node.id, label, node.outRefCount)
+        val nc = NodeController(
+            mapper = this, id, label,
+            propsDiff = hashMapOf(),
+            outRefCount = node.outRefCount,
+            state = EntityState.PERSISTED
+        )
         startTracking(nc)
         return nc
     }
@@ -82,7 +92,12 @@ internal class Mapper(
         crossinline mapFunction: (INodeController) -> R
     ): List<R> {
         return reader.findConnectedNodesWithOutputsCount(startID, rType, endLabel, filter, limit) { res ->
-            val nc = NodeController.createForDBNode(this, res.id, res.label, res.outRefCount)
+            val nc = NodeController(
+                mapper = this, id = res.id, label = res.label,
+                propsDiff = hashMapOf(),
+                outRefCount = res.outRefCount,
+                state = EntityState.PERSISTED
+            )
             startTracking(nc)
             mapFunction(nc)
         }
@@ -108,7 +123,7 @@ internal class Mapper(
 
     fun isPropertyUniqueForCacheNode(label: String, propName: String, propValue: Any): Boolean {
         for ((_, v) in nodesToCreate)
-            if (v.label == label && v.getProperty(propName, AsObject) == propValue) return false
+            if (v.node.label == label && v.node.getProperty(propName, AsObject) == propValue) return false
         return true
     }
 
@@ -232,7 +247,7 @@ internal class Mapper(
 
     // -------------------- UNLOAD section -------------------- //
     fun unload(n: INodeEntity) {
-        nodesToCreate.remove(n._id)
+        nodesToCreate[n._id]?.isTracked = false
     }
 
     fun unload(id: Long) {
@@ -264,8 +279,8 @@ internal class Mapper(
             for ((alias, id) in res) {
                 val nc = nodesToCreate[alias]
                 if (nc != null) {
-                    nc.onCreate(id)
-                    trackedNodes[id] = nc
+                    nc.node.onCreate(id)
+                    if (nc.isTracked) trackedNodes[id] = nc.node
                 }
             }
             nodesToCreate.clear()

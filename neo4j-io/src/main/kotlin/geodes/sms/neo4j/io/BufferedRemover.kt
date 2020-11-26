@@ -8,11 +8,11 @@ import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
 import java.util.*
 
-class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 50000) {
+class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 10000) {
     /** endNode ID --> input ref type */
     private val nodesToRemoveByID = hashSetOf<Long>()
-    private val refsToRemoveByID = hashSetOf<Long>()
-    private val nodesToRemoveByHost = LinkedList<PathMatchParameter>()
+    //private val refsToRemoveByID = hashSetOf<Long>()
+    private val nodesToRemoveByHost = hashSetOf<PathMatchParameter>()
     private val refsToRemoveByHostNodes = hashSetOf<ReferenceMatchParameter>()
 
     fun removeNode(id: Long) {
@@ -23,14 +23,14 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
         nodesToRemoveByHost.add(PathMatchParameter(startID, rType, endID))
     }
 
-    fun removeRelationship(id: Long) {
-        refsToRemoveByID.add(id)
-    }
-
     fun removeRelationship(startID: Long, rType: String, endID: Long) {
         refsToRemoveByHostNodes.add(ReferenceMatchParameter(startID, rType, endID))
     }
 
+//    fun removeRelationship(id: Long) {
+//        refsToRemoveByID.add(id)
+//    }
+//
 //    fun popNodeRemove(id: Long) {
 //        nodesToRemove.remove(id)
 //    }
@@ -48,20 +48,10 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
 
         fun commit(batchSize: Int) {
             session.writeTransaction { tx ->
-//                val res = tx.run(Query("UNWIND \$batch AS row" +
-//                        " MATCH (start)-[r{containment:true}]->(end)" +
-//                        " WHERE ID(start)=row.startID AND type(r)=row.rType AND ID(end)=row.endID" +
-//                        " WITH end LIMIT 1" +
-//                        " MATCH (end)-[*0..{containment:true}]->(d)" +
-//                        " WITH d, ID(d) AS removedIDs" +
-//                        " DETACH DELETE d" +
-//                        " RETURN removedIDs",
-//                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
-//                ))
                 val res = tx.run(Query("UNWIND \$batch AS row" +
-                        " MATCH (start) WHERE ID(start)=row.startID" +
-                        " MATCH (start)-[r{containment:true}]->(end) WHERE type(r)=row.rType AND ID(end)=row.endID" +
-                        " WITH end LIMIT 1" +
+                        " MATCH (start)-[r{containment:true}]->(end)" +
+                        " WHERE ID(start)=row.startID AND ID(end)=row.endID AND type(r)=row.rType" +
+                        " WITH end" +
                         " MATCH (end)-[*0..{containment:true}]->(d)" +
                         " WITH d, ID(d) AS removedIDs" +
                         " DETACH DELETE d" +
@@ -100,6 +90,16 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
                         " RETURN value", //return nothing
                     MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
                 ))
+//                tx.run(Query("UNWIND \$batch as row" +
+//                        " MATCH (start) WHERE ID(start)=row.startID" +
+//                        " CALL {" +
+//                        "  WITH start, row" +
+//                        "  MATCH (start)-[r]->(end)" +
+//                        "  WHERE type(r)=rType AND ID(end)=endID" +
+//                        "  RETURN r LIMIT row.limit" +  //It is not allowed to refer to variables in LIMIT
+//                        " } DELETE r",
+//                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
+//                ))
             }
         }
 

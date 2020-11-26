@@ -3,7 +3,7 @@ package geodes.sms.nmf.codegen.template.nmf
 import org.eclipse.emf.ecore.EClass
 import java.lang.StringBuilder
 
-class EClassTpl(val eClass: EClass, val subClassed: Boolean, val basePackagePath: String) {
+class EClassTpl(val eClass: EClass, val basePackagePath: String) {
     val className = eClass.name.capitalize()
 
     fun genInterfaceHeader(): String {
@@ -22,7 +22,7 @@ class EClassTpl(val eClass: EClass, val subClassed: Boolean, val basePackagePath
     }
 
     fun genImplHeader(): String {
-        val abstract = if (eClass.isAbstract) "abstract " else if (subClassed) "open " else ""
+        val abstract = if (eClass.isAbstract) "abstract " else "" //if (subClassed) "open " else ""
         var ncImplementor = ", INodeController by nc"
         val superTypes = StringBuilder()
         for (s in eClass.eSuperTypes) {
@@ -34,7 +34,7 @@ class EClassTpl(val eClass: EClass, val subClassed: Boolean, val basePackagePath
             else superTypes.append(", $name by ${name}Neo4jImpl(nc)")
         }
         superTypes.append(ncImplementor)
-        return """
+        val header =  """
             package $basePackagePath.neo4jImpl
             
             import geodes.sms.neo4j.io.controllers.INodeController
@@ -42,11 +42,14 @@ class EClassTpl(val eClass: EClass, val subClassed: Boolean, val basePackagePath
             import $basePackagePath.*
             
             ${abstract}class ${className}Neo4jImpl(nc: INodeController) : $className$superTypes {
-            
-        """.trimIndent() + if (eClass.eSuperTypes.size > 1 || (eClass.eSuperTypes.size == 1 && !eClass.eSuperTypes[0].isAbstract)) """
-            override val _id = nc._id
-            override val label = nc.label
-        """.replaceIndent("\t").plus("\n") else ""
+        """.trimIndent()
+
+        val str = StringBuilder().append(header)
+        if (eClass.eSuperTypes.size > 1 || (eClass.eSuperTypes.size == 1 && !eClass.eSuperTypes[0].isAbstract)) {
+            str.appendLine()
+            str.appendLine("\toverride val _id by nc::_id")
+            str.appendLine("\toverride val label by nc::label")
+        }
+        return str.toString()
     }
 }
-

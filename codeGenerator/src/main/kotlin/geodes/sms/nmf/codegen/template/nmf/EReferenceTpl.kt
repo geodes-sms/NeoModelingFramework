@@ -1,23 +1,25 @@
 package geodes.sms.nmf.codegen.template.nmf
 
 import geodes.sms.nmf.codegen.core.AbstractFeatureTemplate
+import geodes.sms.nmf.codegen.core.Context
 import org.eclipse.emf.ecore.EReference
 import java.lang.StringBuilder
 
-class EReferenceTpl(val eRef: EReference, val subClasses: List<String>) : AbstractFeatureTemplate(eRef) {
+class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTemplate(eRef) {
+    private val subClasses: List<String> = context.getSubClasses(eRef.eReferenceType)
     private val type = eRef.eReferenceType.name.capitalize()
     private val isETypeAbstract = eRef.eReferenceType.isAbstract || eRef.eReferenceType.isInterface
     private val allTypes = if (isETypeAbstract) subClasses else subClasses.plus(type)
 
     private val readMapFunction = if (subClasses.isNotEmpty()) {
-        val str = StringBuilder("when (it.label) {\n")
+        val str = StringBuilder("\t\t\twhen (it.label) {\n")
         for (t in allTypes) {
-            str.append("\t\"$t\" -> ${t}Neo4jImpl(it)\n")
+            str.appendLine("\t\t\t\t\"$t\" -> ${t}Neo4jImpl(it)")
         }
-        str.append("\telse -> throw Exception(\"Cannot cast InodeController\")\n")
-        str.append("}")
+        str.appendLine("\t\t\t\telse -> throw Exception(\"Cannot cast to INodeController\")")
+        str.appendLine("\t\t\t}")
         str.toString()
-    } else if (!isETypeAbstract) "${type}Neo4jImpl(it)" else ""
+    } else if (!isETypeAbstract) "\t\t\t${type}Neo4jImpl(it)\n" else ""
 
     private val loadTpl = when (eRef.upperBound) {
         1 -> SingleRefLoadTemplate()
@@ -52,14 +54,15 @@ class EReferenceTpl(val eRef: EReference, val subClasses: List<String>) : Abstra
         }
 
         override fun genImpl(): String {
-            return if (allTypes.isNotEmpty()) """
-                override fun load$featureNameCapitalized(): $type? {
-                    val data = loadOutConnectedNodes("${eRef.name}", null, 1, "") {
-                        $readMapFunction
-                    }
-                    return if (data.isEmpty()) null else data[0]
-                }
-                """.replaceIndent("\t").plus("\n")
+            return if (allTypes.isNotEmpty())
+                StringBuilder()
+                    .appendLine("\toverride fun load$featureNameCapitalized(): $type? {")
+                    .appendLine("\t\tval data = loadOutConnectedNodes(\"${eRef.name}\", null, 1) {")
+                    .append(readMapFunction)
+                    .appendLine("\t\t}")
+                    .appendLine("\t\treturn if (data.isEmpty()) null else data[0]")
+                    .appendLine("\t}")
+                    .toString()
             else ""
         }
     }
@@ -72,70 +75,88 @@ class EReferenceTpl(val eRef: EReference, val subClasses: List<String>) : Abstra
         }
 
         override fun genImpl(): String {
-            return if (allTypes.isNotEmpty()) """
-                override fun load$featureNameCapitalized(limit: Int): List<$type> {
-                    return loadOutConnectedNodes("${eRef.name}", null, limit, "") {
-                        $readMapFunction
-                    }
-                }
-                """.replaceIndent("\t").plus("\n")
+            return if (allTypes.isNotEmpty())
+                StringBuilder()
+                    .appendLine("\toverride fun load$featureNameCapitalized(limit: Int): List<$type> {")
+                    .appendLine("\t\treturn loadOutConnectedNodes(\"${eRef.name}\", null, limit) {")
+                    .append(readMapFunction)
+                    .appendLine("\t\t}\n\t}")
+                    .toString()
             else ""
         }
     }
 
     private inner class CrossRefTemplate(private val loadTpl: LoadTemplate) : IFeatureTemplate {
-        override fun genInterface() = """
-            fun set$featureNameCapitalized(v: $type)
-            fun unset$featureNameCapitalized(v: $type)
-            ${loadTpl.genInterface()}
-        """.replaceIndent("\t").plus("\n")
+        override fun genInterface() = StringBuilder()
+            .appendLine("\tfun set$featureNameCapitalized(v: $type)")
+            .appendLine("\tfun unset$featureNameCapitalized(v: $type)")
+            .append(loadTpl.genInterface())
+            .toString()
 
-        override fun genImplementation(): String {
-            return loadTpl.genImpl() + """
-                override fun set$featureNameCapitalized(v: $type) {
-                    createOutRef("${eRef.name}", v$upperBound)
-                }
-                override fun unset$featureNameCapitalized(v: $type) {
-                    removeOutRef("${eRef.name}", v$lowerBound)
-                }
-            """.replaceIndent("\t").plus("\n")
-        }
+        override fun genImplementation() = StringBuilder()
+            .appendLine()
+            .appendLine("\toverride fun set$featureNameCapitalized(v: $type) {")
+            .appendLine("\t\tcreateOutRef(\"${eRef.name}\", v$upperBound)")
+            .appendLine("\t}")
+
+            .appendLine()
+            .appendLine("\toverride fun unset$featureNameCapitalized(v: $type) {")
+            .appendLine("\t\tremoveOutRef(\"${eRef.name}\", v$lowerBound)")
+            .appendLine("\t}")
+
+            .appendLine()
+            .append(loadTpl.genImpl())
+            .toString()
+
+//            return "\n" + loadTpl.genImpl() + """
+//
+//                override fun set$featureNameCapitalized(v: $type) {
+//                    createOutRef("${eRef.name}", v$upperBound)
+//                }
+//
+//                override fun unset$featureNameCapitalized(v: $type) {
+//                    removeOutRef("${eRef.name}", v$lowerBound)
+//                }
+//            """.replaceIndent("\t").plus("\n")
+//        }
     }
 
     private inner class ContainmentRefTemplate(private val loadTpl: LoadTemplate) : IFeatureTemplate {
         override fun genInterface() : String {
-            val addTpl = subClasses.joinToString("\n") { subType ->
-                "\tfun add$subType$featureNameCapitalized(): $subType"
+            val str = StringBuilder()
+                .appendLine("\tfun remove$featureNameCapitalized(v: $type)")
+                .append(loadTpl.genInterface())
+            if (subClasses.isNotEmpty()) {
+                str.appendLine("\tfun add$featureNameCapitalized(type: ${type}Type): $type")
+            } else if (!isETypeAbstract) {
+                str.appendLine("\tfun add$featureNameCapitalized(): $type")
             }
-
-            return addTpl + "\n" + loadTpl.genInterface() + """
-                ${if (!isETypeAbstract) "fun add$featureNameCapitalized(): $type" else ""}
-                fun remove$featureNameCapitalized(v: $type)
-            """.replaceIndent("\t").plus("\n")
+            return str.toString()
         }
 
         override fun genImplementation() : String {
-            val addTpl = subClasses.joinToString("") { subType ->
-                genAddSubtypeImpl(subType)
-            }.plus(if (!isETypeAbstract) genAddImpl() else "")
-
-            return addTpl + "\n" + loadTpl.genImpl() + """
-                override fun remove$featureNameCapitalized(v: $type) {
-                    removeChild("${eRef.name}", v$lowerBound)
+            val str = StringBuilder().appendLine()
+            // add template
+            if (subClasses.isNotEmpty()) {
+                val enum = "${type}Type"
+                str.appendLine("\toverride fun add$featureNameCapitalized(type: $enum): $type {")
+                str.appendLine("\t\treturn when(type) {")
+                for (it in allTypes) {
+                    str.appendLine("\t\t\t${enum}.$it -> ${it}Neo4jImpl(createChild(\"${eRef.name}\", \"$it\"$upperBound))")
                 }
-            """.replaceIndent("\t").plus("\n")
+                str.appendLine("\t\t}\n\t}")
+            } else if (!isETypeAbstract) {
+                str.appendLine("\toverride fun add$featureNameCapitalized(): $type {")
+                    .appendLine("\t\treturn ${type}Neo4jImpl(createChild(\"${eRef.name}\", \"$type\"$upperBound))")
+                    .appendLine("\t}")
+            }
+            str.appendLine()
+            // remove template
+            str.appendLine("\toverride fun remove$featureNameCapitalized(v: $type) {")
+                .appendLine("\t\tremoveChild(\"${eRef.name}\", v$lowerBound)")
+                .appendLine("\t}")
+
+            return str.toString() + "\n" + loadTpl.genImpl()
         }
-
-        private fun genAddSubtypeImpl(subType: String) = """
-            override fun add$subType$featureNameCapitalized(): $subType {
-                return ${subType}Neo4jImpl(createChild("${eRef.name}", "$subType"$upperBound))
-            }
-        """.replaceIndent("\t").plus("\n")
-
-        private fun genAddImpl() = """
-            override fun add$featureNameCapitalized(): $type {
-                return ${type}Neo4jImpl(createChild("${eRef.name}", "$type"$upperBound))
-            }
-        """.replaceIndent("\t").plus("\n")
     }
 }

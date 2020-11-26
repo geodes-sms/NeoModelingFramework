@@ -31,7 +31,8 @@ class ModelManagerWriter(context: Context) {
                 override fun close() {
                     manager.close()
                 }
-        """.trimIndent().plus("\n"))
+                
+        """.trimIndent() + System.lineSeparator())
     }
 
     fun genClass(className: String) {
@@ -48,7 +49,7 @@ class ModelManagerWriter(context: Context) {
                 manager.unload(node)
             }
 
-        """.replaceIndent("\t").plus("\n"))
+        """.replaceIndent("\t") + System.lineSeparator())
     }
 
     fun close() {

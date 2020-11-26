@@ -7,10 +7,8 @@ interface CompositeVertex : Vertex {
 	fun getCapacity(): Int?
 	fun setDefault_vertex(v: Vertex)
 	fun unsetDefault_vertex(v: Vertex)
-		fun loadDefault_vertex(): Vertex?
-	
-	fun addCompositeVertexSub_vertices(): CompositeVertex
-	fun loadSub_vertices(limit: Int = 100): List<Vertex>
-	fun addSub_vertices(): Vertex
+	fun loadDefault_vertex(): Vertex?
 	fun removeSub_vertices(v: Vertex)
+	fun loadSub_vertices(limit: Int = 100): List<Vertex>
+	fun addSub_vertices(type: VertexType): Vertex
 }

@@ -1,6 +1,5 @@
 package geodes.sms.neo4j.io.controllers
 
-import geodes.sms.neo4j.io.DBAccess
 import geodes.sms.neo4j.io.GraphManager
 import geodes.sms.neo4j.io.type.AsInt
 import geodes.sms.neo4j.io.type.AsList
@@ -9,7 +8,10 @@ import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PropertyAccessorTest {
-    private val manager = GraphManager(DBAccess.dbUri, DBAccess.username, DBAccess.password)
+    private val dbUri = "bolt://localhost:7687"
+    private val username = "neo4j"
+    private val password = "admin"
+    private val manager = GraphManager(dbUri, username, password)
 
     @AfterEach fun clearCache() {
         manager.clearCache()
