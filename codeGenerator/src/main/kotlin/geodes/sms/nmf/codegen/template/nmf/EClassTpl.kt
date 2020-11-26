@@ -17,12 +17,12 @@ class EClassTpl(val eClass: EClass, val basePackagePath: String) {
             import geodes.sms.neo4j.io.entity.INodeEntity
         
             interface $className : $superTypes {
-
+            
         """.trimIndent()
     }
 
     fun genImplHeader(): String {
-        val abstract = if (eClass.isAbstract) "abstract " else "" //if (subClassed) "open " else ""
+        val abstract = if (eClass.isAbstract) "abstract " else ""
         var ncImplementor = ", INodeController by nc"
         val superTypes = StringBuilder()
         for (s in eClass.eSuperTypes) {
@@ -34,17 +34,14 @@ class EClassTpl(val eClass: EClass, val basePackagePath: String) {
             else superTypes.append(", $name by ${name}Neo4jImpl(nc)")
         }
         superTypes.append(ncImplementor)
-        val header =  """
-            package $basePackagePath.neo4jImpl
-            
-            import geodes.sms.neo4j.io.controllers.INodeController
-            import geodes.sms.neo4j.io.type.*
-            import $basePackagePath.*
-            
-            ${abstract}class ${className}Neo4jImpl(nc: INodeController) : $className$superTypes {
-        """.trimIndent()
 
-        val str = StringBuilder().append(header)
+        val str = StringBuilder()
+            .appendLine("package $basePackagePath.neo4jImpl\n")
+            .appendLine("import geodes.sms.neo4j.io.controllers.INodeController")
+            .appendLine("import geodes.sms.neo4j.io.type.*")
+            .appendLine("import $basePackagePath.*\n")
+            .append("${abstract}class ${className}Neo4jImpl(nc: INodeController) : $className$superTypes {")
+
         if (eClass.eSuperTypes.size > 1 || (eClass.eSuperTypes.size == 1 && !eClass.eSuperTypes[0].isAbstract)) {
             str.appendLine()
             str.appendLine("\toverride val _id by nc::_id")

@@ -1,6 +1,5 @@
 package geodes.sms.neo4j.io.controllers
 
-import geodes.sms.neo4j.io.GraphManager
 import geodes.sms.neo4j.io.type.AsInt
 import geodes.sms.neo4j.io.type.AsList
 import geodes.sms.neo4j.io.type.AsString
@@ -11,7 +10,7 @@ internal class PropertyAccessorTest {
     private val dbUri = "bolt://localhost:7687"
     private val username = "neo4j"
     private val password = "admin"
-    private val manager = GraphManager(dbUri, username, password)
+    private val manager = IGraphManager.getDefaultManager(dbUri, username, password)
 
     @AfterEach fun clearCache() {
         manager.clearCache()

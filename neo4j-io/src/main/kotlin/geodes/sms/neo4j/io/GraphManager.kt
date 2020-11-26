@@ -1,11 +1,12 @@
 package geodes.sms.neo4j.io
 
+import geodes.sms.neo4j.io.controllers.IGraphManager
 import geodes.sms.neo4j.io.controllers.INodeController
 import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.*
 
 /** Graph proxy */
-class GraphManager(dbUri: String, username: String, password: String) : AutoCloseable {
+internal class GraphManager(dbUri: String, username: String, password: String) : IGraphManager {
     private val driver = GraphDatabase.driver(dbUri, AuthTokens.basic(username, password))
 
     private val creator = BufferedCreator()
@@ -14,7 +15,7 @@ class GraphManager(dbUri: String, username: String, password: String) : AutoClos
     private val reader = DBReader(driver)
     private val mapper = Mapper(creator, updater, remover, reader)
 
-    fun saveChanges() {
+    override fun saveChanges() {
         val session = driver.session()
         mapper.saveChanges(session)
         session.close()
@@ -22,33 +23,34 @@ class GraphManager(dbUri: String, username: String, password: String) : AutoClos
 
     //fun clearChanges() {}
 
-    fun clearCache() = mapper.clearCache()
+    override fun clearCache() = mapper.clearCache()
 
-    fun clearDB() {
+    override fun clearDB() {
         val session = driver.session()
         remover.removeAll(session)
         session.close()
     }
 
-    fun createNode(label: String): INodeController {
+    override fun createNode(label: String): INodeController {
         return mapper.createNode(label)
     }
 
-    fun loadNode(id: Long, label: String): INodeController {
+    override fun loadNode(id: Long, label: String): INodeController {
         return mapper.loadNode(id, label)
     }
 
-//    fun load(query: String): List<INodeController> {
-//        return mapper.loadWithCustomQuery(query)
-//    }
+    @Suppress("OVERRIDE_BY_INLINE")
+    override inline fun <R> loadNodes(label: String, limit: Int, crossinline mapFunction: (INodeController) -> R): List<R> {
+        return mapper.loadNodesByLabel(label, limit, mapFunction)
+    }
 
     //also unloads all out/in refs
-    fun unload(node: INodeEntity) {
+    override fun unload(node: INodeEntity) {
         if (node is INodeController) node.unload()
         else throw Exception("object $node must be instance of INodeController")
     }
 
-    fun remove(node: INodeEntity) {
+    override fun remove(node: INodeEntity) {
         if (node is INodeController) node.remove()
         else throw Exception("object $node must be instance of INodeController")
     }

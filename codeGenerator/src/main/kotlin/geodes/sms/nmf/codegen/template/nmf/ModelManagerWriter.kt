@@ -8,13 +8,12 @@ class ModelManagerWriter(context: Context) {
     init {
         writer.write("""
             package ${context.basePackagePath}.neo4jImpl
-                
-            import geodes.sms.neo4j.io.GraphManager
-            import geodes.sms.neo4j.io.entity.INodeEntity
+            
+            import geodes.sms.neo4j.io.controllers.IGraphManager
             import ${context.basePackagePath}.*
                 
             class ModelManagerImpl(dbUri: String, username: String, password: String): AutoCloseable {
-                private val manager = GraphManager(dbUri, username, password)
+                private val manager = IGraphManager.getDefaultManager(dbUri, username, password)
                 
                 fun saveChanges() {
                     manager.saveChanges()
@@ -45,8 +44,16 @@ class ModelManagerWriter(context: Context) {
                 return ${className}Neo4jImpl(manager.loadNode(id, "$className"))
             }
             
+            fun load${className}ByLabel(limit: Int = 100): List<$className> {
+                return manager.loadNodes("$className", limit) { ${className}Neo4jImpl(it) }
+            }
+            
             fun unload(node: $className) {
                 manager.unload(node)
+            }
+            
+            fun remove(node: $className) {
+                manager.remove(node)
             }
 
         """.replaceIndent("\t") + System.lineSeparator())

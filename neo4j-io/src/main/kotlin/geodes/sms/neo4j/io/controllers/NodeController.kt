@@ -24,11 +24,11 @@ internal class NodeController constructor(
         EntityState.NEW -> StateNew()
         EntityState.PERSISTED -> StatePersisted()
         EntityState.MODIFIED -> StateModified()
-        EntityState.DETACHED -> StateDetached
-        else -> StateRemoved
+        EntityState.DETACHED -> StateDetached()
+        else -> StateRemoved()
     }
 
-    companion object;
+//    companion object;
 //        fun createForNewNode(
 //            mapper: Mapper, id: Long, label: String,
 //            propsDiff: HashMap<String, Value>
@@ -65,14 +65,14 @@ internal class NodeController constructor(
         propsDiff.clear()
         props.clear()
         outRefCount.clear()
-        state = StateRemoved
+        state = StateRemoved()
     }
 
     override fun onDetach() {
         propsDiff.clear()
         props.clear()
         outRefCount.clear()
-        state = StateDetached
+        state = StateDetached()
     }
 
     //////////////////////////////////////////
@@ -195,12 +195,12 @@ internal class NodeController constructor(
     private inner class StateNew : StateActive(), IPropertyAccessor by NewPropertyAccessor() {
         override fun remove() { //remove from bufferedCreator
             mapper.removeNode(this@NodeController)
-            state = StateRemoved
+            state = StateRemoved()
         }
 
         override fun unload() { //unload from nodesToCreate map
             mapper.unload(this@NodeController)
-            state = StateDetached
+            state = StateDetached()
         }
 
         override fun removeChild(rType: String, n: INodeEntity) {
@@ -237,12 +237,12 @@ internal class NodeController constructor(
     private open inner class StatePersisted : StateActive(), IPropertyAccessor by PersistedPropertyAccessor() {
         override fun remove() {
             mapper.removeNode(_id)
-            state = StateRemoved
+            state = StateRemoved()
         }
 
         override fun unload() {
             mapper.unload(_id)
-            state = StateDetached
+            state = StateDetached()
         }
 
         override fun removeChild(rType: String, n: INodeEntity) {
@@ -323,13 +323,13 @@ internal class NodeController constructor(
         ) = throw Exception(exceptionMsg)
     }
 
-    private object StateRemoved : StateNotActive(
+    private inner class StateRemoved : StateNotActive(
         "Node '$this' was removed. Cannot perform operation on removed node"
     ) {
         override fun getState() = EntityState.REMOVED
     }
 
-    private object StateDetached : StateNotActive(
+    private inner class StateDetached : StateNotActive(
         "Node '$this' was unloaded. Cannot perform operation on unloaded node"
     ) {
         override fun getState() = EntityState.DETACHED

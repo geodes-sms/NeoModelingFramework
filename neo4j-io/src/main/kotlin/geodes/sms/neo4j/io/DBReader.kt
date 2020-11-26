@@ -42,39 +42,34 @@ class DBReader(val driver: Driver) {
         return nodeRes
     }
 
-//    fun findRelationshipByID(id: Long) {
-//
-//    }
-
-//    /** return endNode */
-//    fun findConnectedNodes(
-//        startID: Long, rType: String,
-//        filter: String = "",
-//        limit: Int = 100
-//        //mapFunction: (Sequence<ContainmentResult>) -> Unit
-//    ): List<NodeResult> {
-//        val params = MapValue(mapOf(
-//            "startID" to IntegerValue(startID),
-//            //"labelFilter" to StringValue("+$endLabel"),
-//            "refPattern" to StringValue("$rType>"),
-//            "limit" to IntegerValue(limit.toLong())
-//        ))
-//
-//        return driver.session().readTransaction { tx ->
-//            val res = tx.run(Query("MATCH (start) WHERE ID(start)=\$startID" +
-//                    " CALL apoc.path.expand(start, \$refPattern, \$labelFilter, 1, 1) YIELD path " +
-//                    filter +
-//                    //" RETURN nodes(path)[1] AS node, collect(ID(relationships(path)[0])) AS refID " +
-//                    " RETURN nodes(path)[1] AS endNode LIMIT \$limit", params)
-//            )
-//            res.stream().map { NodeResult( it["endNode"].asNode() )  }.toList()
-//
-//
-////            mapFunction(Sequence { res }.map {
-////                ContainmentResult(it["endNode"].asNode())
-////            })
-//        }
-//    }
+    inline fun <R> findNodesByLabelWithOutputsCount(
+        label: String,
+        limit: Int = 100,
+        crossinline mapFunction: (NodeResult) -> R
+    ): List<R> {
+        val params = MapValue(mapOf("limit" to IntegerValue(limit.toLong())))
+        val session = driver.session()
+        val data = session.readTransaction { tx ->
+            val res = tx.run(Query("MATCH (node:$label)" +
+                    " WITH node LIMIT \$limit" +
+                    " OPTIONAL MATCH (node)-[r]->()" +
+                    " WITH ID(node) AS id, labels(node)[0] AS label, type(r) AS rType, count(r) AS count" +
+                    " RETURN id, label, apoc.map.fromPairs(collect([rType, count])) AS count", params)
+            )
+            val data = LinkedList<R>()
+            for (record in res) {
+                data.add(mapFunction(
+                    NodeResult(
+                        id = record["id"].asLong(),
+                        label = record["label"].asString(),
+                        outRefCount = HashMap(record["count"].asMap { it.asInt() }) )
+                ))
+            }
+            data
+        }
+        session.close()
+        return data
+    }
 
     /** @return endNode plus count of output refs aggregated by count*/
     inline fun <R> findConnectedNodesWithOutputsCount(
@@ -126,14 +121,6 @@ class DBReader(val driver: Driver) {
         } */
         session.close()
         return data
-    }
-
-    fun loadNodes(query: String) {
-        val session = driver.session()
-        session.readTransaction { tx ->
-            tx.run(query)
-        }
-        session.close()
     }
 
     fun getNodeCountWithProperty(label: String, propName: String, propValue: Value): Int {
