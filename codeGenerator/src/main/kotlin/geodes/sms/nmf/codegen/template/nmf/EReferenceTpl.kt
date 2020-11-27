@@ -8,18 +8,8 @@ import java.lang.StringBuilder
 class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTemplate(eRef) {
     private val subClasses: List<String> = context.getSubClasses(eRef.eReferenceType)
     private val type = eRef.eReferenceType.name.capitalize()
-    private val isETypeAbstract = eRef.eReferenceType.isAbstract || eRef.eReferenceType.isInterface
-    private val allTypes = if (isETypeAbstract) subClasses else subClasses.plus(type)
-
-    private val readMapFunction = if (subClasses.isNotEmpty()) {
-        val str = StringBuilder("\t\t\twhen (it.label) {\n")
-        for (t in allTypes) {
-            str.appendLine("\t\t\t\t\"$t\" -> ${t}Neo4jImpl(it)")
-        }
-        str.appendLine("\t\t\t\telse -> throw Exception(\"Cannot cast to INodeController\")")
-        str.appendLine("\t\t\t}")
-        str.toString()
-    } else if (!isETypeAbstract) "\t\t\t${type}Neo4jImpl(it)\n" else ""
+    private val allTypes = if (eRef.eReferenceType.isAbstract || eRef.eReferenceType.isInterface)
+        subClasses else subClasses.plus(type)
 
     private val loadTpl = when (eRef.upperBound) {
         1 -> SingleRefLoadTemplate()
@@ -39,6 +29,20 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
     private val lowerBound = when (val v = eRef.lowerBound) {
         0, -1, -2 -> ""
         else -> ", $v"
+    }
+
+    private val readMapFunction = when {
+        allTypes.size > 1 -> {
+            val str = StringBuilder("\t\t\twhen (it.label) {\n")
+            for (t in allTypes) {
+                str.appendLine("\t\t\t\t\"$t\" -> ${t}Neo4jImpl(it)")
+            }
+            str.appendLine("\t\t\t\telse -> throw Exception(\"Cannot cast to INodeController\")")
+            str.appendLine("\t\t\t}")
+            str.toString()
+        }
+        allTypes.size == 1 -> "\t\t\t${allTypes[0]}Neo4jImpl(it)\n"
+        else -> ""
     }
 
     private interface LoadTemplate {
@@ -98,12 +102,10 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
             .appendLine("\toverride fun set$featureNameCapitalized(v: $type) {")
             .appendLine("\t\tcreateOutRef(\"${eRef.name}\", v$upperBound)")
             .appendLine("\t}")
-
             .appendLine()
             .appendLine("\toverride fun unset$featureNameCapitalized(v: $type) {")
             .appendLine("\t\tremoveOutRef(\"${eRef.name}\", v$lowerBound)")
             .appendLine("\t}")
-
             .appendLine()
             .append(loadTpl.genImpl())
             .toString()
@@ -114,10 +116,10 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
             val str = StringBuilder()
                 .appendLine("\tfun remove$featureNameCapitalized(v: $type)")
                 .append(loadTpl.genInterface())
-            if (subClasses.isNotEmpty()) {
+            if (allTypes.size > 1) {
                 str.appendLine("\tfun add$featureNameCapitalized(type: ${type}Type): $type")
-            } else if (!isETypeAbstract) {
-                str.appendLine("\tfun add$featureNameCapitalized(): $type")
+            } else if (allTypes.size == 1) {
+                str.appendLine("\tfun add$featureNameCapitalized(): ${allTypes[0]}")
             }
             return str.toString()
         }
@@ -125,7 +127,7 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
         override fun genImplementation() : String {
             val str = StringBuilder().appendLine()
             // add template
-            if (subClasses.isNotEmpty()) {
+            if (allTypes.size > 1) {
                 val enum = "${type}Type"
                 str.appendLine("\toverride fun add$featureNameCapitalized(type: $enum): $type {")
                 str.appendLine("\t\treturn when(type) {")
@@ -133,9 +135,9 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
                     str.appendLine("\t\t\t${enum}.$it -> ${it}Neo4jImpl(createChild(\"${eRef.name}\", \"$it\"$upperBound))")
                 }
                 str.appendLine("\t\t}\n\t}")
-            } else if (!isETypeAbstract) {
-                str.appendLine("\toverride fun add$featureNameCapitalized(): $type {")
-                    .appendLine("\t\treturn ${type}Neo4jImpl(createChild(\"${eRef.name}\", \"$type\"$upperBound))")
+            } else if (allTypes.size == 1) {
+                str.appendLine("\toverride fun add$featureNameCapitalized(): ${allTypes[0]} {")
+                    .appendLine("\t\treturn ${allTypes[0]}Neo4jImpl(createChild(\"${eRef.name}\", \"$type\"$upperBound))")
                     .appendLine("\t}")
             }
             str.appendLine()
