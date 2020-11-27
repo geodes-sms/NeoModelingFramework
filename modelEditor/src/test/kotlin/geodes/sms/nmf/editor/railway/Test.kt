@@ -1,4 +1,4 @@
-package geodes.sms.nmf.railway
+package geodes.sms.nmf.editor.railway
 
 import geodes.sms.nmf.editor.railway.Region
 import geodes.sms.nmf.editor.railway.Segment

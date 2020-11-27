@@ -15,7 +15,6 @@ internal class NodeController constructor(
     override val outRefCount: HashMap<String, Int>, //rType --> count
     state: EntityState
 ) : INodeController, StateListener, PropertyAccessor(propsDiff) {
-
     override fun getState() = state.getState()
     override var _id: Long = id
         private set
@@ -91,20 +90,12 @@ internal class NodeController constructor(
     }
     ////////////////////////////////////////////
 
-    override fun createChild(rType: String, label: String): INodeController {
-        return state.createChild(label, rType)
-    }
-
     override fun createChild(rType: String, label: String, upperBound: Int): INodeController {
         return state.createChild(label, rType, upperBound)
     }
 
     override fun createOutRef(rType: String, endNode: INodeEntity, upperBound: Int) {
         state.createOutRef(rType, endNode, upperBound)
-    }
-
-    override  fun createOutRef(rType: String, endNode: INodeEntity)/*: IRelationshipController*/ {
-        state.createOutRef(rType, endNode)
     }
 
     override fun remove() {
@@ -115,16 +106,8 @@ internal class NodeController constructor(
         state.unload()
     }
 
-    override fun removeChild(rType: String, childNode: INodeEntity) {
-        state.removeChild(rType, childNode)
-    }
-
     override fun removeChild(rType: String, childNode: INodeEntity, lowerBound: Int) {
         state.removeChild(rType, childNode, lowerBound)
-    }
-
-    override  fun removeOutRef(rType: String, endNode: INodeEntity) {
-        state.removeOutRef(rType, endNode)
     }
 
     override fun removeOutRef(rType: String, endNode: INodeEntity, lowerBound: Int) {
@@ -160,7 +143,8 @@ internal class NodeController constructor(
             return if (upperBound - count > 0) {
                 outRefCount[rType] = count + 1
                 mapper.createChild(this@NodeController, rType, label)
-            } else throw UpperBoundExceedException(upperBound, rType)
+                //createChild(label, rType)
+            } else throw UpperBoundExceedException(_id, label, rType, upperBound, count)
         }
 
         override fun createOutRef(rType: String, end: INodeEntity) {
@@ -171,8 +155,9 @@ internal class NodeController constructor(
             val count = outRefCount.getOrDefault(rType, 0)
             if (upperBound - count > 0) {
                 outRefCount[rType] = count + 1
-                createOutRef(rType, end)
-            } else throw UpperBoundExceedException(upperBound, rType)
+                mapper.createRelationship(this@NodeController, rType, end)
+                //createOutRef(rType, end)
+            } else throw UpperBoundExceedException(_id, label, rType, upperBound, count)
         }
 
         override fun removeChild(rType: String, n: INodeEntity, loverBound: Int) {
@@ -180,7 +165,7 @@ internal class NodeController constructor(
             if (count - loverBound > 0) {
                 outRefCount[rType] = count - 1
                 removeChild(rType, n)
-            } else throw LoverBoundExceedException(loverBound, rType)
+            } else throw LoverBoundExceedException(_id, label, rType, loverBound, count)
         }
 
         override fun removeOutRef(rType: String, end: INodeEntity, loverBound: Int) {
@@ -188,7 +173,7 @@ internal class NodeController constructor(
             if (count - loverBound > 0) {
                 outRefCount[rType] = count - 1
                 removeOutRef(rType, end)
-            } else throw LoverBoundExceedException(loverBound, rType)
+            } else throw LoverBoundExceedException(_id, label, rType, loverBound, count)
         }
     }
 
