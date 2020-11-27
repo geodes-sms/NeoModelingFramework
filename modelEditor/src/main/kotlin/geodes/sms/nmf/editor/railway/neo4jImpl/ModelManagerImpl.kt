@@ -38,6 +38,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	    manager.unload(node)
 	}
 	
+	fun remove(node: RailwayContainer) {
+	    manager.remove(node)
+	}
+	
 	fun createRegion(): Region {
 	    return RegionNeo4jImpl(manager.createNode("Region"))
 	}
@@ -52,6 +56,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	
 	fun unload(node: Region) {
 	    manager.unload(node)
+	}
+	
+	fun remove(node: Region) {
+	    manager.remove(node)
 	}
 	
 	fun createRoute(): Route {
@@ -70,6 +78,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	    manager.unload(node)
 	}
 	
+	fun remove(node: Route) {
+	    manager.remove(node)
+	}
+	
 	fun createSensor(): Sensor {
 	    return SensorNeo4jImpl(manager.createNode("Sensor"))
 	}
@@ -84,6 +96,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	
 	fun unload(node: Sensor) {
 	    manager.unload(node)
+	}
+	
+	fun remove(node: Sensor) {
+	    manager.remove(node)
 	}
 	
 	fun createSegment(): Segment {
@@ -102,6 +118,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	    manager.unload(node)
 	}
 	
+	fun remove(node: Segment) {
+	    manager.remove(node)
+	}
+	
 	fun createSwitch(): Switch {
 	    return SwitchNeo4jImpl(manager.createNode("Switch"))
 	}
@@ -116,6 +136,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	
 	fun unload(node: Switch) {
 	    manager.unload(node)
+	}
+	
+	fun remove(node: Switch) {
+	    manager.remove(node)
 	}
 	
 	fun createSwitchPosition(): SwitchPosition {
@@ -134,6 +158,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	    manager.unload(node)
 	}
 	
+	fun remove(node: SwitchPosition) {
+	    manager.remove(node)
+	}
+	
 	fun createSemaphore(): Semaphore {
 	    return SemaphoreNeo4jImpl(manager.createNode("Semaphore"))
 	}
@@ -148,6 +176,10 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	
 	fun unload(node: Semaphore) {
 	    manager.unload(node)
+	}
+	
+	fun remove(node: Semaphore) {
+	    manager.remove(node)
 	}
 	
 }
