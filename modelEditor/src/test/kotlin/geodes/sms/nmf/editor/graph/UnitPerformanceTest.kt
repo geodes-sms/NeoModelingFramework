@@ -199,18 +199,18 @@ class UnitPerformanceTest {
 
     @Test fun removeContainmentsWidthTest() {
         val resWriter = File(resDirectory,"RemoveContainmentsWidth.csv").bufferedWriter()
-        //----- preparation step -----
-        val vertices = LinkedList<Vertex>()
-        val graph = manager.createGraph()
-        for (i in 1..(sizes.sum() * calibration)) {
-            vertices.add(graph.addVertices(VertexType.Vertex))
-        }
-        manager.saveChanges()
-        //--- preparation step end ----
-
         for (i in sizes) {
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
+                //----- preparation step -----
+                val vertices = LinkedList<Vertex>()
+                val graph = manager.createGraph()
+                for (j in 1..i) {
+                    vertices.add(graph.addVertices(VertexType.Vertex))
+                }
+                manager.saveChanges()
+                //--- preparation step end ----
+
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
                     graph.removeVertices(vertices.pop())
@@ -256,18 +256,22 @@ class UnitPerformanceTest {
 
     @Test fun removeCrossReferenceTest() {
         val resWriter = File(resDirectory,"RemoveCrossRef.csv").bufferedWriter()
-        //----- preparation step -----
+        //----- preparation step1 -----
         val cv1 = manager.createCompositeVertex()
         val cv2 = manager.createCompositeVertex()
-        for (i in 1..(sizes.sum() * calibration) + 1) {
-            cv1.setEdge(cv2)
-        }
         manager.saveChanges()
-        //--- preparation step end ----
+        //--- preparation step1 end ----
 
         for (i in sizes) {
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
+                //--- preparation step2 ----
+                for (j in 1..(i + 1)) {
+                    cv1.setEdge(cv2)
+                }
+                manager.saveChanges()
+                //--- preparation step2 end ----
+
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
                     cv1.unsetEdge(cv2)
