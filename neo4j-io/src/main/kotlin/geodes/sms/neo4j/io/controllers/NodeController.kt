@@ -52,12 +52,10 @@ internal class NodeController constructor(
     override fun onCreate(id: Long) {
         this._id = id
         state = StatePersisted()
-        propsDiff.clear()
     }
 
     override fun onUpdate() {
         state = StatePersisted()
-        propsDiff.clear()
     }
 
     override fun onRemove() {

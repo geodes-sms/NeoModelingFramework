@@ -18,8 +18,9 @@ class UnitPerformanceTest {
     private val resDirectory = File("../TestResults/graph/")
 //    private val sizes = listOf(5, 10, 30)
     private val sizes = listOf(
-        10, 100, 1000, 5000, 10000, 15000, 20000, 25000, 30000, 40000, 60000, 80000, 100000,
-        120000, 140000, 160000, 180000, 200000, 250000, 300000, 350000//, 400000
+        10, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000, 100000,
+        120000, 140000, 160000, 180000, 200000, 225000, 250000, 275000, 300000,
+        325000, 350000, 375000, 400000
     )
     private val maxSize = sizes.maxOrNull()!!
     private val calibration = 30
@@ -150,13 +151,12 @@ class UnitPerformanceTest {
         manager.saveChanges()
         //--- preparation step end ----
 
-        var id = 0
         for (i in sizes) {
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
                 val startTime = System.currentTimeMillis()
                 for (v in vertices) {
-                    v.setId(id++)
+                    v.setId(v.getId()!! * -1)
                 }
                 manager.saveChanges()
                 val endTime = System.currentTimeMillis()
