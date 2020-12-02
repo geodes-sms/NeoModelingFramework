@@ -206,7 +206,19 @@ internal abstract class PropertyAccessor(
         }
     }
 
-    protected open inner class PersistedPropertyAccessor: ModifiedPropertyAccessor() {
+    protected open inner class PersistedPropertyAccessor: ActivePropertyAccessor() {
+        override fun <T : Any> getProperty(name: String, mapFunc: MapFunction<T>): T? {
+            val resCached = props[name]
+            return if (resCached != null) resCached as? T else {
+                val res = readPropertyFromDB(name)
+                return if (res.isNull) null else {
+                    val value = mapFunc.apply(res)
+                    props[name] = value
+                    value
+                }
+            }
+        }
+
         override fun putProperty(name: String, value: String) {
             updateEntity()
             super.putProperty(name, value)
@@ -355,20 +367,6 @@ internal abstract class PropertyAccessor(
         override fun removeProperty(name: String) {
             updateEntity()
             super.removeProperty(name)
-        }
-    }
-
-    protected open inner class ModifiedPropertyAccessor : ActivePropertyAccessor() {
-        override fun <T : Any> getProperty(name: String, mapFunc: MapFunction<T>): T? {
-            val resCached = props[name]
-            return if (resCached != null) resCached as? T else {
-                val res = readPropertyFromDB(name)
-                return if (res.isNull) null else {
-                    val value = mapFunc.apply(res)
-                    props[name] = value
-                    value
-                }
-            }
         }
     }
 

@@ -110,7 +110,7 @@ class UnitPerformanceTest {
     @Test fun updateTest() {
         val resWriter = File(resDirectory,"Update.csv").bufferedWriter()
         //preparation step
-        val vertices = LinkedList<CompositeVertex>()
+        val vertices = ArrayList<CompositeVertex>(maxSize)
         for (i in 1..maxSize) {
             val vertex = manager.createCompositeVertex()
             vertex.setCapacity(7)
@@ -124,9 +124,10 @@ class UnitPerformanceTest {
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
                 val startTime = System.currentTimeMillis()
-                for (vertex in vertices) {
-                    vertex.setCapacity(999)
-                    vertex.setIs_initial(false)
+                for (j in 1..i) {
+                    val vertex = vertices[j]
+                    vertex.setCapacity(-1 * vertex.getCapacity()!!)
+                    vertex.setIs_initial(!vertex.getIs_initial()!!) //change boolean to opposite value
                     vertex.setName("qwerty")
                 }
                 manager.saveChanges()
@@ -155,7 +156,8 @@ class UnitPerformanceTest {
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
                 val startTime = System.currentTimeMillis()
-                for (v in vertices) {
+                for (j in 1..i) {
+                    val v = vertices[j]
                     v.setId(v.getId()!! * -1)
                 }
                 manager.saveChanges()
