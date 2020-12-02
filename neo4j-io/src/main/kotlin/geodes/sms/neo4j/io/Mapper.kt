@@ -150,13 +150,15 @@ internal class Mapper(
     fun removeNode(node: INodeEntity) {
         creator.popNodeCreate(node._id)
         nodesToCreate.remove(node._id)
+        removeContainmentsCascade(node._id)
     }
 
+    // from db
     fun removeNode(id: Long) {
         remover.removeNode(id)
     }
 
-    //from db
+    // from db
     fun removeChild(startID: Long, rType: String, endID: Long) {
         remover.removeChild(startID, rType, endID)
     }
@@ -275,11 +277,16 @@ internal class Mapper(
                 val node = trackedNodes.remove(id)
                 if (node != null) {
                     node.onRemove()
-                    if (node.getState() == EntityState.MODIFIED) {
-                        updater.popNodeUpdate(node._id)
-                        nodesToUpdate.remove(node._id)
-                    }
+//                    if (node.getState() == EntityState.MODIFIED) {
+//                        updater.popNodeUpdate(node._id)
+//                        nodesToUpdate.remove(node._id)
+//                    }
                 }
+            }
+        }
+        remover.commitNodesRemoveByID(session) { ids ->
+            for (id in ids) {
+                trackedNodes.remove(id)?.onRemove()
             }
         }
         remover.commitRelationshipsRemoveByHost(session)

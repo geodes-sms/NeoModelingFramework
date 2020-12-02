@@ -30,7 +30,7 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	    return GraphNeo4jImpl(manager.loadNode(id, "Graph"))
 	}
 	
-	fun loadGraphByLabel(limit: Int = 100): List<Graph> {
+	fun loadGraphList(limit: Int = 100): List<Graph> {
 	    return manager.loadNodes("Graph", limit) { GraphNeo4jImpl(it) }
 	}
 	
@@ -50,7 +50,7 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	    return VertexNeo4jImpl(manager.loadNode(id, "Vertex"))
 	}
 	
-	fun loadVertexByLabel(limit: Int = 100): List<Vertex> {
+	fun loadVertexList(limit: Int = 100): List<Vertex> {
 	    return manager.loadNodes("Vertex", limit) { VertexNeo4jImpl(it) }
 	}
 	
@@ -70,7 +70,7 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 	    return CompositeVertexNeo4jImpl(manager.loadNode(id, "CompositeVertex"))
 	}
 	
-	fun loadCompositeVertexByLabel(limit: Int = 100): List<CompositeVertex> {
+	fun loadCompositeVertexList(limit: Int = 100): List<CompositeVertex> {
 	    return manager.loadNodes("CompositeVertex", limit) { CompositeVertexNeo4jImpl(it) }
 	}
 	

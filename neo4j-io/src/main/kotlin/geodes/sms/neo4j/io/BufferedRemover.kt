@@ -111,24 +111,41 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
         refsToRemoveByHostNodes.clear()
     }
 
-    //fun commitNodesRemoveByID() {}
-//  do not work like this!!!
-//    fun commitRelationshipsRemoveByID(session: Session): Sequence<Long> {
-//        if (refsToRemoveByID.isEmpty()) return emptySequence()
-//
-//        val batchData = refsToRemoveByID.map { IntegerValue(it) }
-//        return session.writeTransaction { tx ->
-//            val res = tx.run(Query("UNWIND \$batch AS id" +
+    fun commitNodesRemoveByID(session: Session, mapFunction: (Sequence<Long>) -> Unit) {
+        val paramsIterator = nodesToRemoveByID.asSequence().map {
+            MapValue(mapOf("id" to IntegerValue(it)))
+        }.iterator()
+
+        fun commit(batchSize: Int) {
+            session.writeTransaction { tx ->
+                val res = tx.run(Query("UNWIND \$batch AS row" +
+                        " MATCH (node) WHERE ID(node)=row.id" +
+                        " WITH node" +
+                        " MATCH (node)-[*0..{containment:true}]->(d)" +
+                        " WITH d, ID(d) AS removedIDs" +
+                        " DETACH DELETE d" +
+                        " RETURN removedIDs",
+                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
+                ))
+                mapFunction(Sequence { res }.map { it["removedIDs"].asLong() })
+            }
+        }
+
+        for (i in 1..(nodesToRemoveByID.size / nodesBatchSize)) {
+            commit(nodesBatchSize)
+        }
+        val rem = nodesToRemoveByID.size % nodesBatchSize
+        if (rem > 0) commit(rem)
+        nodesToRemoveByID.clear()
+    }
+
+//    val res = tx.run(Query("UNWIND \$batch AS id" +
 //                    " MATCH ()-[r]->()" +
 //                    " WHERE ID(r)=id" +
 //                    " WITH ID(r) AS removedIDs" +
 //                    " DELETE d" +
 //                    " RETURN removedIDs",
 //                MapValue(mapOf("batch" to ListValue(*Array(batchData.size) {i -> batchData[i]} )))
-//            ))
-//            Sequence { res }.map { it["removedIDs"].asLong() }
-//        }
-//    }
 
     fun removeAll(session: Session) {
         session.writeTransaction { tx ->

@@ -309,13 +309,13 @@ internal class NodeController constructor(
     }
 
     private inner class StateRemoved : StateNotActive(
-        "Node '$this' was removed. Cannot perform operation on removed node"
+        "Node (lastID:$_id label:$label) was removed. Cannot perform operation on removed node"
     ) {
         override fun getState() = EntityState.REMOVED
     }
 
     private inner class StateDetached : StateNotActive(
-        "Node '$this' was unloaded. Cannot perform operation on unloaded node"
+        "Node (lastID:$_id label:$label) was unloaded. Cannot perform operation on unloaded node"
     ) {
         override fun getState() = EntityState.DETACHED
     }

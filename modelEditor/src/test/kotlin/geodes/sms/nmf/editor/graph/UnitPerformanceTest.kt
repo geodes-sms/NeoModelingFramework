@@ -16,10 +16,10 @@ class UnitPerformanceTest {
     private val password = "admin"
     private val manager = ModelManagerImpl(dbUri, username, password)
     private val resDirectory = File("../TestResults/graph/")
-//    private val sizes = listOf(5, 10, 30)
+//    private val sizes = listOf(10, 15, 20)
     private val sizes = listOf(
-        10, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000, 100000,
-        120000, 140000, 160000, 180000, 200000, 225000, 250000, 275000, 300000,
+        10, 50, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000,
+        100000, 125000, 150000, 175000, 200000, 225000, 250000, 275000, 300000,
         325000, 350000, 375000, 400000
     )
     private val maxSize = sizes.maxOrNull()!!
@@ -35,7 +35,8 @@ class UnitPerformanceTest {
         manager.clearDB()
     }
 
-    @Test fun createTest() {
+    // ---------------------------- CREATE ---------------------------- //
+    @Test fun createSingleTest() {
         val resWriter = File(resDirectory,"CreateSingle.csv").bufferedWriter()
         for (i in sizes) {
             val times = mutableListOf<Double>()
@@ -107,9 +108,39 @@ class UnitPerformanceTest {
         resWriter.close()
     }
 
+    @Test fun createCrossRefTest() {
+        val resWriter = File(resDirectory,"CreateCrossRef.csv").bufferedWriter()
+        for (i in sizes) {
+            val times = mutableListOf<Double>()
+            for (k in 1..calibration) {
+                //----- preparation step -----
+                val cv1 = manager.createCompositeVertex()
+                val cv2 = manager.createCompositeVertex()
+                manager.saveChanges()
+                //--- preparation step end ----
+
+                val startTime = System.currentTimeMillis()
+                for (j in 1..i) {
+                    cv1.setEdge(cv2)
+                }
+                manager.saveChanges()
+                val endTime = System.currentTimeMillis()
+                times.add((endTime - startTime).toDouble() / 1000)
+
+                //clear db
+                manager.clearDB()
+                manager.clearCache()
+            }
+            resWriter.write("$i;${times.average()}\n")
+            resWriter.flush()
+        }
+        resWriter.close()
+    }
+
+    // ---------------------------- UPDATE ---------------------------- //
     @Test fun updateTest() {
         val resWriter = File(resDirectory,"Update.csv").bufferedWriter()
-        //preparation step
+        //----- preparation step -----
         val vertices = ArrayList<CompositeVertex>(maxSize)
         for (i in 1..maxSize) {
             val vertex = manager.createCompositeVertex()
@@ -119,12 +150,13 @@ class UnitPerformanceTest {
             vertices.add(vertex)
         }
         manager.saveChanges()
+        //---- preparation step end ----
 
         for (i in sizes) {
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
                 val startTime = System.currentTimeMillis()
-                for (j in 1..i) {
+                for (j in 0 until i) {
                     val vertex = vertices[j]
                     vertex.setCapacity(-1 * vertex.getCapacity()!!)
                     vertex.setIs_initial(!vertex.getIs_initial()!!) //change boolean to opposite value
@@ -156,7 +188,7 @@ class UnitPerformanceTest {
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
                 val startTime = System.currentTimeMillis()
-                for (j in 1..i) {
+                for (j in 0 until i) {
                     val v = vertices[j]
                     v.setId(v.getId()!! * -1)
                 }
@@ -170,28 +202,27 @@ class UnitPerformanceTest {
         resWriter.close()
     }
 
-    @Test fun createCrossRefTest() {
-        val resWriter = File(resDirectory,"CreateCrossRef.csv").bufferedWriter()
+    // ---------------------------- REMOVE ---------------------------- //
+    @Test fun removeSingleTest() {
+        val resWriter = File(resDirectory,"RemoveSingle.csv").bufferedWriter()
         for (i in sizes) {
+            //----- preparation step -----
+            val vertices = LinkedList<CompositeVertex>()
+            for (j in 1..(i*calibration)) {
+                vertices.add(manager.createCompositeVertex())
+            }
+            manager.saveChanges()
+            //--- preparation step end ----
+
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
-                //----- preparation step -----
-                val cv1 = manager.createCompositeVertex()
-                val cv2 = manager.createCompositeVertex()
-                manager.saveChanges()
-                //--- preparation step end ----
-
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
-                    cv1.setEdge(cv2)
+                    manager.remove(vertices.pop())
                 }
                 manager.saveChanges()
                 val endTime = System.currentTimeMillis()
                 times.add((endTime - startTime).toDouble() / 1000)
-
-                //clear db
-                manager.clearDB()
-                manager.clearCache()
             }
             resWriter.write("$i;${times.average()}\n")
             resWriter.flush()
@@ -202,17 +233,17 @@ class UnitPerformanceTest {
     @Test fun removeContainmentsWidthTest() {
         val resWriter = File(resDirectory,"RemoveContainmentsWidth.csv").bufferedWriter()
         for (i in sizes) {
+            //----- preparation step -----
+            val vertices = LinkedList<Vertex>()
+            val graph = manager.createGraph()
+            for (j in 1..(i*calibration)) {
+                vertices.add(graph.addVertices(VertexType.Vertex))
+            }
+            manager.saveChanges()
+            //--- preparation step end ----
+
             val times = mutableListOf<Double>()
             for (k in 1..calibration) {
-                //----- preparation step -----
-                val vertices = LinkedList<Vertex>()
-                val graph = manager.createGraph()
-                for (j in 1..i) {
-                    vertices.add(graph.addVertices(VertexType.Vertex))
-                }
-                manager.saveChanges()
-                //--- preparation step end ----
-
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
                     graph.removeVertices(vertices.pop())
@@ -281,6 +312,59 @@ class UnitPerformanceTest {
                 manager.saveChanges()
                 val endTime = System.currentTimeMillis()
                 times.add((endTime - startTime).toDouble() / 1000)
+            }
+            resWriter.write("$i;${times.average()}\n")
+            resWriter.flush()
+        }
+        resWriter.close()
+    }
+
+    // ---------------------------- READ ---------------------------- //
+    @Test fun readContainmentsWidthTest() {
+        val resWriter = File(resDirectory,"ReadContainmentsWidth.csv").bufferedWriter()
+        //----- preparation step -----
+        val graph = manager.createGraph()
+        for (j in 1..maxSize) {
+            graph.addVertices(VertexType.Vertex)
+        }
+        manager.saveChanges()
+        manager.clearCache()
+        //--- preparation step end ----
+
+        for (i in sizes) {
+            val times = mutableListOf<Double>()
+            for (k in 1..calibration) {
+                val graphLoaded = manager.loadGraphById(graph._id)
+                val startTime = System.currentTimeMillis()
+                    graphLoaded.loadVertices(i)
+                val endTime = System.currentTimeMillis()
+                times.add((endTime - startTime).toDouble() / 1000)
+                manager.clearCache()
+            }
+            resWriter.write("$i;${times.average()}\n")
+            resWriter.flush()
+        }
+        resWriter.close()
+    }
+
+    @Test fun readByLabelTest() {
+        val resWriter = File(resDirectory,"ReadByLabel.csv").bufferedWriter()
+        //----- preparation step -----
+        for (j in 1..maxSize) {
+            manager.createCompositeVertex()
+        }
+        manager.saveChanges()
+        manager.clearCache()
+        //--- preparation step end ----
+
+        for (i in sizes) {
+            val times = mutableListOf<Double>()
+            for (k in 1..calibration) {
+                val startTime = System.currentTimeMillis()
+                    manager.loadCompositeVertexList(i)
+                val endTime = System.currentTimeMillis()
+                times.add((endTime - startTime).toDouble() / 1000)
+                manager.clearCache()
             }
             resWriter.write("$i;${times.average()}\n")
             resWriter.flush()

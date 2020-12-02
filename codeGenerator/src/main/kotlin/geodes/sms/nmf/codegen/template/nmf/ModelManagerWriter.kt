@@ -44,7 +44,7 @@ class ModelManagerWriter(context: Context) {
                 return ${className}Neo4jImpl(manager.loadNode(id, "$className"))
             }
             
-            fun load${className}ByLabel(limit: Int = 100): List<$className> {
+            fun load${className}List(limit: Int = 100): List<$className> {
                 return manager.loadNodes("$className", limit) { ${className}Neo4jImpl(it) }
             }
             
