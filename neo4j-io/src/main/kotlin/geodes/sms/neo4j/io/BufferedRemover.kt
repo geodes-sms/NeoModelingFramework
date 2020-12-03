@@ -151,7 +151,7 @@ class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
         session.writeTransaction { tx ->
             tx.run(Query("call apoc.periodic.iterate(" +
                     "\"MATCH (n) return n\", \"DETACH DELETE n\"," +
-                    " {batchSize:10000, parallel:true})" +
+                    " {batchSize:10000, parallel:false})" +
                     " YIELD batches, total return batches, total"))
         }
     }
