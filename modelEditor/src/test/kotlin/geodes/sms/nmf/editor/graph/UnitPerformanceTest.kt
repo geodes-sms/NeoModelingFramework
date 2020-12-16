@@ -16,14 +16,14 @@ class UnitPerformanceTest {
     private val password = "admin"
     private val manager = ModelManagerImpl(dbUri, username, password)
     private val resDirectory = File("../TestResults/graph/")
-//    private val sizes = listOf(10, 15, 20)
-    private val sizes = listOf(
-        10, 50, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000,
-        100000, 125000, 150000, 175000, 200000, 225000, 250000, 275000, 300000,
-        325000, 350000, 375000, 400000
-    )
+    private val sizes = listOf(10, 15, 20)
+//    private val sizes = listOf(
+//        10, 50, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000,
+//        100000, 125000, 150000, 175000, 200000, 225000, 250000, 275000, 300000,
+//        325000, 350000, 375000, 400000
+//    )
     private val maxSize = sizes.maxOrNull()!!
-    private val calibration = 30
+    private val calibration = 2//30
 
     init {
         resDirectory.mkdirs()
@@ -160,7 +160,7 @@ class UnitPerformanceTest {
                     val vertex = vertices[j]
                     vertex.setCapacity(-1 * vertex.getCapacity()!!)
                     vertex.setIs_initial(!vertex.getIs_initial()!!) //change boolean to opposite value
-                    vertex.setName("qwerty")
+                    //vertex.setName("qwerty")
                 }
                 manager.saveChanges()
                 val endTime = System.currentTimeMillis()

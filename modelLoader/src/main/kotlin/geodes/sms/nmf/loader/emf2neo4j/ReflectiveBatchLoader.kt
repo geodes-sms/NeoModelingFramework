@@ -5,14 +5,10 @@ import geodes.sms.nmf.neo4j.io.Entity
 import geodes.sms.nmf.neo4j.io.Values
 import org.eclipse.emf.common.util.AbstractTreeIterator
 import org.eclipse.emf.common.util.TreeIterator
-import org.eclipse.emf.ecore.EClass
 import org.eclipse.emf.ecore.EObject
-import org.eclipse.emf.ecore.resource.Resource
 import org.neo4j.driver.Value
 
-
 class ReflectiveBatchLoader(private val writer: GraphBatchWriter) {
-
     private val nodes = hashMapOf<EObject, Entity>()
     private fun getIterator(eObj: EObject): TreeIterator<EObject> {
         return object : AbstractTreeIterator<EObject>(eObj, true) {
@@ -45,11 +41,11 @@ class ReflectiveBatchLoader(private val writer: GraphBatchWriter) {
         for (eObject in getIterator(rootEObj)) {
             nodes[eObject] = writer.createNode(eObject.eClass().name, getProps(eObject))
             if (++index == nodeStep) {
-                nodeCount += writer.saveNodes()
+                nodeCount += writer.commitNodes()
                 index = 0
             }
         }
-        if (index > 0) nodeCount += writer.saveNodes()
+        if (index > 0) nodeCount += writer.commitNodes()
         return nodeCount
     }
 
@@ -58,9 +54,9 @@ class ReflectiveBatchLoader(private val writer: GraphBatchWriter) {
         var index = 0
         var refCount = 0
 
-        fun save() {
+        fun commitRefs() {
             if (++index == refStep) {
-                refCount += writer.saveRefs()
+                refCount += writer.commitRefs()
                 index = 0
             }
         }
@@ -78,7 +74,7 @@ class ReflectiveBatchLoader(private val writer: GraphBatchWriter) {
                                 end = nodes.getOrDefault(it as EObject, Entity()),
                                 isContainment = eRef.isContainment
                             )
-                            save()
+                            commitRefs()
                         }
                         is EObject -> {
                             writer.createRef(
@@ -87,14 +83,14 @@ class ReflectiveBatchLoader(private val writer: GraphBatchWriter) {
                                 end = nodes.getOrDefault(value, Entity()),
                                 isContainment = eRef.isContainment
                             )
-                            save()
+                            commitRefs()
                         }
                         else -> println("cannot parse EReference ${eRef.name}")
                     }
                 }
         }
         nodes.clear()
-        if (index > 0) refCount += writer.saveRefs()
+        if (index > 0) refCount += writer.commitRefs()
         return refCount
     }
 }

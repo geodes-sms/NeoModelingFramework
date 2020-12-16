@@ -6,10 +6,9 @@ import org.neo4j.driver.Value
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
-
 object Values {
     fun value(input: Any?): Value = when (input) {
-        null -> NullValue.NULL
+        null -> NullValue.NULL //not persistable value
         is String ->  StringValue(input)
         is Int ->   IntegerValue(input.toLong())
         is Long ->  IntegerValue(input)
@@ -31,7 +30,6 @@ object Values {
         }
         is Array<*> -> ListValue(*Array(input.size) { i -> value(input[i]) })
         //is EEnum = EClass = EDataType  //not in model instance; is not a direct attr type
-        else -> NullValue.NULL //not persistable value
-        //else -> Values.value(input)
+        else -> org.neo4j.driver.Values.value(input)
     }
 }

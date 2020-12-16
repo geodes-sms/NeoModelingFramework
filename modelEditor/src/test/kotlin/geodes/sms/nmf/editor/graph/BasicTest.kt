@@ -1,26 +1,25 @@
-//package geodes.sms.nmf.editor.graph
-//
-//import geodes.sms.nmf.editor.graph.neo4jImpl.ModelManagerImpl
-//import org.junit.jupiter.api.*
-//
-//
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//class BasicTest {
-//    private val dbUri = "bolt://localhost:7687"
-//    private val username = "neo4j"
-//    private val password = "admin"
-//    private val manager = ModelManagerImpl(dbUri, username, password)
-//
-//    @Test fun initGraph() {
-//        val graph = manager.createGraph()
-//        val v1 = graph.addCompositeVertex()
-//        val v2 = graph.addCompositeVertex()
-//
-//        v1.addSubVertex()
-//        v1.addSubVertex()
-//        v1.addSubVertex()
-//
-//        val sv = v2.addSubVertex()
+package geodes.sms.nmf.editor.graph
+
+import geodes.sms.nmf.editor.graph.neo4jImpl.ModelManagerImpl
+import org.junit.jupiter.api.*
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class BasicTest {
+    private val dbUri = "bolt://localhost:7687"
+    private val username = "neo4j"
+    private val password = "admin"
+    private val manager = ModelManagerImpl(dbUri, username, password)
+
+    @Test fun initGraph() {
+        val graph = manager.createGraph()
+        val v1 = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+        val v2 = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+
+        v1.addSub_vertices(VertexType.Vertex)
+        v1.addSub_vertices(VertexType.Vertex)
+        v1.addSub_vertices(VertexType.Vertex)
+
+//        val sv = v2.addSub_vertices()
 //        val cv1 = v2.addCompositeVertex()
 //        v2.addCompositeVertex()
 //        v2.addCompositeVertex()
@@ -31,20 +30,32 @@
 //        cv4.addCompositeVertex()
 //        cv4.addCompositeVertex()
 //        cv5.addCompositeVertex().addSubVertex().addEdge(cv4)
-//
-//        sv.addEdge(sv)
-//        sv.addEdge(sv)
-//        //sv.addEdge(sv)
-//        //cv4
-//
-//        manager.saveChanges()
-//    }
-//
+
+        //sv.addEdge(sv)
+        //cv4
+
+        manager.saveChanges()
+    }
+
+    @Test fun test1() {
+        val graph = manager.createGraph()
+        val v1 = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+        val v2 = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+        val v3 = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+        manager.saveChanges()
+
+        v1.setEdge(v2)
+        v1.setEdge(v2)
+        v1.setEdge(v1)
+        v3.addSub_vertices(VertexType.Vertex)
+        manager.saveChanges()
+    }
+
 //    @Test fun rmContainmentTest() {
 //        val graph = manager.createGraph()
-//        val cv1 = graph.addCompositeVertex()
-//        val cv2 = graph.addCompositeVertex()
-//        graph.addCompositeVertex()
+//        val cv1 = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+//        val cv2 = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+//        graph.addVertices(VertexType.CompositeVertex)
 //
 //        val cv5 = cv1.addCompositeVertex().addCompositeVertex()
 //        cv5.addCompositeVertex().addSubVertex()
@@ -62,7 +73,7 @@
 //        graph.removeVertex(cv2)
 //        manager.saveChanges()
 //    }
-//
+
 //    @Test fun rmChildFromBufferTest() {
 //        val graph = manager.createGraph()
 //        val cv1 = graph.addCompositeVertex()
@@ -207,9 +218,9 @@
 //        manager.saveChanges()
 //        assertThrows<Exception> { cv2.setId(10) }
 //    }
-//
-//    @AfterAll
-//    fun close() {
-//        manager.close()
-//    }
-//}
+
+    @AfterAll
+    fun close() {
+        manager.close()
+    }
+}

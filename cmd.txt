@@ -3,4 +3,4 @@
 java -jar ./modelLoader/build/libs/modelLoader.jar -h 127.0.0.1:7687 -u neo4j -p admin -m ./EmfModel/instance/Document.xmi
 
 ./gradlew :modelEditor:cleanTest :modelEditor:test --tests Vertex500.test1 --stacktrace
-./gradlew :modelEditor:cleanTest :modelEditor:test --tests Vertex500
+./gradlew :modelEditor:test --tests UnitPerformanceTest.createContainmentsWidthTest --tests UnitPerformanceTest.createContainmentsDepthTest --tests UnitPerformanceTest.updateTest --tests UnitPerformanceTest.removeSingleTest --tests UnitPerformanceTest.removeContainmentsWidthTest --tests UnitPerformanceTest.removeContainmentsDepthTest --tests UnitPerformanceTest.readContainmentsWidthTest

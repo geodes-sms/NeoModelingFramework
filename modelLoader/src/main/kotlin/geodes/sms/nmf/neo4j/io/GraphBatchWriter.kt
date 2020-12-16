@@ -7,7 +7,6 @@ import org.neo4j.driver.Value
 import org.neo4j.driver.internal.value.*
 import java.util.*
 
-
 class GraphBatchWriter(dbUri: String, username: String, password: String) : AutoCloseable {
     private val driver = GraphDatabase.driver(dbUri, AuthTokens.basic(username, password))
     private val session = driver.session()
@@ -36,8 +35,8 @@ class GraphBatchWriter(dbUri: String, username: String, password: String) : Auto
             mapOf("containment" to BooleanValue.fromBoolean(isContainment))))
     }
 
-    /** Save nodes from buffer and return count of saved nodes */
-    fun saveNodes(): Int {
+    /** Commit nodes from buffer and return count of saved nodes */
+    fun commitNodes(): Int {
         session.writeTransaction { tx ->
             val res = tx.run(Query("UNWIND \$batch AS row" +
                     " CALL apoc.create.node([row.label], row.props) YIELD node" +
@@ -54,7 +53,7 @@ class GraphBatchWriter(dbUri: String, username: String, password: String) : Auto
         return count
     }
 
-    fun saveRefs(): Int {
+    fun commitRefs(): Int {
         val paramsIterator = refsToCreate.asSequence().map { MapValue(mapOf(
             "from" to IntegerValue(it.startNode.id),
             "type" to StringValue(it.type),

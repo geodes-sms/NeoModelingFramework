@@ -12,7 +12,6 @@ import org.neo4j.driver.internal.value.StringValue
 import java.util.*
 import kotlin.collections.HashMap
 
-
 class EcoreLoader(private val writer: GraphBatchWriter) {
     private val nodes = hashMapOf<EObject, Entity>()
     private val deferredRefs = hashMapOf<Entity, List<DeferredRelationship>>()
@@ -58,7 +57,7 @@ class EcoreLoader(private val writer: GraphBatchWriter) {
         }
 
         nodes.clear()
-        return writer.saveNodes() to writer.saveRefs()
+        return writer.commitNodes() to writer.commitRefs()
     }
 
     private fun loadContainment(
@@ -83,8 +82,6 @@ class EcoreLoader(private val writer: GraphBatchWriter) {
     }
 
     private fun load(eAttr: EAttribute) {
-//        val node = load("eAttribute","EAttribute", eAttr)
-//        node.setProperty() //"eType", StringValue(eAttr.eType.name)
         val attrNode = writer.createNode("EAttribute",
             getProps(eAttr).apply { put("eType", StringValue(eAttr.eType.name)) }
         )
