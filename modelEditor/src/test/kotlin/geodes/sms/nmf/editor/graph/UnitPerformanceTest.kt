@@ -246,7 +246,7 @@ class UnitPerformanceTest {
             for (k in 1..calibration) {
                 val startTime = System.currentTimeMillis()
                 for (j in 1..i) {
-                    graph.removeVertices(vertices.pop())
+                    graph.unsetVertices(vertices.pop())
                 }
                 manager.saveChanges()
                 val endTime = System.currentTimeMillis()
@@ -274,9 +274,9 @@ class UnitPerformanceTest {
                 manager.saveChanges()
                 //--- preparation step end ----
 
-                val cv = graph.loadVertices(1)[0]   //find first vertex
+                val cv = graph.getVertices(1)[0]   //find first vertex
                 val startTime = System.currentTimeMillis()
-                graph.removeVertices(cv)
+                graph.unsetVertices(cv)
                 manager.saveChanges()
                 val endTime = System.currentTimeMillis()
                 times.add((endTime - startTime).toDouble() / 1000)
@@ -336,7 +336,7 @@ class UnitPerformanceTest {
             for (k in 1..calibration) {
                 val graphLoaded = manager.loadGraphById(graph._id)
                 val startTime = System.currentTimeMillis()
-                    graphLoaded.loadVertices(i)
+                    graphLoaded.getVertices(i)
                 val endTime = System.currentTimeMillis()
                 times.add((endTime - startTime).toDouble() / 1000)
                 manager.clearCache()

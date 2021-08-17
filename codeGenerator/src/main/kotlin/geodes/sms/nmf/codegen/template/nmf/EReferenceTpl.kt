@@ -53,14 +53,14 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
     private inner class SingleRefLoadTemplate : LoadTemplate {
         override fun genInterface(): String {
             return if (allTypes.isNotEmpty())
-                "\tfun load$featureNameCapitalized(): $type?\n"
+                "\tfun get$featureNameCapitalized(): $type?\n"
             else ""
         }
 
         override fun genImpl(): String {
             return if (allTypes.isNotEmpty())
                 StringBuilder()
-                    .appendLine("\toverride fun load$featureNameCapitalized(): $type? {")
+                    .appendLine("\toverride fun get$featureNameCapitalized(): $type? {")
                     .appendLine("\t\tval data = loadOutConnectedNodes(\"${eRef.name}\", null, 1) {")
                     .append(readMapFunction)
                     .appendLine("\t\t}")
@@ -74,14 +74,14 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
     private inner class MultipleRefLoadTemplate : LoadTemplate {
         override fun genInterface(): String {
             return if (allTypes.isNotEmpty())
-                "\tfun load$featureNameCapitalized(limit: Int = 100): List<$type>\n"
+                "\tfun get$featureNameCapitalized(limit: Int = 100): List<$type>\n"
             else ""
         }
 
         override fun genImpl(): String {
             return if (allTypes.isNotEmpty())
                 StringBuilder()
-                    .appendLine("\toverride fun load$featureNameCapitalized(limit: Int): List<$type> {")
+                    .appendLine("\toverride fun get$featureNameCapitalized(limit: Int): List<$type> {")
                     .appendLine("\t\treturn loadOutConnectedNodes(\"${eRef.name}\", null, limit) {")
                     .append(readMapFunction)
                     .appendLine("\t\t}\n\t}")
@@ -114,7 +114,7 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
     private inner class ContainmentRefTemplate(private val loadTpl: LoadTemplate) : IFeatureTemplate {
         override fun genInterface() : String {
             val str = StringBuilder()
-                .appendLine("\tfun remove$featureNameCapitalized(v: $type)")
+                .appendLine("\tfun unset$featureNameCapitalized(v: $type)")
                 .append(loadTpl.genInterface())
             if (allTypes.size > 1) {
                 str.appendLine("\tfun add$featureNameCapitalized(type: ${type}Type): $type")
@@ -141,8 +141,8 @@ class EReferenceTpl(val eRef: EReference, context: Context) : AbstractFeatureTem
                     .appendLine("\t}")
             }
             str.appendLine()
-            // remove template
-            str.appendLine("\toverride fun remove$featureNameCapitalized(v: $type) {")
+            // unset template
+            str.appendLine("\toverride fun unset$featureNameCapitalized(v: $type) {")
                 .appendLine("\t\tremoveChild(\"${eRef.name}\", v$lowerBound)")
                 .appendLine("\t}")
 

@@ -21,11 +21,11 @@ class GraphNeo4jImpl(nc: INodeController) : Graph, INodeController by nc {
 		}
 	}
 
-	override fun removeVertices(v: Vertex) {
+	override fun unsetVertices(v: Vertex) {
 		removeChild("vertices", v)
 	}
 
-	override fun loadVertices(limit: Int): List<Vertex> {
+	override fun getVertices(limit: Int): List<Vertex> {
 		return loadOutConnectedNodes("vertices", null, limit) {
 			when (it.label) {
 				"CompositeVertex" -> CompositeVertexNeo4jImpl(it)

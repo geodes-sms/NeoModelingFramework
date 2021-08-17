@@ -40,7 +40,7 @@ class VertexNeo4jImpl(nc: INodeController) : Vertex, INodeController by nc {
 		removeOutRef("edge", v, 1)
 	}
 
-	override fun loadEdge(limit: Int): List<Vertex> {
+	override fun getEdge(limit: Int): List<Vertex> {
 		return loadOutConnectedNodes("edge", null, limit) {
 			when (it.label) {
 				"CompositeVertex" -> CompositeVertexNeo4jImpl(it)

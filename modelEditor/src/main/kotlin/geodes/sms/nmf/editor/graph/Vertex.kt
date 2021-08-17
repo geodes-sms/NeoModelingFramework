@@ -11,5 +11,5 @@ interface Vertex : INodeEntity {
 	fun getIs_initial(): Boolean?
 	fun setEdge(v: Vertex)
 	fun unsetEdge(v: Vertex)
-	fun loadEdge(limit: Int = 100): List<Vertex>
+	fun getEdge(limit: Int = 100): List<Vertex>
 }

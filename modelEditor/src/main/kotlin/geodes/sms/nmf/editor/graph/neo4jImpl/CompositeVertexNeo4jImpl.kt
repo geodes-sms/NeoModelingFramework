@@ -25,7 +25,7 @@ class CompositeVertexNeo4jImpl(nc: INodeController) : CompositeVertex, Vertex by
 		removeOutRef("default_vertex", v)
 	}
 
-	override fun loadDefault_vertex(): Vertex? {
+	override fun getDefault_vertex(): Vertex? {
 		val data = loadOutConnectedNodes("default_vertex", null, 1) {
 			when (it.label) {
 				"CompositeVertex" -> CompositeVertexNeo4jImpl(it)
@@ -43,11 +43,11 @@ class CompositeVertexNeo4jImpl(nc: INodeController) : CompositeVertex, Vertex by
 		}
 	}
 
-	override fun removeSub_vertices(v: Vertex) {
+	override fun unsetSub_vertices(v: Vertex) {
 		removeChild("sub_vertices", v)
 	}
 
-	override fun loadSub_vertices(limit: Int): List<Vertex> {
+	override fun getSub_vertices(limit: Int): List<Vertex> {
 		return loadOutConnectedNodes("sub_vertices", null, limit) {
 			when (it.label) {
 				"CompositeVertex" -> CompositeVertexNeo4jImpl(it)
