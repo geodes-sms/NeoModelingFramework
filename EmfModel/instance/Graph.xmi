@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graph:Graph
+    xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:graph="graph"
+    xsi:schemaLocation="graph ../metamodel/Graph.ecore"
+    name="G1">
+  <vertices
+      xsi:type="graph:CompositeVertex"
+      name="V0"
+      id="1"
+      default_vertex="2">
+    <sub_vertices
+        name="V1"
+        id="2"
+        edge="3"/>
+    <sub_vertices
+        name="V2"
+        id="3"/>
+  </vertices>
+</graph:Graph>
