@@ -5,10 +5,13 @@ import geodes.sms.nmf.codegen.core.Context
 import geodes.sms.nmf.codegen.core.AbstractGenerator
 import org.eclipse.emf.ecore.EClass
 import java.io.File
+import java.util.*
 
 class NMFGenerator(context: Context) : AbstractGenerator(context) {
     private val managerWriter = ModelManagerWriter(context)
     private val subClassEnumWriter = SubclassEnumWriter(context)
+
+    override fun preProcessing() {}
 
     override fun postProcessing() {
         managerWriter.close()
@@ -38,9 +41,17 @@ class NMFGenerator(context: Context) : AbstractGenerator(context) {
         fun writeEnumFor(eClass: EClass) {
             val subClasses = context.getSubClasses(eClass)
             if (subClasses.isNotEmpty()) {
-                val className = eClass.name.capitalize()
+                val className = eClass.name.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(
+                        Locale.getDefault()
+                    ) else it.toString()
+                }
                 val list = if (eClass.isAbstract || eClass.isInterface) subClasses else subClasses.plus(className)
-                str.append("\nenum class ${className}Type { " + list.joinToString { it.capitalize() } + " }")
+                str.append("\nenum class ${className}Type { " + list.joinToString { it.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(
+                        Locale.getDefault()
+                    ) else it.toString()
+                } } + " }")
             }
         }
 

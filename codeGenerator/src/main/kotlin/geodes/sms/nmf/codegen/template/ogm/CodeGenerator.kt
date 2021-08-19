@@ -4,7 +4,16 @@ import geodes.sms.nmf.codegen.core.AbstractGenerator
 import geodes.sms.nmf.codegen.core.Context
 import org.eclipse.emf.ecore.*
 
-class CodeGenerator(context: Context) : AbstractGenerator(context)  {
+
+class CodeGenerator(context: Context) : AbstractGenerator(context) {
+
+    override fun preProcessing() {
+
+    }
+
+    override fun postProcessing() {
+
+    }
 
     override fun generate(eClass: EClass) {
 

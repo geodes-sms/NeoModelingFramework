@@ -5,14 +5,15 @@ import org.eclipse.emf.ecore.EEnum
 import java.io.File
 
 abstract class AbstractGenerator(protected val context: Context) {
+
     init {
         //clear dirs
         context.interfaceDir.deleteRecursively()
         context.implDir.mkdirs()
     }
 
-    protected open fun preProcessing() {}
-    protected open fun postProcessing() {}
+    protected abstract fun preProcessing()
+    protected abstract fun postProcessing()
 
     fun generate() {
         preProcessing()

@@ -1,5 +1,6 @@
-package geodes.sms.neo4j.io.controllers
+package geodes.sms.neo4j.io
 
+import geodes.sms.neo4j.io.controllers.IGraphManager
 import geodes.sms.neo4j.io.type.AsInt
 import geodes.sms.neo4j.io.type.AsList
 import geodes.sms.neo4j.io.type.AsString

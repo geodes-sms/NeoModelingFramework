@@ -1,1 +1,1 @@
-include ':modelLoader', ':codeGenerator', ':modelEditor', ':emfExtension', ':neo4j-io', ':domain-test'
+include ':modelLoader', ':codeGenerator', ':modelEditor', ':emfExtension', ':neo4j-io'
