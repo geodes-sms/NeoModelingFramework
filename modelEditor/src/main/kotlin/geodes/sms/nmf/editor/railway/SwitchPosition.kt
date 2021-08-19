@@ -7,8 +7,8 @@ interface SwitchPosition : RailwayElement {
 	fun getPosition(): Position?
 	fun setRoute(v: Route)
 	fun unsetRoute(v: Route)
-	fun loadRoute(): Route?
+	fun getRoute(): Route?
 	fun setTarget(v: Switch)
 	fun unsetTarget(v: Switch)
-	fun loadTarget(): Switch?
+	fun getTarget(): Switch?
 }

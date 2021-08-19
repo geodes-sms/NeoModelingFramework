@@ -13,7 +13,7 @@ abstract class TrackElementNeo4jImpl(nc: INodeController) : TrackElement, Railwa
 		removeOutRef("monitoredBy", v)
 	}
 
-	override fun loadMonitoredBy(limit: Int): List<Sensor> {
+	override fun getMonitoredBy(limit: Int): List<Sensor> {
 		return loadOutConnectedNodes("monitoredBy", null, limit) {
 			SensorNeo4jImpl(it)
 		}
@@ -27,7 +27,7 @@ abstract class TrackElementNeo4jImpl(nc: INodeController) : TrackElement, Railwa
 		removeOutRef("connectsTo", v)
 	}
 
-	override fun loadConnectsTo(limit: Int): List<TrackElement> {
+	override fun getConnectsTo(limit: Int): List<TrackElement> {
 		return loadOutConnectedNodes("connectsTo", null, limit) {
 			when (it.label) {
 				"Segment" -> SegmentNeo4jImpl(it)

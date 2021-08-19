@@ -18,11 +18,11 @@ class SegmentNeo4jImpl(nc: INodeController) : Segment, TrackElementNeo4jImpl(nc)
 		return SemaphoreNeo4jImpl(createChild("semaphores", "Semaphore"))
 	}
 
-	override fun removeSemaphores(v: Semaphore) {
+	override fun unsetSemaphores(v: Semaphore) {
 		removeChild("semaphores", v)
 	}
 
-	override fun loadSemaphores(limit: Int): List<Semaphore> {
+	override fun getSemaphores(limit: Int): List<Semaphore> {
 		return loadOutConnectedNodes("semaphores", null, limit) {
 			SemaphoreNeo4jImpl(it)
 		}

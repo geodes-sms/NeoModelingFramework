@@ -23,7 +23,7 @@ class SwitchNeo4jImpl(nc: INodeController) : Switch, TrackElementNeo4jImpl(nc) {
 		removeOutRef("positions", v)
 	}
 
-	override fun loadPositions(limit: Int): List<SwitchPosition> {
+	override fun getPositions(limit: Int): List<SwitchPosition> {
 		return loadOutConnectedNodes("positions", null, limit) {
 			SwitchPositionNeo4jImpl(it)
 		}

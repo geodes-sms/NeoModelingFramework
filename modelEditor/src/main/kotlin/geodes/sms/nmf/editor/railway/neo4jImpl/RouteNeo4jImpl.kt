@@ -18,11 +18,11 @@ class RouteNeo4jImpl(nc: INodeController) : Route, RailwayElementNeo4jImpl(nc) {
 		return SwitchPositionNeo4jImpl(createChild("follows", "SwitchPosition"))
 	}
 
-	override fun removeFollows(v: SwitchPosition) {
+	override fun unsetFollows(v: SwitchPosition) {
 		removeChild("follows", v)
 	}
 
-	override fun loadFollows(limit: Int): List<SwitchPosition> {
+	override fun getFollows(limit: Int): List<SwitchPosition> {
 		return loadOutConnectedNodes("follows", null, limit) {
 			SwitchPositionNeo4jImpl(it)
 		}
@@ -36,7 +36,7 @@ class RouteNeo4jImpl(nc: INodeController) : Route, RailwayElementNeo4jImpl(nc) {
 		removeOutRef("requires", v, 2)
 	}
 
-	override fun loadRequires(limit: Int): List<Sensor> {
+	override fun getRequires(limit: Int): List<Sensor> {
 		return loadOutConnectedNodes("requires", null, limit) {
 			SensorNeo4jImpl(it)
 		}
@@ -50,7 +50,7 @@ class RouteNeo4jImpl(nc: INodeController) : Route, RailwayElementNeo4jImpl(nc) {
 		removeOutRef("entry", v)
 	}
 
-	override fun loadEntry(): Semaphore? {
+	override fun getEntry(): Semaphore? {
 		val data = loadOutConnectedNodes("entry", null, 1) {
 			SemaphoreNeo4jImpl(it)
 		}
@@ -65,7 +65,7 @@ class RouteNeo4jImpl(nc: INodeController) : Route, RailwayElementNeo4jImpl(nc) {
 		removeOutRef("exit", v)
 	}
 
-	override fun loadExit(): Semaphore? {
+	override fun getExit(): Semaphore? {
 		val data = loadOutConnectedNodes("exit", null, 1) {
 			SemaphoreNeo4jImpl(it)
 		}

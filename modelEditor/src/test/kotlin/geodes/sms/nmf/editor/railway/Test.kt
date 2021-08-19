@@ -21,7 +21,7 @@ class Test {
         //db cointains
         
         val rc = manager.loadRailwayContainerById(0)
-        val routes = rc.loadRoutes(2000)
+        val routes = rc.getRoutes(2000)
 
         for (rout in routes) {
             println(rout.getActive())
@@ -38,7 +38,7 @@ class Test {
         segment1.setMonitoredBy(sensor1)
         manager.saveChanges()
 
-        rc.removeRegions(region)
+        rc.unsetRegions(region)
         manager.saveChanges()
     }
 
@@ -60,7 +60,7 @@ class Test {
 //        manager.clearCache()
 
         val regionLoaded = manager.loadRegionById(63)
-        val elements = regionLoaded.loadElements()
+        val elements = regionLoaded.getElements()
         for (element in elements) {
             when (element) {
                 is Switch -> println("${element.label} ${element._id} ${element.getCurrentPosition()}")

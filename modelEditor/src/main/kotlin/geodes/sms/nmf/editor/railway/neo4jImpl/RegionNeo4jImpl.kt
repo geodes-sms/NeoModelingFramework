@@ -9,11 +9,11 @@ class RegionNeo4jImpl(nc: INodeController) : Region, RailwayElementNeo4jImpl(nc)
 		return SensorNeo4jImpl(createChild("sensors", "Sensor"))
 	}
 
-	override fun removeSensors(v: Sensor) {
+	override fun unsetSensors(v: Sensor) {
 		removeChild("sensors", v)
 	}
 
-	override fun loadSensors(limit: Int): List<Sensor> {
+	override fun getSensors(limit: Int): List<Sensor> {
 		return loadOutConnectedNodes("sensors", null, limit) {
 			SensorNeo4jImpl(it)
 		}
@@ -26,11 +26,11 @@ class RegionNeo4jImpl(nc: INodeController) : Region, RailwayElementNeo4jImpl(nc)
 		}
 	}
 
-	override fun removeElements(v: TrackElement) {
+	override fun unsetElements(v: TrackElement) {
 		removeChild("elements", v)
 	}
 
-	override fun loadElements(limit: Int): List<TrackElement> {
+	override fun getElements(limit: Int): List<TrackElement> {
 		return loadOutConnectedNodes("elements", null, limit) {
 			when (it.label) {
 				"Segment" -> SegmentNeo4jImpl(it)

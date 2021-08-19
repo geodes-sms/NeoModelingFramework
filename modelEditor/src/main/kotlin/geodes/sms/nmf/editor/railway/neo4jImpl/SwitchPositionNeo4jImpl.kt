@@ -23,7 +23,7 @@ class SwitchPositionNeo4jImpl(nc: INodeController) : SwitchPosition, RailwayElem
 		removeOutRef("route", v)
 	}
 
-	override fun loadRoute(): Route? {
+	override fun getRoute(): Route? {
 		val data = loadOutConnectedNodes("route", null, 1) {
 			RouteNeo4jImpl(it)
 		}
@@ -38,7 +38,7 @@ class SwitchPositionNeo4jImpl(nc: INodeController) : SwitchPosition, RailwayElem
 		removeOutRef("target", v)
 	}
 
-	override fun loadTarget(): Switch? {
+	override fun getTarget(): Switch? {
 		val data = loadOutConnectedNodes("target", null, 1) {
 			SwitchNeo4jImpl(it)
 		}

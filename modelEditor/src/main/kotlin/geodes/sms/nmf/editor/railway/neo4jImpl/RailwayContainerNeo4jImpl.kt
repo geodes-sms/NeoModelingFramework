@@ -9,11 +9,11 @@ class RailwayContainerNeo4jImpl(nc: INodeController) : RailwayContainer, INodeCo
 		return RouteNeo4jImpl(createChild("routes", "Route"))
 	}
 
-	override fun removeRoutes(v: Route) {
+	override fun unsetRoutes(v: Route) {
 		removeChild("routes", v)
 	}
 
-	override fun loadRoutes(limit: Int): List<Route> {
+	override fun getRoutes(limit: Int): List<Route> {
 		return loadOutConnectedNodes("routes", null, limit) {
 			RouteNeo4jImpl(it)
 		}
@@ -23,11 +23,11 @@ class RailwayContainerNeo4jImpl(nc: INodeController) : RailwayContainer, INodeCo
 		return RegionNeo4jImpl(createChild("regions", "Region"))
 	}
 
-	override fun removeRegions(v: Region) {
+	override fun unsetRegions(v: Region) {
 		removeChild("regions", v)
 	}
 
-	override fun loadRegions(limit: Int): List<Region> {
+	override fun getRegions(limit: Int): List<Region> {
 		return loadOutConnectedNodes("regions", null, limit) {
 			RegionNeo4jImpl(it)
 		}

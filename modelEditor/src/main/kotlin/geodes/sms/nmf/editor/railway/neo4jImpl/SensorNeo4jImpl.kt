@@ -13,7 +13,7 @@ class SensorNeo4jImpl(nc: INodeController) : Sensor, RailwayElementNeo4jImpl(nc)
 		removeOutRef("monitors", v)
 	}
 
-	override fun loadMonitors(limit: Int): List<TrackElement> {
+	override fun getMonitors(limit: Int): List<TrackElement> {
 		return loadOutConnectedNodes("monitors", null, limit) {
 			when (it.label) {
 				"Segment" -> SegmentNeo4jImpl(it)
