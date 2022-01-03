@@ -1,69 +1,131 @@
 # Neo Modeling Framework (NMF)
-A set of tools for efficient EMF model editing, built on top of the Neo4j graph database. NMF performs all edit operations (CREATE, UPDATE, REMOVE, READ)
-directly in the database.
+Neo Modeling Framework (NMF) is an open-source set of tools primarily designed to manipulate ultra-large datasets in the [Neo4j database](https://neo4j.com).
+NMF implements Object Graph Mapping (OGM) technique that allows a remote client to operate on data directly in the graph database.
+Hence, a client application can delegate to the database handling of a large amount of data that exceeds the client's RAM capacity through NMF.
+Therefore, the client can select and load to memory only needed elements but not load an entire dataset from the storage.
+Also, NMF optimizes writing operations (i.e., CREATE, UPDATE, and DELETE), previously grouping the changes in the cache and performing them later in a transactional way.
+These features optimize I/O performance for editing large datasets in the Neo4j database providing better efficiency and scalability.
 
-To find out more about Eclipse Modeling Framework (EMF): 
+Inspired by Eclipse Modeling Framework (EMF), NMF treats any dataset in terms of *EMF model*.
+EMF is the famous modeling tool for Model-Driven Engineering (MDE) software development methodology.
+To find out more about EMF and MDE, please refer to:
+- http://www.scielo.org.co/pdf/tecn/v18n40/v18n40a11.pdf
+- https://www.eclipse.org/modeling/emf
+- https://eclipsesource.com/blogs/tutorials/emf-tutorial
 
-https://www.eclipse.org/modeling/emf
+NMF endows the datasets with modeling concepts of EMF models.
+NMF editing operations follow the editing logic of EMF models.
+In NMF, any model (i.e., dataset) must conform to some metamodel -- the structure that describes a model itself.
+In particular, NMF relies on Ecore metamodel presented below:
 
-https://eclipsesource.com/blogs/tutorials/emf-tutorial
+<p align="center">
+   <img src="/docs/meta-metamodel.svg">
+</p>
+
+NMF aims to resolve the EMF model scalability problem by using the graph database as an underlying storage.
+We use Neo4j graph database because the structure of EMF model has a nature of a graph.
+
+## NMF architecture
+NMF consists of three modules: [NMF-editor](/neo4j-io), [NMF-loader](/modelLoader), and [NMF-generator](/codeGenerator).
+
+The modules are designed to achieve the following goals:
+- NMF-loader: stores existing EMF models in the Neo4j database
+- NMF-editor: performs editing operations (i.e., CREATE, UPDATE, REMOVE, READ) over the models directly in the database
+- NMF-generator: provides a domain-specific API to edit the models
+
+The overall NMF architecture within dependencies between the modules are presented in the following figure:
+
+<p align="center">
+   <img src="/docs/NMF-architecture.svg">
+</p>
 
 ## Prerequisites
-1. A running Neo4j database instance is required with APOC plugin installed. 
-Visit https://neo4j.com/download to download Neo4j and https://github.com/neo4j-contrib/neo4j-apoc-procedures to configure APOC plugin
-1. Java 8 installed
+Before using NMF modules a user must have:
+1. A running Neo4j database instance (either local or remote) with [APOC](https://github.com/neo4j-contrib/neo4j-apoc-procedures) plugin installed. 
+We recommend using [Neo4j Desktop](https://neo4j.com/download) to set up the database environment.
+2. JRE (8+) installed. Run in terminal: ```java --version``` to check the jre installation.
+3. Gradle (6+) build tool installed
 
-## Graph-io
-A generic graph editor - a core of NMF
+We recommend using Intellij IDE since it provides integration for Gradle and JRE.
 
-The source code of the module: https://github.com/geodes-sms/NeoModelingFramework/tree/master/neo4j-io
+## NMF-editor
+NMF-editor is a core module that provides an interaction with the Neo4j database. 
+NMF-loader is packaged as an executable jar file and can be used as runtime dependency.
+The jar can be found in the release section.
+The the test sandbox can be found in [NMF-editor test](neo4j-io/src/test/kotlin/InitTest.kt) file.
 
 ### Kotlin usage example
 ```kotlin
 val dbUri = "bolt://localhost:7687"
 val username = "neo4j"
 val password = "admin"
-val graphManager = GraphManager(dbUri, username, password)  // init connection with database
+val graphManager = GraphManager(dbUri, username, password)  // init a connection with the database
    
 val n1 = graphManager.createNode("Node1") // n1 is a node controller
-val n2 = graphManager.createNode("Node1")
-val n3 = graphManager.createNode("Node2")
-
-val n4 = n1.createChild("ref", "Node4")
-val n5 = n4.createChild("ref", "Node4")
+val n2 = graphManager.createNode("Node2")
+val n3 = n1.reateChild("ref2", "Node3")
 graphManager.saveChanges()  // commit updates to the storage
 
-n5.createOutRef("ref2", n1) // controllers remain interactable after the commit
-n1.putProperty("property", 44)
+n1.createOutRef("ref1", n2) // controllers remain interactable after the commit
+n1.putProperty("property", "Test property")
 graphManager.saveChanges()  // commit new changes
 
-n1.removeChild("ref", n4)  // remove children (cascade delete)
+n1.remove()  // remove the node 'n1' within its child 'n3' (cascade delete)
 graphManager.saveChanges()
+graphManager.close()
 ```
 
-## Model loader 
-Loads existing EMF model from XMI file to the storage
+The modification operations are applied in a transactional way on ```graphManager.saveChanges()``` function invocation.
 
-The source code of the module: https://github.com/geodes-sms/NeoModelingFramework/tree/master/modelLoader
+## NMF-loader
+This module provides a model storing facility. NMF-loader can export an existing EMF model provided in XMI format into the Neo4j database. 
+The input model must be provided in a file. Only ```*.xmi``` and ```*.ecore``` file formats are supported.
 
 ### Usage
-1. Prepare an XMI file
-A model must come with its metamodel. So, make sure the model file contains `xsi:schemaLocation` attribute pointing to location of the metamodel.
-```
-...
-xsi:schemaLocation="EPACKAGE_NAME PATH_TO_METAMODEL"
-...
-```
-Example of well-formed model files: https://github.com/geodes-sms/NeoModelingFramework/blob/master/EmfModel/instance
-1. Download latest jar from "Releases" section
-1. Launch the `modelLoader.jar` from a command line
+NMF-loader is packaged as an executable jar file and can be used from a command line. 
+Download the latest [NMF-loader](https://github.com/geodes-sms/NeoModelingFramework/releases/tag/v1.0) release and run the following command in terminal:
+```java -jar <NMF_LOADER_PATH> --help```. The output should be as follows:
 ```bash
-java -jar <PATH_THE_LOADER> --help
+java -jar <NMF_LOADER_PATH> --help
   -h,--host <HOST:PORT>   Database host address with port used to create bolt connection. Example: -h 127.0.0.1:7687
   -m,--model <PATH>       path to model file to be loaded
   -u,--user <arg>         Database auth: username
   -p,--password <arg>     Database auth: password
 ```
 
-## Code generator
-Produces a domain-specific editor from .ecore model
+NMF-loader requires 4 parameters: 
+- Database host (-h) address of Neo4j database to establish a connection with. Both local and remote addresses are supported.
+By default, Neo4j local installation is on `http://127.0.0.1:7687` 
+- Database credentials: a username (-u) and a password (-p)
+- Model path (-m): an actual location of the model to load
+
+NMF-loader can proceed both model instances and metamodels (a model of any level M_i according to [model-hierarchy](docs/metalevels.svg)). 
+To correctly process a model of level M_1, NMF-loader requires a metamodel the model conforms to.
+For that, a model instance stored in XMI format must have linked its metamodel location in the xmi header as follows:
+```
+...
+xsi:schemaLocation="EPACKAGE_NAME PATH_TO_METAMODEL"
+...
+```
+
+An example list of valid models can be found at [EMF models examples](/EmfModel/instance) directory.
+
+## NMF-generator
+NMF-generator is a code generation facility. It produces a set of Kotlin classes (domain-specific API) for editing a specific model.
+Unlike a generic API of NMF-editor, the produced API is conceptually closer to the domain rather than to data.
+The generated API relies on NMF-editor to interact with data in the Neo4j database.
+
+### Usage
+NMF-loader is packaged as an executable jar file and can be used as runtime dependency. 
+NMF-generator takes a metamodel in Ecore format as an input and produces a set of files with Kotlin code.
+By default, NMF-generator outputs the result API in [editor](/modelEditor) directory which represents a module with preconfigured dependencies.
+
+```bash
+java -jar <NMF_LOADER_PATH> --help
+  -mm   Path of the input metamodel
+  -o,--output   Output dirrectory
+```
+
+[Example of the generated domain-specific API](/modelEditor/src/main/kotlin/geodes/sms/nmf/editor/)
+
+[EMF metamodels examples](/EmfModel/metamodel)
