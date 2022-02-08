@@ -1,42 +1,42 @@
 # Neo Modeling Framework (NMF)
 Neo Modeling Framework (NMF) is an open-source set of tools primarily designed to manipulate ultra-large datasets in the [Neo4j database](https://neo4j.com).
-NMF implements Object Graph Mapping (OGM) technique that allows a remote client to operate on data directly in the graph database.
-Hence, a client application can delegate to the database handling of a large amount of data that exceeds the client's RAM capacity through NMF.
-Therefore, the client can select and load to memory only needed elements but not load an entire dataset from the storage.
-Also, NMF optimizes writing operations (i.e., CREATE, UPDATE, and DELETE), previously grouping the changes in the cache and performing them later in a transactional way.
-These features optimize I/O performance for editing large datasets in the Neo4j database providing better efficiency and scalability.
+NMF implements Object Graph Mapping (OGM) technique that allows a remote client to operate on data directly in the remote storage.
+Hence, a client application can delegate to the database handling of large amounts of data, which could potentially exceed RAM capacity.
+Therefore, the client can select and load to memory (i.e., READ) from the storage only needed elements, but not an entire dataset.
+Also, NMF optimizes writing operations (i.e., CREATE, UPDATE, and DELETE), previously grouping the changes in the cache and persisting them to the storage later in a transactional way.
+These features optimize I/O performance while editing large datasets providing better efficiency and data scalability.
 
-Inspired by Eclipse Modeling Framework (EMF), NMF treats any dataset in terms of *EMF model*.
-EMF is the famous modeling tool for Model-Driven Engineering (MDE) software development methodology.
+Inspired by Eclipse Modeling Framework (EMF), NMF treats any dataset in terms of Model-Driven Engineering *(MDE) model*.
+EMF is the famous modeling tool for MDE software development methodology.
 To find out more about EMF and MDE, please refer to:
-- http://www.scielo.org.co/pdf/tecn/v18n40/v18n40a11.pdf
+- [A brief introduction to Model-Driven Engineering (MDE).pdf](/docs/A%20brief%20introduction%20to%20Model-Driven%20Engineering%20(MDE).pdf)
 - https://www.eclipse.org/modeling/emf
 - https://eclipsesource.com/blogs/tutorials/emf-tutorial
 
-NMF endows the datasets with modeling concepts of EMF models.
-NMF editing operations follow the editing logic of EMF models.
+NMF endows the datasets with modeling concepts of MDE models.
+Therefore, NMF editing operations follow the editing logic of MDE models.
 In NMF, any model (i.e., dataset) must conform to some metamodel -- the structure that describes a model itself.
 In particular, NMF relies on Ecore metamodel presented below:
 
 <p align="center">
-   <img src="/docs/meta-metamodel.svg">
+   <img src="/docs/meta-metamodel.svg" width="700">
 </p>
 
-NMF aims to resolve the EMF model scalability problem by using the graph database as an underlying storage.
-We use Neo4j graph database because the structure of EMF model has a nature of a graph.
+NMF aims to resolve the MDE model scalability problem by using the graph database to handle a large amount of data.
+Since the structure of MDE models has a nature of a graph, we use Neo4j graph database as default storage.
 
 ## NMF architecture
 NMF consists of three modules: [NMF-editor](/neo4j-io), [NMF-loader](/modelLoader), and [NMF-generator](/codeGenerator).
 
 The modules are designed to achieve the following goals:
-- NMF-loader: stores existing EMF models in the Neo4j database
+- NMF-loader: stores existing MDE models in the Neo4j database
 - NMF-editor: performs editing operations (i.e., CREATE, UPDATE, REMOVE, READ) over the models directly in the database
 - NMF-generator: provides a domain-specific API to edit the models
 
 The overall NMF architecture within dependencies between the modules are presented in the following figure:
 
 <p align="center">
-   <img src="/docs/NMF-architecture.svg">
+   <img src="/docs/NMF-architecture.svg" width="500">
 </p>
 
 ## Prerequisites
@@ -52,7 +52,7 @@ We recommend using Intellij IDE since it provides integration for Gradle and JRE
 NMF-editor is a core module that provides an interaction with the Neo4j database. 
 NMF-loader is packaged as an executable jar file and can be used as runtime dependency.
 The jar can be found in the release section.
-The the test sandbox can be found in [NMF-editor test](neo4j-io/src/test/kotlin/InitTest.kt) file.
+The test sandbox can be found in [NMF-editor test](neo4j-io/src/test/kotlin/InitTest.kt) file.
 
 ### Kotlin usage example
 ```kotlin
@@ -66,7 +66,7 @@ val n2 = graphManager.createNode("Node2")
 val n3 = n1.reateChild("ref2", "Node3")
 graphManager.saveChanges()  // commit updates to the storage
 
-n1.createOutRef("ref1", n2) // controllers remain interactable after the commit
+n1.createOutRef("ref1", n2) // controllers remain interactive after the commit
 n1.putProperty("property", "Test property")
 graphManager.saveChanges()  // commit new changes
 
@@ -78,7 +78,7 @@ graphManager.close()
 The modification operations are applied in a transactional way on ```graphManager.saveChanges()``` function invocation.
 
 ## NMF-loader
-This module provides a model storing facility. NMF-loader can export an existing EMF model provided in XMI format into the Neo4j database. 
+This module provides a model storing facility. NMF-loader can export an existing MDE model provided in XMI format into the Neo4j database. 
 The input model must be provided in a file. Only ```*.xmi``` and ```*.ecore``` file formats are supported.
 
 ### Usage
@@ -108,7 +108,7 @@ xsi:schemaLocation="EPACKAGE_NAME PATH_TO_METAMODEL"
 ...
 ```
 
-An example list of valid models can be found at [EMF models examples](/EmfModel/instance) directory.
+An example list of valid models can be found at [MDE models examples](/EmfModel/instance) directory.
 
 ## NMF-generator
 NMF-generator is a code generation facility. It produces a set of Kotlin classes (domain-specific API) for editing a specific model.
@@ -126,6 +126,6 @@ java -jar <NMF_LOADER_PATH> --help
   -o,--output   Output dirrectory
 ```
 
-[Example of the generated domain-specific API](/modelEditor/src/main/kotlin/geodes/sms/nmf/editor/)
+[Example of the generated domain-specific API](/modelEditor/src/main/kotlin/geodes/sms/nmf/editor)
 
-[EMF metamodels examples](/EmfModel/metamodel)
+[Metamodels examples](/EmfModel/metamodel)
