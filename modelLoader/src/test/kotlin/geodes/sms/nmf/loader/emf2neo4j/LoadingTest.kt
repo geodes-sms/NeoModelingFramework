@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test
 import java.io.File
 
 class LoadingTest {
-    private val dbUri = "bolt://localhost:7687"
-    private val username = "neo4j"
-    private val password = "admin"
+    private val dbUri = DBCredentials.dbUri
+    private val username = DBCredentials.username
+    private val password =  DBCredentials.password
 
     @Test fun loadRailwayModel() {
         val models = listOf(
@@ -46,12 +46,12 @@ class LoadingTest {
             dbWriteTimes.add(writeTime) //millis to seconds
         }
 
-        val s1 = "${resourceLoadTimes.average()}; ${resourceLoadTimes.min()}; ${resourceLoadTimes.max()}"
-        val s2 = " ${dbWriteTimes.average()}; ${dbWriteTimes.min()}; ${dbWriteTimes.max()}"
+        val s1 = "${resourceLoadTimes.average()}; ${resourceLoadTimes.minOrNull()}; ${resourceLoadTimes.maxOrNull()}"
+        val s2 = " ${dbWriteTimes.average()}; ${dbWriteTimes.minOrNull()}; ${dbWriteTimes.maxOrNull()}"
         resFile.appendText("$model; $s1;   $s2;\n")
 
         //resFile.close()
-        graphWriter.clearDB()
+        graphWriter.close()
     }
 
     /*  OLD loader

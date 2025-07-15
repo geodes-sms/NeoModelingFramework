@@ -1,12 +1,11 @@
 import geodes.sms.neo4j.io.GraphManager
+import org.junit.jupiter.api.Test
 
 class InitTest {
 
-    fun initTest() {
-        val dbUri = "bolt://localhost:7687"
-        val username = "neo4j"
-        val password = "admin"
-        val graphManager = GraphManager(dbUri, username, password)  // init a connection with the database
+ @Test
+ fun initTest() {
+        val graphManager = GraphManager(DBCredentials.dbUri, DBCredentials.username, DBCredentials.password)  // init a connection with the database
 
         val n1 = graphManager.createNode("Node1") // n1 is a node controller
         val n2 = graphManager.createNode("Node1")

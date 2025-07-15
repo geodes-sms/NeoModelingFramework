@@ -55,10 +55,13 @@ The jar can be found in the release section.
 The test sandbox can be found in [NMF-editor test](neo4j-io/src/test/kotlin/InitTest.kt) file.
 
 ### Kotlin usage example
+First, **configure the DB credentials as defined in** [Neo4jDBCredentials.txt](Neo4jDBCredentials.txt),
+
+then:
 ```kotlin
-val dbUri = "bolt://localhost:7687"
-val username = "neo4j"
-val password = "admin"
+val dbUri = DBCredentials.dbUri
+val username = DBCredentials.username
+val password =DBCredentials.password
 val graphManager = GraphManager(dbUri, username, password)  // init a connection with the database
    
 val n1 = graphManager.createNode("Node1") // n1 is a node controller

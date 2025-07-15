@@ -10,6 +10,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
     implementation project(':neo4j-io')
+    implementation project(':config')
 }
 
 test {

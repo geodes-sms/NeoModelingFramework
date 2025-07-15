@@ -8,10 +8,7 @@ import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class PropertyAccessorTest {
-    private val dbUri = "bolt://localhost:7687"
-    private val username = "neo4j"
-    private val password = "admin"
-    private val manager = IGraphManager.getDefaultManager(dbUri, username, password)
+    private val manager = IGraphManager.getDefaultManager(DBCredentials.dbUri, DBCredentials.username, DBCredentials.password)
 
     @AfterEach fun clearCache() {
         manager.clearCache()

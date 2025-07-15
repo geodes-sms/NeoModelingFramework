@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
     //val outputPath = args[1]
 
     Resource.Factory.Registry.INSTANCE.extensionToFactoryMap["ecore"] = XMIResourceFactoryImpl()
-    val resource = ResourceSetImpl().getResource(URI.createURI(File(metamodel).absolutePath), true)
+    val resource = ResourceSetImpl().getResource(URI.createFileURI(File(metamodel).absolutePath), true)
 
     val root = resource.contents[0]
     if (root is EPackage) {
