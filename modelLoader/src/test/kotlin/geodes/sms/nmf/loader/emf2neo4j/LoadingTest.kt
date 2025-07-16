@@ -11,47 +11,42 @@ class LoadingTest {
 
     @Test fun loadRailwayModel() {
         val models = listOf(
-            "../EmfModel/instance/railway/railway-batch-32.xmi",        //[0]
-            "../EmfModel/instance/railway/railway-batch-64.xmi",        //[1]
-            "../EmfModel/instance/railway/railway-batch-128.xmi",       //[2]
-            "../EmfModel/instance/railway/railway-batch-256.xmi",       //[3]
-            "../EmfModel/instance/railway/railway-batch-512.xmi",       //[4]
-            "../EmfModel/instance/railway/railway-batch-1024.xmi"       //[5]
+            "../EmfModel/instance/railway/railway-batch-1.xmi",
+            "../EmfModel/instance/Attributes.xmi",
+            "../EmfModel/instance/Document.xmi",
+            "../EmfModel/instance/Document_large.xmi",
+            "../EmfModel/instance/EnumTest.xmi",
+            "../EmfModel/instance/Graph.xmi",
+            "../EmfModel/metamodel/Attributes.ecore",
         )
-        val model = models[2]
+
 
         val resFile = File("../TestResults/LoaderRailway.csv")
-        //resWriter.write("model; loadResource avg (sec); loadResource min (sec); loadResource max (sec); " +
-        //        "dbWrite avg (sec); dbWrite min (sec); dbWrite max (sec);\n")
-
-        val resourceLoadTimes = mutableListOf<Double>() //seconds
-        val dbWriteTimes = mutableListOf<Double>()  //seconds
-
+        resFile.writeText("") // clear file
+        val dbWriteTimes = mutableListOf<Double>()
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        //graphWriter.clearDB()
-
-        for (i in 1..5) {
+        resFile.appendText("model,time_avg,time_min,time_max\n")
+        for (model in models) {
             println("Processing model:  $model")
-
-//            val resourceLoadStartTime = System.currentTimeMillis()
-//                val resource = getResource(model)
-//            val resourceLoadTime = (System.currentTimeMillis() - resourceLoadStartTime).toDouble() / 1000
-//            resourceLoadTimes.add(resourceLoadTime) //millis to seconds
-//            println(" resource load time: $resourceLoadTime")
-//            val loader = ReflectiveBatchLoader(graphWriter)
-
             val writeStartTime = System.currentTimeMillis()
-                val (nodeCount, refCount) = EmfModelLoader.load(model, graphWriter)
-            val writeTime = (System.currentTimeMillis() - writeStartTime).toDouble() / 1000
-            dbWriteTimes.add(writeTime) //millis to seconds
+            val (nodeCount, refCount) = EmfModelLoader.load(model, graphWriter)
+            val writeTime = (System.currentTimeMillis() - writeStartTime).toDouble()
+            dbWriteTimes.add(writeTime/ 1000) //millis to seconds
+            val s2 = " ${dbWriteTimes.average()}, ${dbWriteTimes.minOrNull()}, ${dbWriteTimes.maxOrNull()}"
+            val modelName = getModelName(model)
+            resFile.appendText("$modelName,$s2\n")
         }
 
-        val s1 = "${resourceLoadTimes.average()}; ${resourceLoadTimes.minOrNull()}; ${resourceLoadTimes.maxOrNull()}"
-        val s2 = " ${dbWriteTimes.average()}; ${dbWriteTimes.minOrNull()}; ${dbWriteTimes.maxOrNull()}"
-        resFile.appendText("$model; $s1;   $s2;\n")
-
-        //resFile.close()
         graphWriter.close()
+    }
+
+    fun getModelName(model: String): String {
+        // to get only the model name
+        var end = ".ecore";
+        if(model.contains("xmi"))
+            end = ".xmi"
+        return model.substring(model.lastIndexOf('/') + 1,model.lastIndexOf(end));
+
     }
 
     /*  OLD loader

@@ -22,6 +22,7 @@ class InitTest {
         n4.remove()  // remove the node 'n4' within its children (cascade delete)
         graphManager.saveChanges()
         graphManager.close()
+        graphManager.clearCache()
     }
 
 }

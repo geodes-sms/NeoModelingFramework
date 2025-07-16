@@ -1,0 +1,8 @@
+model,time_avg,time_min,time_max
+railway-batch-1, 0.603, 0.603, 0.603
+Attributes, 0.309, 0.015, 0.603
+Document, 0.21166666666666667, 0.015, 0.603
+Document_large, 0.16525, 0.015, 0.603
+EnumTest, 0.1336, 0.007, 0.603
+Graph, 0.1135, 0.007, 0.603
+Attributes, 0.10057142857142858, 0.007, 0.603
