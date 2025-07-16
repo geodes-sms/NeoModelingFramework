@@ -6,14 +6,16 @@ import org.junit.jupiter.api.Test
 import java.io.File
 // test file to evaluate RQ1
 // To what extent can our approach represent metamodels and models of different domains, complexity and sizes?
-// Metrics: model size, number of nodes, number of edges, time (s) and memory (KB) consumed to load
+// Metrics: model size Number of classes, Number of associations/containments, Number of attributes, Types of attributes
+// For us, only: int, Integer, string, list, map,
+// number of nodes, number of edges, time (ms) and memory (KB) consumed to load
 
-class `LoadingEvaluation-ECMFA2026` {
+class RQ1Eval {
     private val dbUri = DBCredentials.dbUri
     private val username = DBCredentials.username
     private val password =  DBCredentials.password
 
-    @Test fun loadRailwayModel() {
+    @Test fun loadEvalData() {
         val directory = File("../ECMFA-2026-Evaluation/models") // loading models
         val ecoreFiles = directory
             .walk()
@@ -22,7 +24,7 @@ class `LoadingEvaluation-ECMFA2026` {
             .toList()
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        runEval(ecoreFiles,graphWriter,1) // we run the evaluation multiple times and use the worst values to mitigate threats
+        runEval(ecoreFiles,graphWriter,4) // we run the evaluation multiple times and use the worst values to mitigate threats
         graphWriter.close()
     }
 
@@ -31,15 +33,14 @@ class `LoadingEvaluation-ECMFA2026` {
         val resFile = getFile(i) // creating csv file for each eval
         for (model in ecoreFiles) {
             try {
-                val file = File(model)
-                val lineCount = file.useLines { it.count() } // counting number of lines for size
-                val writeStartTime = System.currentTimeMillis()
+                //garbageCollector() // to guarantee that the garbage colletor is run before the memory
                 val beforeMemory = getUsedMemoryKB()
+                val writeStartTime = System.currentTimeMillis()
                 val (nodeCount, edgeCount) = EmfModelLoader.Companion.load(model, graphWriter)
                 val mem = getUsedMemoryKB() - beforeMemory
-                val writeTime = (System.currentTimeMillis() - writeStartTime).toDouble() / 1000 //millis to seconds
-                resFile.appendText("${getModelName(model)},$lineCount,$nodeCount,$edgeCount,$writeTime,$mem\n")
-            }catch (e: Exception) {  // to avoid invalid models (null values)
+                val writeTime = System.currentTimeMillis() - writeStartTime
+                resFile.appendText("${getModelName(model)},$nodeCount,$edgeCount,$writeTime,$mem\n")
+            }catch (e: Exception) {  // to avoid invalid models (models with null values)
                 println("error loading model: ${getModelName(model)} with message: ${e.message}")
             }
         }
@@ -57,9 +58,9 @@ class `LoadingEvaluation-ECMFA2026` {
 
     fun getFile(i: Int): File {
         // create csv file to store the results
-        val resFile = File("../ECMFA-2026-Evaluation/results/RQ1/models_run_"+i+".csv")
+        val resFile = File("../ECMFA-2026-Evaluation/results/RQ1/models_run_$i.csv")
         resFile.writeText("") // clear file in case it existed before
-        resFile.appendText("model,size,nodes,edges,time,mem\n")
+        resFile.appendText("model,LOC,classes,attributes,refs,containments,nodes,edges,time,mem\n")
         return resFile
     }
 
@@ -68,6 +69,11 @@ class `LoadingEvaluation-ECMFA2026` {
         val runtime = Runtime.getRuntime()
         val usedBytes = runtime.totalMemory() - runtime.freeMemory()
         return usedBytes / 1024 // memory is in KB
+    }
+
+    fun garbageCollector() {
+        System.gc()
+        Thread.sleep(100)
     }
 
 
