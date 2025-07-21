@@ -4,6 +4,9 @@ import geodes.sms.nmf.loader.emf2neo4j.EmfModelLoader
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.junit.jupiter.api.Test
 import java.io.File
+/*/
+To run this file, follow the steps on the Readme.md
+ */
 // test file to evaluate RQ1
 // To what extent can our approach represent metamodels and models of different domains, complexity and sizes?
 // Metrics: model size Number of classes, Number of associations/containments, Number of attributes, Types of attributes
@@ -24,7 +27,7 @@ class RQ1Eval {
             .toList()
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        runEval(ecoreFiles,graphWriter,4) // we run the evaluation multiple times and use the worst values to mitigate threats
+        runEval(ecoreFiles,graphWriter,0) // we run the evaluation multiple times and use the worst values to mitigate threats
         graphWriter.close()
     }
 
@@ -33,7 +36,7 @@ class RQ1Eval {
         val resFile = getFile(i) // creating csv file for each eval
         for (model in ecoreFiles) {
             try {
-                //garbageCollector() // to guarantee that the garbage colletor is run before the memory
+                garbageCollector() // to guarantee that the garbage colletor is run before the memory
                 val beforeMemory = getUsedMemoryKB()
                 val writeStartTime = System.currentTimeMillis()
                 val (nodeCount, edgeCount) = EmfModelLoader.Companion.load(model, graphWriter)
@@ -41,7 +44,7 @@ class RQ1Eval {
                 val writeTime = System.currentTimeMillis() - writeStartTime
                 resFile.appendText("${getModelName(model)},$nodeCount,$edgeCount,$writeTime,$mem\n")
             }catch (e: Exception) {  // to avoid invalid models (models with null values)
-                println("error loading model: ${getModelName(model)} with message: ${e.message}")
+               // println("error loading model: ${getModelName(model)} with message: ${e.message}")
             }
         }
         graphWriter.clearDB() // clearing db after eval is finished
@@ -60,7 +63,7 @@ class RQ1Eval {
         // create csv file to store the results
         val resFile = File("../ECMFA-2026-Evaluation/results/RQ1/models_run_$i.csv")
         resFile.writeText("") // clear file in case it existed before
-        resFile.appendText("model,LOC,classes,attributes,refs,containments,nodes,edges,time,mem\n")
+        resFile.appendText("model,nodes,edges,time,mem\n")
         return resFile
     }
 
