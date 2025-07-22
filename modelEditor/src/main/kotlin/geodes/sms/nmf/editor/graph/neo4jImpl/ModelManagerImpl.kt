@@ -16,6 +16,7 @@ class ModelManagerImpl(dbUri: String, username: String, password: String): AutoC
 
     fun clearDB() {
         manager.clearDB()
+		clearCache()
     }
 
     override fun close() {

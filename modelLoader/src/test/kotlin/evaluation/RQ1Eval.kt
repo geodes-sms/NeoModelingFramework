@@ -27,7 +27,7 @@ class RQ1Eval {
             .toList()
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        runEval(ecoreFiles,graphWriter,0) // we run the evaluation multiple times and use the worst values to mitigate threats
+        runEval(ecoreFiles,graphWriter,0) // we run the evaluation multiple times to mitigate threats
         graphWriter.close()
     }
 

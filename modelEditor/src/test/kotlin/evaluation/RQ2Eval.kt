@@ -14,7 +14,7 @@ import kotlin.collections.ArrayList
 
 // test file to evaluate RQ2
 //  To what extent can our approach perform CRUD operations on metamodels and models of different domains, complexity and sizes?
-// metrics
+// metrics (time and memory consumed when performing each operation for different configurations)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RQ2Eval {
     private val dbUri = DBCredentials.dbUri
@@ -22,17 +22,14 @@ class RQ2Eval {
     private val password = DBCredentials.password
     private val manager = ModelManagerImpl(dbUri, username, password)
     private val sizesDebug = listOf( // only for debugging
-        10, 50, 100, 1000, 5000
+        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
     )
     private val sizesEval = listOf( // for the evaluation
-        10, 50, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000,
-        100000, 125000, 150000, 175000, 200000, 225000, 250000, 275000, 300000,
-        325000, 350000, 375000, 400000
+        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000,500000, 1000000,5000000, 10000000,50000000
     )
-    private val calibration = 2//30
-    private val evalCount = 1 // // we run the evaluation multiple times and use the worst values to mitigate threats
+
     var sizes = sizesDebug;
-    val isEval = false
+    val isEval = false // to be set in case eval data needs to be collected
 
     @BeforeEach
     fun beforeEach() {
@@ -41,29 +38,24 @@ class RQ2Eval {
         if (isEval)
             sizes = sizesEval
     }
-
+    private val evalCount = 5 // we run the evaluation multiple times to mitigate threats
     // ---------------------------- CREATE ---------------------------- //
-    @Test fun createSingleTest() {
+    @Test fun createSingle() {
         val resWriter = getFile("CreateSingle")
         for (i in sizes) {
-            val times = mutableListOf<Long>()
             var mem: Long = 0;
-            for (k in 1..calibration) {    //repeat n times to calibrate
-                val startTime = System.currentTimeMillis()
-                val beforeMemory = getUsedMemoryKB()
-                for (j in 1..i) {
-                    manager.createVertex()
-                }
-                manager.saveChanges()
-                mem = getUsedMemoryKB() - beforeMemory
-                val endTime = System.currentTimeMillis()
-                times.add(endTime - startTime)
-
-                manager.clearDB()
-                manager.clearCache()
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            for (j in 1..i) {
+                manager.createVertex()
             }
-            val timeResults = "${times.average()},${times.minOrNull()},${times.maxOrNull()}"
-            resWriter.appendText("$i,$timeResults,$mem\n")
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            manager.clearDB()
+            resWriter.appendText("$i,$time,$mem\n")
         }
     }
 
@@ -72,21 +64,19 @@ class RQ2Eval {
         for (i in sizes) {
             val times = mutableListOf<Long>()
             var mem: Long = 0;
-            for (k in 1..calibration) {
-                val graph = manager.createGraph()
-                val startTime = System.currentTimeMillis()
-                val beforeMemory = getUsedMemoryKB()
-                for (j in 1..i) {
-                    graph.addVertices(VertexType.CompositeVertex)
-                }
-                manager.saveChanges()
-                mem = getUsedMemoryKB() - beforeMemory
-                val endTime = System.currentTimeMillis()
-                times.add(endTime - startTime)
-
-                manager.clearDB()
-                manager.clearCache()
+            val graph = manager.createGraph()
+            val startTime = System.currentTimeMillis()
+            val beforeMemory = getUsedMemoryKB()
+            for (j in 1..i) {
+                graph.addVertices(VertexType.CompositeVertex)
             }
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            times.add(endTime - startTime)
+
+            manager.clearDB()
+
             val timeResults = "${times.average()},${times.minOrNull()},${times.maxOrNull()}"
             resWriter.appendText("$i,$timeResults,$mem\n")
         }
@@ -392,7 +382,8 @@ class RQ2Eval {
         // create csv file to store the results
         val resFile = File("../ECMFA-2026-Evaluation/results/RQ2/${fileName}_run_$evalCount.csv")
         resFile.writeText("") // clear file in case it existed before
-        resFile.appendText("element_count,time_avg,time_min,time_max,mem\n")
+        resFile.appendText("element_count,time,mem\n")
+        println("file created: ${resFile.name}")
         return resFile
     }
 
@@ -402,5 +393,10 @@ class RQ2Eval {
         val runtime = Runtime.getRuntime()
         val usedBytes = runtime.totalMemory() - runtime.freeMemory()
         return usedBytes / 1024 // memory is in KB
+    }
+
+    fun garbageCollector() {
+        System.gc()
+        Thread.sleep(100)
     }
 }
