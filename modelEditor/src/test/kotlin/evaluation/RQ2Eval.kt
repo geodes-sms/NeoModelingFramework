@@ -1,6 +1,7 @@
 package evaluation
 
 import geodes.sms.nmf.editor.graph.CompositeVertex
+import geodes.sms.nmf.editor.graph.Graph
 import geodes.sms.nmf.editor.graph.Vertex
 import geodes.sms.nmf.editor.graph.VertexType
 import geodes.sms.nmf.editor.graph.neo4jImpl.ModelManagerImpl
@@ -30,7 +31,7 @@ class RQ2Eval {
 
     var sizes = sizesDebug;
     val isEval = false // to be set in case eval data needs to be collected
-
+    val maxSize = sizes[sizes.size-1]
     @BeforeEach
     fun beforeEach() {
         manager.clearCache()
@@ -38,7 +39,7 @@ class RQ2Eval {
         if (isEval)
             sizes = sizesEval
     }
-    private val evalCount = 5 // we run the evaluation multiple times to mitigate threats
+    private val evalCount = 2 // we run the evaluation multiple times to mitigate threats
     // ---------------------------- CREATE ---------------------------- //
     @Test fun createSingle() {
         val resWriter = getFile("CreateSingle")
@@ -59,13 +60,13 @@ class RQ2Eval {
         }
     }
 
-    @Test fun createContainmentsWidthTest() {
-        val resWriter =  getFile("CreateContainmentsWidth")
+    @Test fun createContainmentWidth() {
+        val resWriter = getFile("CreateContainmentWidth")
         for (i in sizes) {
-            val times = mutableListOf<Long>()
-            var mem: Long = 0;
             val graph = manager.createGraph()
+            var mem: Long = 0;
             val startTime = System.currentTimeMillis()
+            garbageCollector()
             val beforeMemory = getUsedMemoryKB()
             for (j in 1..i) {
                 graph.addVertices(VertexType.CompositeVertex)
@@ -73,192 +74,244 @@ class RQ2Eval {
             manager.saveChanges()
             mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
-            times.add(endTime - startTime)
+            val time = endTime - startTime
 
             manager.clearDB()
-
-            val timeResults = "${times.average()},${times.minOrNull()},${times.maxOrNull()}"
-            resWriter.appendText("$i,$timeResults,$mem\n")
+            resWriter.appendText("$i,$time,$mem\n")
         }
     }
-//
-//    @Test fun createContainmentsDepthTest() {
-//        val resWriter = File(resDirectory,"CreateContainmentsDepth.csv").bufferedWriter()
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                val graph = manager.createGraph()
-//                var lastVertex = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
-//
-//                val startTime = System.currentTimeMillis()
-//                for (j in 2..i) {
-//                    lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
-//                }
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//
-//                //clear db
-//                manager.clearDB()
-//                manager.clearCache()
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//    @Test fun createCrossRefTest() {
-//        val resWriter = File(resDirectory,"CreateCrossRef.csv").bufferedWriter()
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                //----- preparation step -----
-//                val cv1 = manager.createCompositeVertex()
-//                val cv2 = manager.createCompositeVertex()
-//                manager.saveChanges()
-//                //--- preparation step end ----
-//
-//                val startTime = System.currentTimeMillis()
-//                for (j in 1..i) {
-//                    cv1.setEdge(cv2)
-//                }
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//
-//                //clear db
-//                manager.clearDB()
-//                manager.clearCache()
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//    // ---------------------------- UPDATE ---------------------------- //
-//    @Test fun updateTest() {
-//        val resWriter = File(resDirectory,"Update.csv").bufferedWriter()
-//        //----- preparation step -----
-//        val vertices = ArrayList<CompositeVertex>(maxSize)
-//        for (i in 1..maxSize) {
-//            val vertex = manager.createCompositeVertex()
-//            vertex.setCapacity(7)
-//            vertex.setIs_initial(true)
-//            vertex.setName("some name")
-//            vertices.add(vertex)
-//        }
-//        manager.saveChanges()
-//        //---- preparation step end ----
-//
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                val startTime = System.currentTimeMillis()
-//                for (j in 0 until i) {
-//                    val vertex = vertices[j]
-//                    vertex.setCapacity(-1 * vertex.getCapacity()!!)
-//                    vertex.setIs_initial(!vertex.getIs_initial()!!) //change boolean to opposite value
-//                    //vertex.setName("qwerty")
-//                }
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//    @Test fun updateUniqueTest() {
-//        val resWriter = File(resDirectory,"UpdateUnique.csv").bufferedWriter()
-//        //----- preparation step -----
-//        val vertices = ArrayList<CompositeVertex>(maxSize)
-//        for (i in 1..maxSize) {
-//            val compositeVertex = manager.createCompositeVertex()
-//            compositeVertex.setId(-i)
-//            vertices.add(compositeVertex)
-//        }
-//        manager.saveChanges()
-//        //--- preparation step end ----
-//
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                val startTime = System.currentTimeMillis()
-//                for (j in 0 until i) {
-//                    val v = vertices[j]
-//                    v.setId(v.getId()!! * -1)
-//                }
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//    // ---------------------------- REMOVE ---------------------------- //
-//    @Test fun removeSingleTest() {
-//        val resWriter = File(resDirectory,"RemoveSingle.csv").bufferedWriter()
+    //
+    @Test fun createContainmentDepth() {
+        val resWriter = getFile("CreateContainmentDepth")
+        for (i in sizes) {
+            val graph = manager.createGraph()
+            var lastVertex = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            for (j in 2..i) {
+                lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
+            }
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            //clear db
+            manager.clearDB()
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+
+    }
+
+    @Test fun createCrossRef() {
+        val resWriter = getFile("CreateCrossRef")
+        for (i in sizes) {
+            //----- preparation step -----
+            val cv1 = manager.createCompositeVertex()
+            val cv2 = manager.createCompositeVertex()
+            manager.saveChanges()
+            //--- preparation step end ----
+
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            for (j in 1..i) {
+                cv1.setEdge(cv2)
+            }
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            //clear db
+            manager.clearDB()
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+    }
+
+    // ---------------------------- READ ---------------------------- //
+    @Test fun read() {
+        val resWriter = getFile("Read")
+        //----- preparation step -----
+        for (j in 1..maxSize) {
+            manager.createCompositeVertex()
+        }
+        manager.saveChanges()
+        manager.clearCache()
+        //--- preparation step end ----
+        for (i in sizes) {
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            manager.loadCompositeVertexList(i)
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+        //clear db
+        manager.clearDB()
+    }
+
+    @Test fun readContainmentWidth() {
+        val resWriter = getFile("ReadContainmentWidth")
+        //----- preparation step -----
+        generateContainmentWidthGraph()
+        //--- preparation step end ----
+        for (i in sizes) {
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            val vertices = manager.loadCompositeVertexList(i)
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+        //clear db
+        manager.clearDB()
+    }
+
+    @Test fun readContainmentDepth() {
+        val resWriter = getFile("ReadContainmentDepth")
+        //----- preparation step -----
+        val graph = manager.createGraph()
+        var lastVertex = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+        for (j in 1..maxSize) {
+            lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
+        }
+        manager.saveChanges()
+        manager.clearCache()
+        //--- preparation step end ----
+        for (i in sizes) {
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            val vertices = manager.loadCompositeVertexList(i)
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+        //clear db
+        manager.clearDB()
+    }
+
+    @Test fun readCrossRef() {
+        val resWriter = getFile("ReadCrossRef")
+        //----- preparation step -----
+        for (j in 1..maxSize) {
+            val cv1 = manager.createCompositeVertex()
+            val cv2 = manager.createCompositeVertex()
+            cv1.setEdge(cv2)
+        }
+        manager.saveChanges()
+        manager.clearCache()
+        //--- preparation step end ----
+        for (i in sizes) {
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            val vertices = manager.loadCompositeVertexList(i)
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+        manager.clearDB()
+    }
+
+    // ---------------------------- UPDATE ---------------------------- //
+    @Test fun update() {
+        val resWriter = getFile("Update")
+        //----- preparation step -----
+        val vertices = ArrayList<CompositeVertex>(maxSize)
+        for (i in 1..maxSize) {
+            val vertex = manager.createCompositeVertex()
+            vertex.setCapacity(Random(42).nextInt(10)) // random value (seed makes sure it is always the same for all runs)
+            vertex.setIs_initial(true)
+            vertex.setName("x$i")
+            vertices.add(vertex)
+        }
+        manager.saveChanges()
+        //---- preparation step end ----
+        for (i in sizes) {
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            for (j in 0 until i) {
+                val vertex = vertices[j]
+                vertex.setCapacity(-1 * vertex.getCapacity()!!)
+                vertex.setIs_initial(!vertex.getIs_initial()!!) //change boolean to opposite value
+                vertex.setName("y$j")
+            }
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+        manager.clearDB()
+    }
+
+    // ---------------------------- DELETE ---------------------------- //
+    @Test fun deleteSingle() {
+        val resWriter = getFile("DeleteSingle")
+        //----- preparation step -----
+        val vertices = LinkedList<CompositeVertex>()
+        for (j in 1..maxSize*2) {
+            vertices.add(manager.createCompositeVertex())
+        }
+        manager.saveChanges()
+        //--- preparation step end ----
+        for (i in sizes) {
+            var mem: Long = 0;
+            val startTime = System.currentTimeMillis()
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            for (j in 1..i) {
+                manager.remove(vertices.pop()) // TODO bug with maxSize delete
+
+            }
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+        manager.clearDB() // not needed since the remove will delete everything
+    }
+
+//    @Test fun deleteContainmentWidth() {
+//        val resWriter = getFile("DeleteContainmentWidth")
 //        for (i in sizes) {
 //            //----- preparation step -----
-//            val vertices = LinkedList<CompositeVertex>()
-//            for (j in 1..(i*calibration)) {
-//                vertices.add(manager.createCompositeVertex())
+//            val graph = generateContainmentWidthGraph()
+//            val vertices:LinkedList<Vertex> = manager.loadVertexList(maxSize) as LinkedList<Vertex>
+//            //--- preparation step end ----
+//            var mem: Long = 0;
+//            val startTime = System.currentTimeMillis()
+//            garbageCollector()
+//            val beforeMemory = getUsedMemoryKB()
+//            for (j in 1..i) {
+//                graph.unsetVertices(vertices.pop())
 //            }
 //            manager.saveChanges()
-//            //--- preparation step end ----
-//
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                val startTime = System.currentTimeMillis()
-//                for (j in 1..i) {
-//                    manager.remove(vertices.pop())
-//                }
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
+//            mem = getUsedMemoryKB() - beforeMemory
+//            val endTime = System.currentTimeMillis()
+//            val time = endTime - startTime
+//            resWriter.appendText("$i,$time,$mem\n")
 //        }
-//        resWriter.close()
+//        println("end")
 //    }
-//
-//    @Test fun removeContainmentsWidthTest() {
-//        val resWriter = File(resDirectory,"RemoveContainmentsWidth.csv").bufferedWriter()
-//        for (i in sizes) {
-//            //----- preparation step -----
-//            val vertices = LinkedList<Vertex>()
-//            val graph = manager.createGraph()
-//            for (j in 1..(i*calibration)) {
-//                vertices.add(graph.addVertices(VertexType.Vertex))
-//            }
-//            manager.saveChanges()
-//            //--- preparation step end ----
-//
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                val startTime = System.currentTimeMillis()
-//                for (j in 1..i) {
-//                    graph.unsetVertices(vertices.pop())
-//                }
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//    @Test fun removeContainmentsDepthTest() {
+
+    //    @Test fun removeContainmentsDepthTest() {
 //        val resWriter = File(resDirectory,"RemoveContainmentsDepth.csv").bufferedWriter()
 //        for (i in sizes) {
 //            val times = mutableListOf<Double>()
@@ -319,68 +372,25 @@ class RQ2Eval {
 //        resWriter.close()
 //    }
 //
-//    // ---------------------------- READ ---------------------------- //
-//    @Test fun readContainmentsWidthTest() {
-//        val resWriter = File(resDirectory,"ReadContainmentsWidth.csv").bufferedWriter()
-//        //----- preparation step -----
-//        val graph = manager.createGraph()
-//        for (j in 1..maxSize) {
-//            graph.addVertices(VertexType.Vertex)
-//        }
-//        manager.saveChanges()
-//        manager.clearCache()
-//        //--- preparation step end ----
 //
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                val graphLoaded = manager.loadGraphById(graph._id)
-//                val startTime = System.currentTimeMillis()
-//                graphLoaded.getVertices(i)
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//                manager.clearCache()
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//    @Test fun readByLabelTest() {
-//        val resWriter = File(resDirectory,"ReadByLabel.csv").bufferedWriter()
-//        //----- preparation step -----
-//        for (j in 1..maxSize) {
-//            manager.createCompositeVertex()
-//        }
-//        manager.saveChanges()
-//        manager.clearCache()
-//        //--- preparation step end ----
-//
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                val startTime = System.currentTimeMillis()
-//                manager.loadCompositeVertexList(i)
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//                manager.clearCache()
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-
+    private fun generateContainmentWidthGraph() : Graph{
+        val graph = manager.createGraph()
+        for (j in 1..maxSize) {
+            graph.addVertices(VertexType.CompositeVertex)
+        }
+        manager.saveChanges()
+        manager.clearCache()
+        return graph
+    }
     @AfterAll fun close() {
         manager.clearDB()
         manager.clearCache()
         manager.close()
     }
 
-    fun getFile(fileName: String): File {
+    fun getFile(operationName: String): File {
         // create csv file to store the results
-        val resFile = File("../ECMFA-2026-Evaluation/results/RQ2/${fileName}_run_$evalCount.csv")
+        val resFile = File("../ECMFA-2026-Evaluation/results/RQ2/${operationName}/${operationName}_run_$evalCount.csv")
         resFile.writeText("") // clear file in case it existed before
         resFile.appendText("element_count,time,mem\n")
         println("file created: ${resFile.name}")
