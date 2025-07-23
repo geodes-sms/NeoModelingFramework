@@ -26,7 +26,7 @@ class RQ2Eval {
         10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
     )
     private val sizesEval = listOf( // for the evaluation
-        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000,500000, 1000000,5000000, 10000000,50000000
+        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000,500000, 1000000, 5000000, 10000000, 50000000
     )
 
     var sizes = sizesDebug;
@@ -39,15 +39,15 @@ class RQ2Eval {
         if (isEval)
             sizes = sizesEval
     }
-    private val evalCount = 2 // we run the evaluation multiple times to mitigate threats
+    private val evalCount = 5 // we run the evaluation multiple times to mitigate threats
     // ---------------------------- CREATE ---------------------------- //
     @Test fun createSingle() {
         val resWriter = getFile("CreateSingle")
         for (i in sizes) {
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             for (j in 1..i) {
                 manager.createVertex()
             }
@@ -65,9 +65,9 @@ class RQ2Eval {
         for (i in sizes) {
             val graph = manager.createGraph()
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             for (j in 1..i) {
                 graph.addVertices(VertexType.CompositeVertex)
             }
@@ -81,15 +81,15 @@ class RQ2Eval {
         }
     }
     //
-    @Test fun createContainmentDepth() {
+    @Test fun createContainmentDepth() { // similiar to
         val resWriter = getFile("CreateContainmentDepth")
         for (i in sizes) {
             val graph = manager.createGraph()
             var lastVertex = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             for (j in 2..i) {
                 lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
             }
@@ -114,9 +114,9 @@ class RQ2Eval {
             //--- preparation step end ----
 
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             for (j in 1..i) {
                 cv1.setEdge(cv2)
             }
@@ -142,88 +142,70 @@ class RQ2Eval {
         //--- preparation step end ----
         for (i in sizes) {
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             manager.loadCompositeVertexList(i)
             mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
-        //clear db
-        manager.clearDB()
+
     }
 
     @Test fun readContainmentWidth() {
         val resWriter = getFile("ReadContainmentWidth")
         //----- preparation step -----
-        generateContainmentWidthGraph()
+        generateContainmentWidthGraph(maxSize)
         //--- preparation step end ----
         for (i in sizes) {
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             val vertices = manager.loadCompositeVertexList(i)
             mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
-        //clear db
-        manager.clearDB()
     }
 
     @Test fun readContainmentDepth() {
         val resWriter = getFile("ReadContainmentDepth")
         //----- preparation step -----
-        val graph = manager.createGraph()
-        var lastVertex = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
-        for (j in 1..maxSize) {
-            lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
-        }
-        manager.saveChanges()
-        manager.clearCache()
+        generateContainmentDepthGraph(maxSize)
         //--- preparation step end ----
         for (i in sizes) {
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             val vertices = manager.loadCompositeVertexList(i)
             mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
-        //clear db
-        manager.clearDB()
     }
 
     @Test fun readCrossRef() {
         val resWriter = getFile("ReadCrossRef")
         //----- preparation step -----
-        for (j in 1..maxSize) {
-            val cv1 = manager.createCompositeVertex()
-            val cv2 = manager.createCompositeVertex()
-            cv1.setEdge(cv2)
-        }
-        manager.saveChanges()
-        manager.clearCache()
+        generateCrossRefGraph(maxSize)
         //--- preparation step end ----
         for (i in sizes) {
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             val vertices = manager.loadCompositeVertexList(i)
             mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
-        manager.clearDB()
     }
 
     // ---------------------------- UPDATE ---------------------------- //
@@ -242,9 +224,9 @@ class RQ2Eval {
         //---- preparation step end ----
         for (i in sizes) {
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             for (j in 0 until i) {
                 val vertex = vertices[j]
                 vertex.setCapacity(-1 * vertex.getCapacity()!!)
@@ -257,7 +239,6 @@ class RQ2Eval {
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
-        manager.clearDB()
     }
 
     // ---------------------------- DELETE ---------------------------- //
@@ -265,19 +246,19 @@ class RQ2Eval {
         val resWriter = getFile("DeleteSingle")
         //----- preparation step -----
         val vertices = LinkedList<CompositeVertex>()
-        for (j in 1..maxSize*2) {
+        val deleteMaxSize = getMaxSizeForDelete()
+        for (j in 1..deleteMaxSize) {
             vertices.add(manager.createCompositeVertex())
         }
         manager.saveChanges()
         //--- preparation step end ----
         for (i in sizes) {
             var mem: Long = 0;
-            val startTime = System.currentTimeMillis()
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
             for (j in 1..i) {
-                manager.remove(vertices.pop()) // TODO bug with maxSize delete
-
+                manager.remove(vertices.pop())
             }
             manager.saveChanges()
             mem = getUsedMemoryKB() - beforeMemory
@@ -285,95 +266,75 @@ class RQ2Eval {
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
-        manager.clearDB() // not needed since the remove will delete everything
     }
 
-//    @Test fun deleteContainmentWidth() {
-//        val resWriter = getFile("DeleteContainmentWidth")
-//        for (i in sizes) {
-//            //----- preparation step -----
-//            val graph = generateContainmentWidthGraph()
-//            val vertices:LinkedList<Vertex> = manager.loadVertexList(maxSize) as LinkedList<Vertex>
-//            //--- preparation step end ----
-//            var mem: Long = 0;
-//            val startTime = System.currentTimeMillis()
-//            garbageCollector()
-//            val beforeMemory = getUsedMemoryKB()
-//            for (j in 1..i) {
-//                graph.unsetVertices(vertices.pop())
-//            }
-//            manager.saveChanges()
-//            mem = getUsedMemoryKB() - beforeMemory
-//            val endTime = System.currentTimeMillis()
-//            val time = endTime - startTime
-//            resWriter.appendText("$i,$time,$mem\n")
-//        }
-//        println("end")
-//    }
+    @Test fun deleteContainmentWidth() {
+        val resWriter = getFile("DeleteContainmentWidth")
+        //----- preparation step -----
+        val graph = generateContainmentWidthGraph(getMaxSizeForDelete())
+        val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(getMaxSizeForDelete()) as LinkedList<Vertex>
+        //--- preparation step end ----
+        for (i in sizes) {
+            var mem: Long = 0;
+            garbageCollector()
+            val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
+            for (j in 1..i) {
+                manager.remove(vertices.pop())
+            }
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+    }
 
-    //    @Test fun removeContainmentsDepthTest() {
-//        val resWriter = File(resDirectory,"RemoveContainmentsDepth.csv").bufferedWriter()
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                //----- preparation step -----
-//                val graph = manager.createGraph()
-//                var lastVertex = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
-//                for (j in 2..i) {
-//                    val cv = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
-//                    manager.unload(lastVertex)
-//                    lastVertex = cv
-//                }
-//                manager.saveChanges()
-//                //--- preparation step end ----
-//
-//                val cv = graph.getVertices(1)[0]   //find first vertex
-//                val startTime = System.currentTimeMillis()
-//                graph.unsetVertices(cv)
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//    @Test fun removeCrossReferenceTest() {
-//        val resWriter = File(resDirectory,"RemoveCrossRef.csv").bufferedWriter()
-//        //----- preparation step1 -----
-//        val cv1 = manager.createCompositeVertex()
-//        val cv2 = manager.createCompositeVertex()
-//        manager.saveChanges()
-//        //--- preparation step1 end ----
-//
-//        for (i in sizes) {
-//            val times = mutableListOf<Double>()
-//            for (k in 1..calibration) {
-//                //--- preparation step2 ----
-//                for (j in 1..(i + 1)) {
-//                    cv1.setEdge(cv2)
-//                }
-//                manager.saveChanges()
-//                //--- preparation step2 end ----
-//
-//                val startTime = System.currentTimeMillis()
-//                for (j in 1..i) {
-//                    cv1.unsetEdge(cv2)
-//                }
-//                manager.saveChanges()
-//                val endTime = System.currentTimeMillis()
-//                times.add((endTime - startTime).toDouble() / 1000)
-//            }
-//            resWriter.write("$i;${times.average()}\n")
-//            resWriter.flush()
-//        }
-//        resWriter.close()
-//    }
-//
-//
-    private fun generateContainmentWidthGraph() : Graph{
+    @Test fun deleteContainmentDepth() {
+        val resWriter = getFile("DeleteContainmentDepth")
+        for (i in sizes) {  // due to the remove recursive call, we have to create the graphs for each run
+            //----- preparation step -----
+            generateContainmentDepthGraph(i)
+            val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(i) as LinkedList<Vertex>
+            //--- preparation step end ----
+            garbageCollector()
+            var mem: Long = 0;
+            val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
+            manager.remove(vertices.pop()) // since its a recursive remove, calling only one is enough
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+    }
+
+    @Test fun deleteCrossRef() {
+        val resWriter = getFile("DeleteCrossRef")
+        //----- preparation step -----
+        generateCrossRefGraph(getMaxSizeForDelete())
+        val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(getMaxSizeForDelete()) as LinkedList<Vertex>
+        //--- preparation step end ----
+        for (i in sizes) {
+            garbageCollector()
+            var mem: Long = 0;
+            val beforeMemory = getUsedMemoryKB()
+            val startTime = System.currentTimeMillis()
+            for (j in 1..i) {
+                if(j<maxSize) // to prevent trying to remove the last edge (it does not exist)
+                    vertices[0].unsetEdge(vertices[1])
+            }
+            manager.saveChanges()
+            mem = getUsedMemoryKB() - beforeMemory
+            val endTime = System.currentTimeMillis()
+            val time = endTime - startTime
+            resWriter.appendText("$i,$time,$mem\n")
+        }
+    }
+
+    // ---------------------------- UTILS ---------------------------- //
+private fun generateContainmentWidthGraph(maxSize: Int): Graph{
         val graph = manager.createGraph()
         for (j in 1..maxSize) {
             graph.addVertices(VertexType.CompositeVertex)
@@ -381,6 +342,36 @@ class RQ2Eval {
         manager.saveChanges()
         manager.clearCache()
         return graph
+    }
+
+    private fun generateContainmentDepthGraph(maxSize: Int) : Graph {
+        val graph = manager.createGraph()
+        var lastVertex = graph.addVertices(VertexType.CompositeVertex) as CompositeVertex
+        for (j in 2..maxSize) { // since the first vertex is created before the loop, we start at 2
+            lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
+        }
+        manager.saveChanges()
+        manager.clearCache()
+        return graph
+    }
+
+    private fun generateCrossRefGraph(maxSize: Int) {
+        val cv1 = manager.createCompositeVertex()
+        val cv2 = manager.createCompositeVertex()
+        for (j in 1..maxSize) {
+            cv1.setEdge(cv2)
+        }
+        manager.saveChanges()
+        manager.clearCache()
+    }
+
+    private fun getMaxSizeForDelete() : Int {
+        // for deletes, we create as many elements as we will delete (the combination of all sizes)
+        var deleteMaxSize = 0
+        for (i in sizes) {
+            deleteMaxSize += i
+        }
+        return deleteMaxSize
     }
     @AfterAll fun close() {
         manager.clearDB()
@@ -409,4 +400,29 @@ class RQ2Eval {
         System.gc()
         Thread.sleep(100)
     }
+
+
+//    @Test fun deleteContainmentDepthAlt() { // for this one we create the graph only once (it needs more memory for neo4j)
+//        val resWriter = getFile("DeleteContainmentDepthAlt")
+//        //----- preparation step -----
+//        val graph = generateContainmentDepthGraph(getMaxSizeForDelete())
+//        val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(getMaxSizeForDelete()) as LinkedList<Vertex>
+//        //--- preparation step end ----
+//        for (i in sizes) {
+//            var mem: Long = 0;
+//            garbageCollector()
+//            val beforeMemory = getUsedMemoryKB()
+//            val startTime = System.currentTimeMillis()
+//            for (j in 1..i) {
+//                val lastVertex = vertices.get(vertices.size-1) // since its a directed graph, we need to get the last element
+//                manager.remove(lastVertex)
+//                vertices.removeAt(vertices.size-1)
+//            }
+//            manager.saveChanges()
+//            mem = getUsedMemoryKB() - beforeMemory
+//            val endTime = System.currentTimeMillis()
+//            val time = endTime - startTime
+//            resWriter.appendText("$i,$time,$mem\n")
+//        }
+//    }
 }

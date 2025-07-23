@@ -1,5 +1,6 @@
 package geodes.sms.neo4j.io
 
+import ManagerBatchSizes
 import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.Query
 import org.neo4j.driver.Session
@@ -9,7 +10,7 @@ import org.neo4j.driver.internal.value.ListValue
 import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
 
-class BufferedCreator(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 10000) {
+class BufferedCreator(val nodesBatchSize: Int = ManagerBatchSizes.creatorNodesBatchSize, val refsBatchSize: Int = 10000) {
     private val nodesToCreate = hashMapOf<Long, NodeParameter>()
     private val refsToCreate = hashMapOf<Long, ReferenceParameter>()
     private var n: Long = 0
