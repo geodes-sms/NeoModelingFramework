@@ -75,6 +75,7 @@ class RQ1Eval {
     }
 
     fun garbageCollector() {
+        // to make sure that memory is cleaned before collecting it
         System.gc()
         Thread.sleep(100)
     }

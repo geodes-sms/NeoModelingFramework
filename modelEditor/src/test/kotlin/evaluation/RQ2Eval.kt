@@ -12,10 +12,10 @@ import org.junit.jupiter.api.TestInstance
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
-
+// To run this file, follow the steps on the Readme.md
 // test file to evaluate RQ2
 //  To what extent can our approach perform CRUD operations on metamodels and models of different domains, complexity and sizes?
-// metrics (time and memory consumed when performing each operation for different configurations)
+// metrics (time and memory consumed when performing each operation for different configurations as defined in `sizesEval`)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RQ2Eval {
     private val dbUri = DBCredentials.dbUri
@@ -28,7 +28,6 @@ class RQ2Eval {
     private val sizesEval = listOf( // for the evaluation
         10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000,500000, 1000000, 5000000, 10000000, 50000000
     )
-
     var sizes = sizesDebug;
     val isEval = false // to be set in case eval data needs to be collected
     val maxSize = sizes[sizes.size-1]
@@ -334,7 +333,7 @@ class RQ2Eval {
     }
 
     // ---------------------------- UTILS ---------------------------- //
-private fun generateContainmentWidthGraph(maxSize: Int): Graph{
+    private fun generateContainmentWidthGraph(maxSize: Int): Graph{
         val graph = manager.createGraph()
         for (j in 1..maxSize) {
             graph.addVertices(VertexType.CompositeVertex)
@@ -388,7 +387,6 @@ private fun generateContainmentWidthGraph(maxSize: Int): Graph{
         return resFile
     }
 
-
     fun getUsedMemoryKB(): Long {
         // return memory used in KB
         val runtime = Runtime.getRuntime()
@@ -397,6 +395,7 @@ private fun generateContainmentWidthGraph(maxSize: Int): Graph{
     }
 
     fun garbageCollector() {
+        // to make sure that memory is cleaned before collecting it
         System.gc()
         Thread.sleep(100)
     }
