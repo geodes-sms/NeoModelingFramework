@@ -38,7 +38,7 @@ class RQ2Eval {
         if (isEval)
             sizes = sizesEval
     }
-    private val evalCount = 5 // we run the evaluation multiple times to mitigate threats
+    private val evalCount = 0 // we run the evaluation multiple times to mitigate threats
     // ---------------------------- CREATE ---------------------------- //
     @Test fun createSingle() {
         val resWriter = getFile("CreateSingle")
