@@ -30,16 +30,27 @@ class RQ2Eval {
     )
     var sizes = sizesDebug;
     val isEval = false // to be set in case eval data needs to be collected
-    val maxSize = sizes[sizes.size-1]
+    var maxSize = 0
 
     private var evalCount = 0
-    
-   @Test fun loadEvalData() {
+
+    @Test fun loadEvalData() {
         if (isEval)
             sizes = sizesEval
-        for (i in 1 until 5) {
+        maxSize = sizes[sizes.size-1]
+        reset()
+        for (i in 1 .. 2) { // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
+            //deletes
+            deleteCrossRef()
+            reset()
+            deleteSingle()
+            reset()
+            deleteContainmentWidth()
+            reset()
+            deleteContainmentDepth()
+            reset()
             // creates
             createSingle()
             reset()
@@ -63,22 +74,12 @@ class RQ2Eval {
             // update
             update()
             reset()
-
-            //deletes
-            deleteSingle()
-            reset()
-            deleteContainmentWidth()
-            reset()
-            deleteContainmentDepth()
-            reset()
-            deleteCrossRef()
-            reset()
         }
-       manager.close()
+        manager.close()
     }
-    // we run the evaluation multiple times to mitigate threats
+
     // ---------------------------- CREATE ---------------------------- //
-     fun createSingle() {
+    fun createSingle() {
         val resWriter = getFile("CreateSingle")
         for (i in sizes) {
             var mem: Long = 0;
@@ -97,7 +98,7 @@ class RQ2Eval {
         }
     }
 
-     fun createContainmentWidth() {
+    fun createContainmentWidth() {
         val resWriter = getFile("CreateContainmentWidth")
         for (i in sizes) {
             val graph = manager.createGraph()
@@ -118,7 +119,7 @@ class RQ2Eval {
         }
     }
     //
-     fun createContainmentDepth() { // similiar to
+    fun createContainmentDepth() { // similiar to
         val resWriter = getFile("CreateContainmentDepth")
         for (i in sizes) {
             val graph = manager.createGraph()
@@ -141,7 +142,7 @@ class RQ2Eval {
 
     }
 
-     fun createCrossRef() {
+    fun createCrossRef() {
         val resWriter = getFile("CreateCrossRef")
         for (i in sizes) {
             //----- preparation step -----
@@ -168,7 +169,7 @@ class RQ2Eval {
     }
 
     // ---------------------------- READ ---------------------------- //
-     fun read() {
+    fun read() {
         val resWriter = getFile("Read")
         //----- preparation step -----
         for (j in 1..maxSize) {
@@ -191,7 +192,7 @@ class RQ2Eval {
 
     }
 
-     fun readContainmentWidth() {
+    fun readContainmentWidth() {
         val resWriter = getFile("ReadContainmentWidth")
         //----- preparation step -----
         generateContainmentWidthGraph(maxSize)
@@ -209,7 +210,7 @@ class RQ2Eval {
         }
     }
 
-     fun readContainmentDepth() {
+    fun readContainmentDepth() {
         val resWriter = getFile("ReadContainmentDepth")
         //----- preparation step -----
         generateContainmentDepthGraph(maxSize)
@@ -227,7 +228,7 @@ class RQ2Eval {
         }
     }
 
-     fun readCrossRef() {
+    fun readCrossRef() {
         val resWriter = getFile("ReadCrossRef")
         //----- preparation step -----
         generateCrossRefGraph(maxSize)
@@ -246,7 +247,7 @@ class RQ2Eval {
     }
 
     // ---------------------------- UPDATE ---------------------------- //
-     fun update() {
+    fun update() {
         val resWriter = getFile("Update")
         //----- preparation step -----
         val vertices = ArrayList<CompositeVertex>(maxSize)
@@ -279,7 +280,7 @@ class RQ2Eval {
     }
 
     // ---------------------------- DELETE ---------------------------- //
-     fun deleteSingle() {
+    fun deleteSingle() {
         val resWriter = getFile("DeleteSingle")
         //----- preparation step -----
         val vertices = LinkedList<CompositeVertex>()
@@ -305,7 +306,7 @@ class RQ2Eval {
         }
     }
 
-     fun deleteContainmentWidth() {
+    fun deleteContainmentWidth() {
         val resWriter = getFile("DeleteContainmentWidth")
         //----- preparation step -----
         val graph = generateContainmentWidthGraph(getMaxSizeForDelete())
@@ -327,7 +328,7 @@ class RQ2Eval {
         }
     }
 
-     fun deleteContainmentDepth() {
+    fun deleteContainmentDepth() {
         val resWriter = getFile("DeleteContainmentDepth")
         for (i in sizes) {  // due to the remove recursive call, we have to create the graphs for each run
             //----- preparation step -----
@@ -347,7 +348,7 @@ class RQ2Eval {
         }
     }
 
-     fun deleteCrossRef() {
+    fun deleteCrossRef() {
         val resWriter = getFile("DeleteCrossRef")
         //----- preparation step -----
         generateCrossRefGraph(getMaxSizeForDelete())
@@ -359,7 +360,7 @@ class RQ2Eval {
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
             for (j in 1..i) {
-                if(j<maxSize) // to prevent trying to remove the last edge (it does not exist)
+                if(j!=maxSize) // to prevent trying to remove the last edge (it does not exist as it is removed when the previous one is)
                     vertices[0].unsetEdge(vertices[1])
             }
             manager.saveChanges()

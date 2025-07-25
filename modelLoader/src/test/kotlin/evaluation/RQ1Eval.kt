@@ -27,9 +27,9 @@ class RQ1Eval {
             .toList()
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        for (i in 6 until 5) {
+        for (i in 1 .. 2) { // we run the evaluation multiple times to mitigate threats
             runEval(ecoreFiles, graphWriter, i)
-        } // we run the evaluation multiple times to mitigate threats
+        }
         graphWriter.close()
     }
 
@@ -46,7 +46,7 @@ class RQ1Eval {
                 val writeTime = System.currentTimeMillis() - writeStartTime
                 resFile.appendText("${getModelName(model)},$nodeCount,$edgeCount,$writeTime,$mem\n")
             }catch (e: Exception) {  // to avoid invalid models (models with null values)
-               // println("error loading model: ${getModelName(model)} with message: ${e.message}")
+               println("error loading model: ${getModelName(model)} with message: ${e.message}")
             }
         }
         graphWriter.clearDB() // clearing db after eval is finished
@@ -54,11 +54,12 @@ class RQ1Eval {
 
     fun getModelName(model: String): String {
         // get only the model name
+        val file = File(model)
+        val fileName = file.name
         var end = ".ecore";
         if(model.contains("xmi"))
             end = ".xmi"
-        return model.substring(model.lastIndexOf('\\') + 1,model.lastIndexOf(end));
-
+        return if (end.isNotEmpty()) fileName.removeSuffix(end) else fileName
     }
 
     fun getFile(i: Int): File {
