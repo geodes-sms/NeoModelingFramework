@@ -29,7 +29,7 @@ class RQ2Eval {
         10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000,500000, 1000000, 5000000, 10000000, 50000000
     )
     var sizes = sizesDebug;
-    val isEval = false // to be set in case eval data needs to be collected
+    val isEval = true // to be set in case eval data needs to be collected
     var maxSize = 0
 
     private var evalCount = 0
@@ -39,7 +39,7 @@ class RQ2Eval {
             sizes = sizesEval
         maxSize = sizes[sizes.size-1]
         reset()
-        for (i in 1 .. 2) { // we run the evaluation multiple times to mitigate threats
+        for (i in 1 .. 30) { // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
             //deletes
@@ -90,8 +90,9 @@ class RQ2Eval {
                 manager.createVertex()
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             manager.clearDB()
             resWriter.appendText("$i,$time,$mem\n")
@@ -110,8 +111,9 @@ class RQ2Eval {
                 graph.addVertices(VertexType.CompositeVertex)
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
 
             manager.clearDB()
@@ -132,8 +134,9 @@ class RQ2Eval {
                 lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             //clear db
             manager.clearDB()
@@ -159,8 +162,9 @@ class RQ2Eval {
                 cv1.setEdge(cv2)
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             //clear db
             manager.clearDB()
@@ -184,8 +188,9 @@ class RQ2Eval {
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
             manager.loadCompositeVertexList(i)
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -203,8 +208,9 @@ class RQ2Eval {
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
             val vertices = manager.loadCompositeVertexList(i)
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -221,8 +227,9 @@ class RQ2Eval {
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
             val vertices = manager.loadCompositeVertexList(i)
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -239,8 +246,9 @@ class RQ2Eval {
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
             val vertices = manager.loadCompositeVertexList(i)
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -272,8 +280,9 @@ class RQ2Eval {
                 vertex.setName("y$j")
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -299,8 +308,9 @@ class RQ2Eval {
                 manager.remove(vertices.pop())
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -321,8 +331,9 @@ class RQ2Eval {
                 manager.remove(vertices.pop())
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -341,8 +352,9 @@ class RQ2Eval {
             val startTime = System.currentTimeMillis()
             manager.remove(vertices.pop()) // since its a recursive remove, calling only one is enough
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
@@ -364,8 +376,9 @@ class RQ2Eval {
                     vertices[0].unsetEdge(vertices[1])
             }
             manager.saveChanges()
-            mem = getUsedMemoryKB() - beforeMemory
             val endTime = System.currentTimeMillis()
+            mem = getUsedMemoryKB() - beforeMemory
+
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }

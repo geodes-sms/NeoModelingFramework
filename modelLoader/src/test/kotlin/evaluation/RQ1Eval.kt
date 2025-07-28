@@ -27,7 +27,7 @@ class RQ1Eval {
             .toList()
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        for (i in 1 .. 2) { // we run the evaluation multiple times to mitigate threats
+        for (i in 1 .. 30) { // we run the evaluation multiple times to mitigate threats
             runEval(ecoreFiles, graphWriter, i)
         }
         graphWriter.close()
@@ -42,8 +42,8 @@ class RQ1Eval {
                 val beforeMemory = getUsedMemoryKB()
                 val writeStartTime = System.currentTimeMillis()
                 val (nodeCount, edgeCount) = EmfModelLoader.Companion.load(model, graphWriter)
-                val mem = getUsedMemoryKB() - beforeMemory
                 val writeTime = System.currentTimeMillis() - writeStartTime
+                val mem = getUsedMemoryKB() - beforeMemory
                 resFile.appendText("${getModelName(model)},$nodeCount,$edgeCount,$writeTime,$mem\n")
             }catch (e: Exception) {  // to avoid invalid models (models with null values)
                println("error loading model: ${getModelName(model)} with message: ${e.message}")
