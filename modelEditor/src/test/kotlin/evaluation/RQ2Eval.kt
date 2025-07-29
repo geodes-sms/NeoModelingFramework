@@ -26,10 +26,10 @@ class RQ2Eval {
         10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
     )
     private val sizesEval = listOf( // for the evaluation
-        1000000,
+        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000,
     )
     var sizes = sizesDebug;
-    val isEval = true // to be set in case eval data needs to be collected
+    val isEval = false //true // to be set in case eval data needs to be collected
     var maxSize = 0
 
     private var evalCount = 0
@@ -362,13 +362,12 @@ class RQ2Eval {
 
     fun deleteCrossRef() {
         val resWriter = getFile("DeleteCrossRef")
-        println("Started test DeleteCrossRef")
         //----- preparation step -----
         generateCrossRefGraph(getMaxSizeForDelete())
         val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(getMaxSizeForDelete()) as LinkedList<Vertex>
         //--- preparation step end ----
         for (i in sizes) {
-            println("Evaluting with size $i")
+            println("Evaluating sizes  $i")
             garbageCollector()
             var mem: Long = 0;
             val beforeMemory = getUsedMemoryKB()
