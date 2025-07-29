@@ -367,6 +367,7 @@ class RQ2Eval {
         val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(getMaxSizeForDelete()) as LinkedList<Vertex>
         //--- preparation step end ----
         for (i in sizes) {
+            println("Evaluting with size $i")
             garbageCollector()
             var mem: Long = 0;
             val beforeMemory = getUsedMemoryKB()
