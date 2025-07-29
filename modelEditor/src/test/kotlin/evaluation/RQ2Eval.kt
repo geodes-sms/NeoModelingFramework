@@ -29,7 +29,7 @@ class RQ2Eval {
         10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000,
     )
     var sizes = sizesDebug;
-    val isEval = false //true // to be set in case eval data needs to be collected
+    val isEval = true //true // to be set in case eval data needs to be collected
     var maxSize = 0
 
     private var evalCount = 0
@@ -39,7 +39,7 @@ class RQ2Eval {
             sizes = sizesEval
         maxSize = sizes[sizes.size-1]
         reset()
-        for (i in 1 .. 2) { // we run the evaluation multiple times to mitigate threats
+        for (i in 1 .. 30) { // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
             //deletes
