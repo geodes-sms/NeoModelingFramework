@@ -362,6 +362,7 @@ class RQ2Eval {
 
     fun deleteCrossRef() {
         val resWriter = getFile("DeleteCrossRef")
+        println("Started test DeleteCrossRef")
         //----- preparation step -----
         generateCrossRefGraph(getMaxSizeForDelete())
         val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(getMaxSizeForDelete()) as LinkedList<Vertex>
