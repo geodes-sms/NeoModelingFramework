@@ -45,11 +45,11 @@ class RQ2Eval {
             //deletes
             deleteCrossRef()
             reset()
+            deleteContainmentDepth()
+            reset()
             deleteSingle()
             reset()
             deleteContainmentWidth()
-            reset()
-            deleteContainmentDepth()
             reset()
             // creates
             createSingle()
@@ -121,7 +121,7 @@ class RQ2Eval {
         }
     }
     //
-    fun createContainmentDepth() { // similiar to
+    fun createContainmentDepth() {
         val resWriter = getFile("CreateContainmentDepth")
         for (i in sizes) {
             val graph = manager.createGraph()
@@ -343,10 +343,11 @@ class RQ2Eval {
         val resWriter = getFile("DeleteContainmentDepth")
         for (i in sizes) {  // due to the remove recursive call, we have to create the graphs for each run
             //----- preparation step -----
+            println("creating graph for size $i")
             generateContainmentDepthGraph(i)
             val vertices:LinkedList<Vertex> = manager.loadCompositeVertexList(i) as LinkedList<Vertex>
             //--- preparation step end ----
-            garbageCollector()
+           // garbageCollector()
             var mem: Long = 0;
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
@@ -383,6 +384,7 @@ class RQ2Eval {
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
+        vertices.clear()
     }
 
     // ---------------------------- UTILS ---------------------------- //
@@ -402,6 +404,7 @@ class RQ2Eval {
         for (j in 2..maxSize) { // since the first vertex is created before the loop, we start at 2
             lastVertex = lastVertex.addSub_vertices(VertexType.CompositeVertex) as CompositeVertex
         }
+        println("saving generateContainmentDepthGraph for size $maxSize")
         manager.saveChanges()
         manager.clearCache()
         return graph
