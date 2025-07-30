@@ -26,7 +26,7 @@ class RQ2Eval {
         10, 50, 100, 500, 1000, 5000, 10000, 50000,
     )
     private val sizesEval = listOf( // for the evaluation
-        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000,
+        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 400000,
     )
     var sizes = sizesDebug;
     val isEval = true //true // to be set in case eval data needs to be collected
