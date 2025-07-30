@@ -23,10 +23,10 @@ class RQ2Eval {
     private val password = DBCredentials.password
     private val manager = ModelManagerImpl(dbUri, username, password)
     private val sizesDebug = listOf( // only for debugging
-        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
+        10, 50, 100, 500, 1000, 5000, 10000, 50000,
     )
     private val sizesEval = listOf( // for the evaluation
-        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000,
+        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000,
     )
     var sizes = sizesDebug;
     val isEval = true //true // to be set in case eval data needs to be collected

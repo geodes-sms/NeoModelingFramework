@@ -33,6 +33,21 @@ class RQ1Eval {
         graphWriter.close()
     }
 
+    @Test fun loadEvalDataXMI() {
+        val directory = File("../ECMFA-2026-Evaluation/models_xmi") // loading models
+        val ecoreFiles = directory
+            .walk()
+            .filter { it.isFile && it.extension == "xmi" }
+            .map { it.path }
+            .toList()
+
+        val graphWriter = GraphBatchWriter(dbUri, username, password)
+        for (i in 1 .. 1) { // we run the evaluation multiple times to mitigate threats
+            runEval(ecoreFiles, graphWriter, i)
+        }
+        graphWriter.close()
+    }
+
     fun runEval(ecoreFiles: List<String>, graphWriter:GraphBatchWriter, i: Int) {
         println("Running evaluation number: $i")
         val resFile = getFile(i) // creating csv file for each eval
