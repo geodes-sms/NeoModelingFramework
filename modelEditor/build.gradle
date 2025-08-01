@@ -19,4 +19,8 @@ test {
     testLogging {
         showStandardStreams = true
     }
+    minHeapSize = "1g"   // Initial heap size
+    maxHeapSize = "8g"     // Maximum heap size
+    // You can also add other JVM args if needed
+    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
 }
