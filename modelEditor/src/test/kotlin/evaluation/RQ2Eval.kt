@@ -39,7 +39,7 @@ class RQ2Eval {
             sizes = sizesEval
         maxSize = sizes[sizes.size-1]
         reset() // to clear db in case last run threw an exception
-        for (i in 1 .. 30) { // we run the evaluation multiple times to mitigate threats
+        for (i in 8 .. 30) { // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
             //deletes
