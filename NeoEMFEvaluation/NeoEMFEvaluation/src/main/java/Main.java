@@ -2,42 +2,66 @@ import fr.inria.atlanmod.neoemf.config.ImmutableConfig;
 import fr.inria.atlanmod.neoemf.data.blueprints.neo4j.config.BlueprintsNeo4jConfig;
 import fr.inria.atlanmod.neoemf.resource.PersistentResource;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcorePackage;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.resource.Resource;
-import fr.inria.atlanmod.neoemf.data.blueprints.util.BlueprintsUriFactory;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
+import fr.inria.atlanmod.neoemf.data.blueprints.util.BlueprintsUriFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 
 public class Main {
 
     public static void main(String[] args) {
+        // Path to your Neo4j store
+        String dbPath = "C:\\Users\\lamp6\\.Neo4jDesktop2\\Data\\dbmss\\dbms-e3bd9e12-3000-4922-8ac8-8c53279facb2\\data\\databases\\neo4j";
 
-        ImmutableConfig config = new BlueprintsNeo4jConfig().autoSave();
-        BlueprintsUriFactory factory = new BlueprintsUriFactory();
-        URI sourceUri = URI.createURI("model/sample.xmi");
-        URI targetUri = new BlueprintsUriFactory().createLocalUri("databases/sample.graphdb");
+        // Path to your .ecore file
+        File sourceFile = new File("models/metamodel/wadl2.ecore");
+
+        // Set up ResourceSet and register Ecore factory
         ResourceSet resourceSet = new ResourceSetImpl();
-        try (PersistentResource targetResource = (PersistentResource) resourceSet.createResource(targetUri)) {
-            targetResource.save(config.toMap());
+        resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap()
+                .put("ecore", new EcoreResourceFactoryImpl());
 
-//            Stopwatch stopwatch = Stopwatch.createStarted();
+        // Always register base Ecore package
+        EPackage.Registry.INSTANCE.put(EcorePackage.eINSTANCE.getNsURI(), EcorePackage.eINSTANCE);
 
+        // Create URIs
+        URI sourceUri = URI.createFileURI(sourceFile.getAbsolutePath());
+        URI targetUri = new BlueprintsUriFactory().createLocalUri(dbPath);
+
+        // NeoEMF config
+        ImmutableConfig config = new BlueprintsNeo4jConfig().autoSave();
+
+        try (
+                PersistentResource targetResource = (PersistentResource) resourceSet.createResource(targetUri)
+        ) {
+            // Load the metamodel
             Resource sourceResource = resourceSet.createResource(sourceUri);
             sourceResource.load(Collections.emptyMap());
 
+            // Register all EPackages from the loaded .ecore
+            for (Object obj : sourceResource.getContents()) {
+                if (obj instanceof EPackage) {
+                    EPackage pkg = (EPackage) obj;
+                    EPackage.Registry.INSTANCE.put(pkg.getNsURI(), pkg);
+                }
+            }
+
+            // Copy into the persistent resource
             targetResource.getContents().addAll(EcoreUtil.copyAll(sourceResource.getContents()));
             targetResource.save(config.toMap());
 
-            System.out.printf(targetResource.getURI().toString());
-//            stopwatch.stop();
-//            Log.info("Model created in {0} seconds", stopwatch.elapsed().getSeconds());
+            System.out.println("Saved metamodel to: " + targetResource.getURI());
 
-//            Helpers.compare(sourceResource, targetResource);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error processing metamodel", e);
         }
     }
 }

@@ -2,6 +2,8 @@ package evaluation
 
 import geodes.sms.nmf.loader.emf2neo4j.EmfModelLoader
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
+//import org.eclipse.emf.ecore.EPackage
+//import org.eclipse.gmt.modisco.java.cdo.meta.JavaPackage
 import org.junit.jupiter.api.Test
 import java.io.File
 /*/
@@ -27,30 +29,32 @@ class RQ1Eval {
             .toList()
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        for (i in 1 .. 30) { // we run the evaluation multiple times to mitigate threats
-            runEval(files, graphWriter, i)
-        }
-        graphWriter.close()
-    }
-
-    @Test fun loadEvalDataXMI() {
-        val directory = File("../ECMFA-2026-Evaluation/models_xmi") // loading models
-        val files = directory
-            .walk()
-            .filter { it.isFile && it.extension == "xmi" }
-            .map { it.path }
-            .toList()
-
-        val graphWriter = GraphBatchWriter(dbUri, username, password)
+        graphWriter.clearDB() // in case there is data in the db
         for (i in 1 .. 1) { // we run the evaluation multiple times to mitigate threats
-            runEval(files, graphWriter, i)
+            runEval("ecore",files, graphWriter, i)
         }
         graphWriter.close()
     }
 
-    fun runEval(files: List<String>, graphWriter:GraphBatchWriter, i: Int) {
+//    @Test fun loadEvalDataXMI() {
+//        val directory = File("../ECMFA-2026-Evaluation/NeoEMF-benchmark-models") // loading models
+//        val files = directory
+//            .walk()
+//            .filter { it.isFile && it.extension == "xmi" }
+//            .map { it.path }
+//            .toList()
+//        EPackage.Registry.INSTANCE.put(JavaPackage.eNS_URI, JavaPackage.eINSTANCE);
+//        val graphWriter = GraphBatchWriter(dbUri, username, password)
+//        graphWriter.clearDB() // in case there is data in the db
+//        for (i in 1 .. 1) { // we run the evaluation multiple times to mitigate threats
+//            runEval("xmi",files, graphWriter, i)
+//        }
+//        graphWriter.close()
+//    }
+
+    fun runEval(type: String, files: List<String>, graphWriter:GraphBatchWriter, i: Int) {
         println("Running evaluation number: $i")
-        val resFile = getFile(i) // creating csv file for each eval
+        val resFile = getFile(i,type) // creating csv file for each eval
         for (model in files) {
             try {
                 garbageCollector() // to guarantee that the garbage colletor is run before the memory
@@ -77,9 +81,9 @@ class RQ1Eval {
         return if (end.isNotEmpty()) fileName.removeSuffix(end) else fileName
     }
 
-    fun getFile(i: Int): File {
+    fun getFile(i: Int,type:String): File {
         // create csv file to store the results
-        val resFile = File("../ECMFA-2026-Evaluation/results/RQ1/models_run_$i.csv")
+        val resFile = File("../ECMFA-2026-Evaluation/results/RQ1/$type/models_run_$i.csv")
         resFile.writeText("") // clear file in case it existed before
         resFile.appendText("model,nodes,edges,time,mem\n")
         return resFile
@@ -97,6 +101,7 @@ class RQ1Eval {
         System.gc()
         Thread.sleep(100)
     }
+
 
 
 }

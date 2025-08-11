@@ -8,6 +8,8 @@ dependencies {
     implementation 'org.eclipse.emf:org.eclipse.emf.ecore:2.23.0'
     implementation 'commons-cli:commons-cli:1.4'
     implementation 'org.neo4j.driver:neo4j-java-driver:4.2.0'
+    //implementation 'org.eclipselabs:cdo:4.7.2'
+    //implementation "org.atlanmod.zoo:cdo.java:1.0.5"
     implementation project(":config")
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
