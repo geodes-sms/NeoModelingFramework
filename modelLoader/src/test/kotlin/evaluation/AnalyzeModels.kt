@@ -34,13 +34,14 @@ fun loadEcoreModel(filePath: String): Collection<EPackage> {
 }
 
 fun analyzeEcore(filePath: String): EcoreMetrics {
-    val packages = loadEcoreModel(filePath)
-    var numClasses = 0
-    var numAttributes = 0
-    var numReferences = 0
-    var numContainments = 0
 
-    for (pkg in packages) {
+    fun countClassifiers(pkg: EPackage): Triple<Int, Int, Pair<Int, Int>> {
+        var numClasses = 0
+        var numAttributes = 0
+        var numReferences = 0
+        var numContainments = 0
+
+        // Count classifiers in this package
         for (classifier in pkg.eClassifiers) {
             if (classifier is EClass) {
                 numClasses++
@@ -49,13 +50,39 @@ fun analyzeEcore(filePath: String): EcoreMetrics {
                 numContainments += classifier.eReferences.count { it.isContainment }
             }
         }
+
+        // Recurse into subpackages
+        for (subPkg in pkg.eSubpackages) {
+            val (subClasses, subAttributes, subRefsAndConts) = countClassifiers(subPkg)
+            numClasses += subClasses
+            numAttributes += subAttributes
+            numReferences += subRefsAndConts.first
+            numContainments += subRefsAndConts.second
+        }
+
+        return Triple(numClasses, numAttributes, numReferences to numContainments)
+    }
+
+    val packages = loadEcoreModel(filePath)
+    var totalClasses = 0
+    var totalAttributes = 0
+    var totalReferences = 0
+    var totalContainments = 0
+
+    for (pkg in packages) {
+        val (cls, attr, refsAndConts) = countClassifiers(pkg)
+        totalClasses += cls
+        totalAttributes += attr
+        totalReferences += refsAndConts.first
+        totalContainments += refsAndConts.second
     }
 
     val modelName = filePath.substringAfterLast(File.separator).removeSuffix(".ecore")
     val loc = File(filePath).useLines { it.count() }
 
-    return EcoreMetrics(modelName, numClasses, numAttributes, numReferences, numContainments, loc)
+    return EcoreMetrics(modelName, totalClasses, totalAttributes, totalReferences, totalContainments, loc)
 }
+
 
 
 fun exportEcoreMetricsToCSV(directoryPath: String, outputPath: String) {
@@ -74,79 +101,3 @@ fun exportEcoreMetricsToCSV(directoryPath: String, outputPath: String) {
     }
 
 }
-//
-//@Test
-//fun runXMIAnalysis() {
-//    exportXmiMetricsToCSV("../ECMFA-2026-Evaluation/NeoEMF-benchmark-models", "../ECMFA-2026-Evaluation/results/RQ1/xmi/models.csv")
-//}
-//fun loadXMIModel(filePath: String): Collection<EPackage> {
-//    val resourceSet = ResourceSetImpl()
-//    resourceSet.resourceFactoryRegistry.extensionToFactoryMap["xmi"] = XMIResourceFactoryImpl()
-//    val fileUri = URI.createFileURI(File(filePath).absolutePath)
-//    val resource = resourceSet.getResource(fileUri, true)
-//    resource.load(null)
-//    return resource.contents.filterIsInstance<EPackage>()
-//}
-//
-//data class XmiMetrics(
-//    val modelName: String,
-//    val classDeclaration: Int,
-//    val fieldDeclaration: Int,
-//    val methodDeclaration: Int
-//)
-//fun exportXmiMetricsToCSV(directoryPath: String, outputPath: String) {
-//    val modelsDir = File(directoryPath)
-//    val xmiFiles = modelsDir.walk()
-//        .filter { it.isFile && it.extension == "xmi" }
-//        .map { it.path }
-//        .toList()
-//
-//    val outputFile = File(outputPath)
-//    outputFile.writeText("model,classDeclaration,fieldDeclaration,methodDeclaration\n") // header
-//
-//    for (model in xmiFiles) {
-//        val metrics = analyzeJavaModel(model)
-//        outputFile.appendText("${metrics.modelName},${metrics.classDeclaration},${metrics.fieldDeclaration},${metrics.methodDeclaration}\n")
-//    }
-//
-//}
-//fun analyzeJavaModel(xmiFilePath: String): XmiMetrics {
-//    val resourceSet = ResourceSetImpl()
-//    EPackage.Registry.INSTANCE.put(JavaPackage.eNS_URI, JavaPackage.eINSTANCE);
-//    // Register XMI factory for .xmi files
-//    resourceSet.resourceFactoryRegistry.extensionToFactoryMap["xmi"] = XMIResourceFactoryImpl()
-//
-//    // Load the MoDisco Java metamodel
-//    //val metamodelUri = URI.createFileURI(metamodelPath)
-//    //val metamodelResource = resourceSet.getResource(metamodelUri, true)
-//    // val ePackages = metamodelResource.contents.filterIsInstance<org.eclipse.emf.ecore.EPackage>()
-//
-//    //
-//
-//    // Load the XMI model (your sample Java model)
-//    val modelUri = URI.createFileURI(xmiFilePath)
-//    val modelResource = resourceSet.getResource(modelUri, true)
-//
-//    var numClassDeclarations = 0
-//    var numFieldDeclarations = 0
-//    var numMethodDeclarations = 0
-//
-//    fun traverse(eObject: EObject) {
-//        // Count specific MoDisco Java types by checking their eClass name or namespace
-//        val eClassName = eObject.eClass().name
-//
-//        when (eClassName) {
-//            "ClassDeclaration" -> numClassDeclarations++
-//            "FieldDeclaration" -> numFieldDeclarations++
-//            "MethodDeclaration" -> numMethodDeclarations++
-//        }
-//
-//        eObject.eContents().forEach { traverse(it) }
-//    }
-//
-//    modelResource.contents.forEach { traverse(it) }
-//
-//    val modelName = File(xmiFilePath).nameWithoutExtension
-//    return XmiMetrics(modelName, numClassDeclarations, numFieldDeclarations, numMethodDeclarations)
-//}
-
