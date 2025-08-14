@@ -7,7 +7,6 @@ import org.eclipse.emf.ecore.resource.impl.*
 import org.eclipse.emf.ecore.xmi.impl.*
 import java.io.File
 import org.junit.jupiter.api.Test
-//import org.eclipse.gmt.modisco.java.cdo.meta.JavaPackage
 
 class AnalyzeModels{
     @Test

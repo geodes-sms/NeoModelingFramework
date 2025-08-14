@@ -281,7 +281,6 @@ com.ibm.commerce.inventory.facade.datatypes,1366,25,29,0,69
 com.ibm.commerce.marketing.facade.datatypes,5739,123,129,0,263
 com.ibm.commerce.member.datatypes,734,9,33,0,31
 com.ibm.commerce.member.facade.datatypes,3125,59,69,0,145
-com.ibm.commerce.oagis9.datatypes.codelists,1471,0,0,0,0
 com.ibm.commerce.oagis9.datatypes,22727,276,793,0,1291
 com.ibm.commerce.oagis9.datatypes.unqualifieddatatypes,729,12,59,0,0
 com.ibm.commerce.order.facade.datatypes,4369,68,80,0,226
@@ -412,12 +411,10 @@ database_tgg_rule,62,8,0,0,16
 DataContractDsl,112,19,19,12,8
 DataMining,463,21,27,21,5
 dataset,113,20,31,7,11
-DataType,6,0,0,0,0
 datatypes,42,9,7,4,2
 daum,144,33,36,11,15
 DawnGenModel.emf,9,1,0,1,0
 DB,293,5,16,2,7
-db2emf,17,0,0,0,0
 dbitem,80,2,1,0,7
 dbl,570,165,26,12,111
 Dbmodel,184,14,47,12,12
@@ -481,7 +478,6 @@ DoDAF-OV5,135,31,19,24,28
 DoDAF-SV4,159,43,14,25,43
 DoDAF-SV5,130,31,9,36,23
 DoDAF,198,57,28,57,10
-dom,7,0,0,0,0
 Domain,46,6,7,7,0
 Domainmodel,44,9,5,1,8
 DomDsl,566,90,106,60,88
@@ -933,7 +929,6 @@ javalogtrace,10,1,1,0,0
 JavaProject,45,10,6,1,8
 javaproperties,17,2,4,0,1
 JavaSource,25,5,1,3,3
-JavaTypes,43,0,0,0,0
 JavaVMTypes,341,51,28,14,19
 javaz,82,8,25,4,6
 java_templates,173,37,0,0,47
@@ -1019,7 +1014,6 @@ library07,35,5,5,3,4
 LibraryInteractionModel,76,11,13,10,6
 library_eve,31,6,5,2,2
 library_karl,40,7,5,5,3
-library_types,6,0,0,0,0
 lifecycle,37,9,3,4,3
 lims,61,7,7,9,6
 linkagemap,49,12,0,12,0
@@ -1218,7 +1212,6 @@ OCLCST,324,49,26,1,55
 OCLEcore,405,54,1,4,1
 OCLinEcoreCST,11,2,2,0,0
 OCLStates,70,7,8,4,4
-oclstdlib,7,0,0,0,0
 OCLUML,371,50,0,0,7
 OCL_Expressions,52,15,2,9,9
 OCL_Operations,55,14,4,7,7
@@ -1584,7 +1577,6 @@ RPG,107,14,5,9,7
 RSS-2.0,104,10,49,5,12
 RSS,99,10,16,2,9
 Rss20,941,13,57,0,15
-RtData-1,19,0,0,0,0
 rule,47,7,11,1,4
 ruleml,10,3,0,0,2
 rules,12,2,0,0,0
@@ -1972,7 +1964,6 @@ UTPPredefined,37,6,1,0,0
 V1_oldcontrol,21,4,5,0,4
 V2_accesscontrol,29,5,5,0,4
 v41,1483,22,65,0,22
-validator,7,0,0,0,0
 validators,32,3,12,1,0
 value,49,10,8,5,0
 Values,21,16,0,0,0
@@ -2056,7 +2047,6 @@ XBNF,96,24,12,8,8
 XBNFwithCardinality,15,6,0,0,1
 Xconfig,21,4,3,0,3
 Xdoc,155,36,15,8,27
-xecore,9,0,0,0,0
 xforms,90,13,6,0,15
 xhtml,5806,65,333,0,279
 xls,109,16,22,7,8
