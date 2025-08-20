@@ -409,7 +409,7 @@ class RQ2Eval {
      * create csv file to store the results
      */
     fun getFile(operationName: String): File {
-        val resFile = File("../ECMFA-2026-Evaluation/results/RQ2/${operationName}/${operationName}_run_$evalCount.csv")
+        val resFile = File("../Evaluation/results/RQ2/${operationName}/${operationName}_run_$evalCount.csv")
         resFile.writeText("") // clear file in case it existed before
         resFile.appendText("element_count,time,mem\n")
         println("file created: ${resFile.name}")

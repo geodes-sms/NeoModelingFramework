@@ -21,7 +21,7 @@ class RQ1Eval {
     private val password =  DBCredentials.password
 
     @Test fun loadEvalData() {
-        val directory = File("../ECMFA-2026-Evaluation/models") // loading models
+        val directory = File("../Evaluation/models") // loading models
         val files = directory
             .walk()
             .filter { it.isFile && it.extension == "ecore" }
@@ -37,7 +37,7 @@ class RQ1Eval {
     }
 
 //    @Test fun loadEvalDataXMI() {
-//        val directory = File("../ECMFA-2026-Evaluation/NeoEMF-benchmark-models") // loading models
+//        val directory = File("../Evaluation/NeoEMF-benchmark-models") // loading models
 //        val files = directory
 //            .walk()
 //            .filter { it.isFile && it.extension == "xmi" }
@@ -83,7 +83,7 @@ class RQ1Eval {
 
     fun getFile(i: Int,type:String): File {
         // create csv file to store the results
-        val resFile = File("../ECMFA-2026-Evaluation/results/RQ1/$type/models_run_$i.csv")
+        val resFile = File("../Evaluation/results/RQ1/$type/models_run_$i.csv")
         resFile.writeText("") // clear file in case it existed before
         resFile.appendText("model,nodes,edges,time,mem\n")
         return resFile

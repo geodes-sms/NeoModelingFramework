@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 class AnalyzeModels{
     @Test
     fun runEcoreAnalysis() {
-        exportEcoreMetricsToCSV("../ECMFA-2026-Evaluation/models", "../ECMFA-2026-Evaluation/results/RQ1/ecore/models.csv")
+        exportEcoreMetricsToCSV("../Evaluation/models", "../Evaluation/results/RQ1/ecore/models.csv")
     }
 }
 data class EcoreMetrics(
