@@ -5,9 +5,9 @@ import org.junit.jupiter.api.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BasicTest {
-    private val dbUri = "bolt://localhost:7687"
-    private val username = "neo4j"
-    private val password = "admin"
+    private val dbUri = DBCredentials.dbUri
+    private val username = DBCredentials.username
+    private val password = DBCredentials.password
     private val manager = ModelManagerImpl(dbUri, username, password)
 
     @Test fun initGraph() {

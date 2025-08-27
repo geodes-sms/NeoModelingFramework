@@ -11,17 +11,17 @@ import kotlin.collections.ArrayList
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UnitPerformanceTest {
-    private val dbUri = "bolt://localhost:7687"
-    private val username = "neo4j"
-    private val password = "admin"
+    private val dbUri = DBCredentials.dbUri
+    private val username = DBCredentials.username
+    private val password = DBCredentials.password
     private val manager = ModelManagerImpl(dbUri, username, password)
     private val resDirectory = File("../TestResults/graph/")
-    private val sizes = listOf(10, 15, 20)
-//    private val sizes = listOf(
-//        10, 50, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000,
-//        100000, 125000, 150000, 175000, 200000, 225000, 250000, 275000, 300000,
-//        325000, 350000, 375000, 400000
-//    )
+//    private val sizes = listOf(10, 15, 20)
+    private val sizes = listOf(
+        10, 50, 100, 1000, 5000, 10000, 15000, 20000, 30000, 40000, 60000, 80000,
+        100000, 125000, 150000, 175000, 200000, 225000, 250000, 275000, 300000,
+        325000, 350000, 375000, 400000
+    )
     private val maxSize = sizes.maxOrNull()!!
     private val calibration = 2//30
 
@@ -171,36 +171,36 @@ class UnitPerformanceTest {
         }
         resWriter.close()
     }
-
-    @Test fun updateUniqueTest() {
-        val resWriter = File(resDirectory,"UpdateUnique.csv").bufferedWriter()
-        //----- preparation step -----
-        val vertices = ArrayList<CompositeVertex>(maxSize)
-        for (i in 1..maxSize) {
-            val compositeVertex = manager.createCompositeVertex()
-            compositeVertex.setId(-i)
-            vertices.add(compositeVertex)
-        }
-        manager.saveChanges()
-        //--- preparation step end ----
-
-        for (i in sizes) {
-            val times = mutableListOf<Double>()
-            for (k in 1..calibration) {
-                val startTime = System.currentTimeMillis()
-                for (j in 0 until i) {
-                    val v = vertices[j]
-                    v.setId(v.getId()!! * -1)
-                }
-                manager.saveChanges()
-                val endTime = System.currentTimeMillis()
-                times.add((endTime - startTime).toDouble() / 1000)
-            }
-            resWriter.write("$i;${times.average()}\n")
-            resWriter.flush()
-        }
-        resWriter.close()
-    }
+//
+//    @Test fun updateUniqueTest() {
+//        val resWriter = File(resDirectory,"UpdateUnique.csv").bufferedWriter()
+//        //----- preparation step -----
+//        val vertices = ArrayList<CompositeVertex>(maxSize)
+//        for (i in 1..maxSize) {
+//            val compositeVertex = manager.createCompositeVertex()
+//            compositeVertex.setId(-i)
+//            vertices.add(compositeVertex)
+//        }
+//        manager.saveChanges()
+//        //--- preparation step end ----
+//
+//        for (i in sizes) {
+//            val times = mutableListOf<Double>()
+//            for (k in 1..calibration) {
+//                val startTime = System.currentTimeMillis()
+//                for (j in 0 until i) {
+//                    val v = vertices[j]
+//                    v.setId(v.getId()!! * -1)
+//                }
+//                manager.saveChanges()
+//                val endTime = System.currentTimeMillis()
+//                times.add((endTime - startTime).toDouble() / 1000)
+//            }
+//            resWriter.write("$i;${times.average()}\n")
+//            resWriter.flush()
+//        }
+//        resWriter.close()
+//    }
 
     // ---------------------------- REMOVE ---------------------------- //
     @Test fun removeSingleTest() {

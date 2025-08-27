@@ -11,6 +11,7 @@ class GraphBatchWriter(dbUri: String, username: String, password: String) : Auto
     private val driver = GraphDatabase.driver(dbUri, AuthTokens.basic(username, password))
     private val session = driver.session()
 
+
     private var n: Long = 0   // alias creator
     private val onCreateListeners = hashMapOf<Long, Entity>()
 
@@ -79,5 +80,14 @@ class GraphBatchWriter(dbUri: String, username: String, password: String) : Auto
     override fun close() {
         session.close()
         driver.close()
+    }
+
+    fun clearDB(){
+
+        session.writeTransaction { tx ->
+            tx.run(Query("MATCH (n) DETACH DELETE n",     // clearDB
+            ))
+        }
+
     }
 }

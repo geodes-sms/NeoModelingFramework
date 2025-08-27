@@ -19,7 +19,7 @@ In NMF, any model (i.e., dataset) must conform to some metamodel -- the structur
 In particular, NMF relies on Ecore metamodel presented below:
 
 <p align="center">
-   <img src="/docs/meta-metamodel.svg" width="700">
+   <img src="/docs/meta-metamodel.svg" width="700" style="background-color:white;">
 </p>
 
 NMF aims to resolve the MDE model scalability problem by using the graph database to handle a large amount of data.
@@ -36,7 +36,7 @@ The modules are designed to achieve the following goals:
 The overall NMF architecture within dependencies between the modules are presented in the following figure:
 
 <p align="center">
-   <img src="/docs/NMF-architecture.svg" width="500">
+   <img src="/docs/NMF-architecture.svg" width="500" style="background-color:white;">
 </p>
 
 ## Prerequisites
@@ -55,10 +55,13 @@ The jar can be found in the release section.
 The test sandbox can be found in [NMF-editor test](neo4j-io/src/test/kotlin/InitTest.kt) file.
 
 ### Kotlin usage example
+First, **configure the DB credentials as defined in** [Neo4jDBCredentials.txt](Neo4jDBCredentials.txt),
+
+then:
 ```kotlin
-val dbUri = "bolt://localhost:7687"
-val username = "neo4j"
-val password = "admin"
+val dbUri = DBCredentials.dbUri
+val username = DBCredentials.username
+val password =DBCredentials.password
 val graphManager = GraphManager(dbUri, username, password)  // init a connection with the database
    
 val n1 = graphManager.createNode("Node1") // n1 is a node controller
@@ -129,3 +132,12 @@ java -jar <NMF_LOADER_PATH> --help
 [Example of the generated domain-specific API](/modelEditor/src/main/kotlin/geodes/sms/nmf/editor)
 
 [Metamodels examples](/EmfModel/metamodel)
+
+# Empirical Evaluation
+
+The quantitative evaluation can be re-run by running [RQ1Eval.kt](modelLoader/src/test/kotlin/evaluation) and [RQ2Eval.kt](modelEditor/src/test/kotlin/evaluation) files. Make sure you have a empty instance of Neo4j running.
+Results will be generated as CSV files, under [Evaluation/results](Evaluation/results).
+
+Results can be plotted running the Jupyter Notebooks at [Evaluation/analysis](Evaluation/analysis).
+
+Please note that due to difference in hardware, re-running the experiments will probably generate slightly different results than those reported in the paper. 

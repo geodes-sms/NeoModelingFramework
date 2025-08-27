@@ -8,7 +8,7 @@ import org.neo4j.driver.internal.value.ListValue
 import org.neo4j.driver.internal.value.MapValue
 
 /** Update properties of db entities (nodes and refs) */
-class BufferedUpdater(val updateBatchSize: Int = 20000) {
+class BufferedUpdater(val updateBatchSize: Int = ManagerBatchSizes.updaterNodesBatchSize) {
     private val nodesToUpdate = hashMapOf<Long, Map<String, Value>>()
     private val refsToUpdate = hashMapOf<Long, Map<String, Value>>()
 

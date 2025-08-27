@@ -27,5 +27,5 @@ interface EmfModelLoader {
                 else -> throw Exception("Unknown element type $root in the model $modelPath. SKIPPING the model")
             }
         }
-    }
+    } 
 }

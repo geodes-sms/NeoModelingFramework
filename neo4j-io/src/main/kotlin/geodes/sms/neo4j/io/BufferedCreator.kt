@@ -1,5 +1,6 @@
 package geodes.sms.neo4j.io
 
+import ManagerBatchSizes
 import geodes.sms.neo4j.io.entity.INodeEntity
 import org.neo4j.driver.Query
 import org.neo4j.driver.Session
@@ -9,7 +10,7 @@ import org.neo4j.driver.internal.value.ListValue
 import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
 
-class BufferedCreator(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 10000) {
+class BufferedCreator(val nodesBatchSize: Int = ManagerBatchSizes.creatorNodesBatchSize, val refsBatchSize: Int = 10000) {
     private val nodesToCreate = hashMapOf<Long, NodeParameter>()
     private val refsToCreate = hashMapOf<Long, ReferenceParameter>()
     private var n: Long = 0
@@ -34,33 +35,36 @@ class BufferedCreator(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 
     fun popRelationshipCreate(alias: Long) { refsToCreate.remove(alias) }
 
     fun commitNodes(session: Session, mapFunction: (Sequence<Pair<Long, Long>>) -> Unit) {
-        val paramsIterator = nodesToCreate.asSequence().map { (_, v) -> MapValue(mapOf(
-            "label" to StringValue(v.label),
-            "alias" to IntegerValue(v.alias),
-            "props" to MapValue(v.props)    //Values.value(v.props)
-        )) }.iterator()
+        if (nodesToCreate.isEmpty()) return
 
-        fun commit(dataSize: Int) {
+        val chunkedSequence = nodesToCreate.asSequence().map { (_, v) ->
+            val propsValue = if (v.props is MapValue) v.props else MapValue(v.props)
+            MapValue(
+                mapOf(
+                    "label" to StringValue(v.label),
+                    "alias" to IntegerValue(v.alias),
+                    "props" to propsValue
+                )
+            )
+        }.chunked(nodesBatchSize)
+
+        for (chunk in chunkedSequence) {
             session.writeTransaction { tx ->
+                val params = MapValue(mapOf("batch" to ListValue(*chunk.toTypedArray())))
                 val res = tx.run(Query("UNWIND \$batch AS row" +
                         " CALL apoc.create.node([row.label], row.props) YIELD node" +
                         " RETURN row.alias AS alias, ID(node) AS id",
-                    MapValue(mapOf("batch" to ListValue(*Array(dataSize) { paramsIterator.next() })))
-                ))
+                        params
+                    )
+                )
                 mapFunction(Sequence { res }.map { it["alias"].asLong() to it["id"].asLong() })
             }
         }
 
-        val rem = nodesToCreate.size % nodesBatchSize
-        for (i in 1..(nodesToCreate.size / nodesBatchSize)) {
-            commit(nodesBatchSize)
-        }
-
-        //process remaining elements
-        if (rem > 0) commit(rem)
         nodesToCreate.clear()
         n = 0
     }
+
 
     fun commitRelationships(session: Session, mapFunction: (Sequence<Pair<Long, Long>>) -> Unit) {
         val paramsIterator = refsToCreate.asSequence().map { (_, v) ->

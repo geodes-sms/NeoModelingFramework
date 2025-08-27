@@ -8,7 +8,7 @@ import org.neo4j.driver.internal.value.MapValue
 import org.neo4j.driver.internal.value.StringValue
 import java.util.*
 
-class BufferedRemover(val nodesBatchSize: Int = 20000, val refsBatchSize: Int = 10000) {
+class BufferedRemover(val nodesBatchSize: Int = ManagerBatchSizes.removerNodesBatchSize, val refsBatchSize: Int = 10000) {
     /** endNode ID --> input ref type */
     private val nodesToRemoveByID = hashSetOf<Long>()
     //private val refsToRemoveByID = hashSetOf<Long>()
