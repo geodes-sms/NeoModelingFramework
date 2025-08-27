@@ -135,8 +135,9 @@ java -jar <NMF_LOADER_PATH> --help
 
 # Empirical Evaluation
 
-The quantitative evaluation can be re-run by running [RQ1Eval.kt](modelLoader\src\test\kotlin\evaluation) and [RQ2Eval.kt](modelEditor\src\test\kotlin\evaluation) files. Make sure you have a empty instance of Neo4j running.
-Results will be generated as CSV files, under [Evaluation\results](Evaluation\results).
+The quantitative evaluation can be re-run by running [RQ1Eval.kt](modelLoader/src/test/kotlin/evaluation) and [RQ2Eval.kt](modelEditor/src/test/kotlin/evaluation) files. Make sure you have a empty instance of Neo4j running.
+Results will be generated as CSV files, under [Evaluation/results](Evaluation/results).
 
-Results can be plotted running the Jupyter Notebooks at [Evaluation\analysis](Evaluation\analysis).
+Results can be plotted running the Jupyter Notebooks at [Evaluation/analysis](Evaluation/analysis).
+
 Please note that due to difference in hardware, re-running the experiments will probably generate slightly different results than those reported in the paper. 
