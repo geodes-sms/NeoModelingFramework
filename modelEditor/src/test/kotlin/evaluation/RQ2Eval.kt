@@ -13,8 +13,9 @@ import java.util.*
 
 // To run this file, follow the steps on the Readme.md
 // test file to evaluate RQ2
-//  To what extent can our approach perform CRUD operations on metamodels and models of different domains, complexity and sizes?
-// metrics (time and memory consumed when performing each operation for different configurations as defined in `sizesEval`)
+//  To what extent can our framework perform CRUD operations on models of different complexities and sizes?
+// metrics (time and memory consumed when performing each operation for different
+// configurations as defined in `sizesEval`) for different graph types
 @Suppress("UNCHECKED_CAST")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RQ2Eval {

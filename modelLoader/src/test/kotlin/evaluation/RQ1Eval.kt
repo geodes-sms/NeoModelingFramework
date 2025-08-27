@@ -2,17 +2,14 @@ package evaluation
 
 import geodes.sms.nmf.loader.emf2neo4j.EmfModelLoader
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
-//import org.eclipse.emf.ecore.EPackage
-//import org.eclipse.gmt.modisco.java.cdo.meta.JavaPackage
 import org.junit.jupiter.api.Test
 import java.io.File
 /*/
 To run this file, follow the steps on the Readme.md
  */
 // test file to evaluate RQ1
-// To what extent can our approach represent metamodels and models of different domains, complexity and sizes?
-// Metrics: model size Number of classes, Number of associations/containments, Number of attributes, Types of attributes
-// For us, only: int, Integer, string, list, map,
+// To what extent can our framework represent metamodels and models of different domains, complexity and sizes?
+// Metrics: model size (Number of classes, Number of associations/containments, Number of attributes)
 // number of nodes, number of edges, time (ms) and memory (KB) consumed to load
 
 class RQ1Eval {
@@ -30,27 +27,12 @@ class RQ1Eval {
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
         graphWriter.clearDB() // in case there is data in the db
-        for (i in 1 .. 1) { // we run the evaluation multiple times to mitigate threats
+        for (i in 1 .. 30) { // we run the evaluation multiple times to mitigate threats
             runEval("ecore",files, graphWriter, i)
         }
         graphWriter.close()
     }
 
-//    @Test fun loadEvalDataXMI() {
-//        val directory = File("../Evaluation/NeoEMF-benchmark-models") // loading models
-//        val files = directory
-//            .walk()
-//            .filter { it.isFile && it.extension == "xmi" }
-//            .map { it.path }
-//            .toList()
-//        EPackage.Registry.INSTANCE.put(JavaPackage.eNS_URI, JavaPackage.eINSTANCE);
-//        val graphWriter = GraphBatchWriter(dbUri, username, password)
-//        graphWriter.clearDB() // in case there is data in the db
-//        for (i in 1 .. 1) { // we run the evaluation multiple times to mitigate threats
-//            runEval("xmi",files, graphWriter, i)
-//        }
-//        graphWriter.close()
-//    }
 
     fun runEval(type: String, files: List<String>, graphWriter:GraphBatchWriter, i: Int) {
         println("Running evaluation number: $i")
@@ -101,7 +83,5 @@ class RQ1Eval {
         System.gc()
         Thread.sleep(100)
     }
-
-
 
 }
