@@ -21,7 +21,7 @@ class RQ1Eval {
     }
 }
 
-// ---- Data class for metrics ----
+//  Data class for metrics 
 data class EcoreMetrics(
     val modelName: String,
     val numClasses: Int,
@@ -33,7 +33,7 @@ data class EcoreMetrics(
     val maxHagg: Int
 )
 
-// ---- Load Ecore model ----
+//  Load Ecore model 
 fun loadEcoreModel(filePath: String): Collection<EPackage> {
     val resourceSet = ResourceSetImpl()
     resourceSet.resourceFactoryRegistry.extensionToFactoryMap["ecore"] = EcoreResourceFactoryImpl()
@@ -43,7 +43,7 @@ fun loadEcoreModel(filePath: String): Collection<EPackage> {
     return resource.contents.filterIsInstance<EPackage>()
 }
 
-// ---- DIT (Generalisation / Inheritance) ----
+//  DIT (Generalisation / Inheritance) 
 fun computeDIT(
     eClass: EClass,
     visited: MutableSet<EClass> = mutableSetOf(),
@@ -65,7 +65,7 @@ fun computeMaxDIT(allClasses: Collection<EClass>): Int {
     return allClasses.maxOfOrNull { computeDIT(it, mutableSetOf(), memo) } ?: 0
 }
 
-// ---- HAgg (Aggregation / Containment) ----
+//  HAgg (Aggregation / Containment) 
 fun buildAggregationMap(allClasses: Collection<EClass>): Map<EClass, List<EClass>> {
     val map = mutableMapOf<EClass, MutableList<EClass>>()
     for (cls in allClasses) {
@@ -100,7 +100,7 @@ fun computeMaxHagg(allClasses: Collection<EClass>): Int {
     return allClasses.maxOfOrNull { computeHaggDepth(it, aggMap, mutableSetOf(), memo) } ?: 0
 }
 
-// ---- Main analysis ----
+//  Main analysis 
 fun analyzeEcore(filePath: String): EcoreMetrics {
     val packages = loadEcoreModel(filePath)
 
@@ -143,7 +143,7 @@ fun analyzeEcore(filePath: String): EcoreMetrics {
     )
 }
 
-// ---- CSV Export ----
+//  CSV Export 
 fun exportEcoreMetricsToCSV(directoryPath: String, outputPath: String) {
     val metamodelsDir = File(directoryPath)
     val ecoreFiles = metamodelsDir.walk()
