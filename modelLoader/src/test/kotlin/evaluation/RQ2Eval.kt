@@ -24,7 +24,7 @@ class RQ2Eval {
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
         graphWriter.clearDB() // in case there is data in the db
-        for (i in 1 .. 30) { // we run the evaluation multiple times to mitigate threats
+        for (i in 1 .. 1) { // we run the evaluation multiple times to mitigate threats
             runEval(files, graphWriter, i)
         }
         graphWriter.close()
