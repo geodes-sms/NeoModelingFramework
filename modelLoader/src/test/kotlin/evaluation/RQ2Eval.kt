@@ -39,7 +39,7 @@ class RQ2Eval {
                 garbageCollector() // to guarantee that the garbage colletor is run before the memory
                 val beforeMemory = getUsedMemoryKB()
                 val writeStartTime = System.currentTimeMillis()
-                val (nodeCount, edgeCount) = EmfModelLoader.Companion.load(model, graphWriter)
+                val (nodeCount, edgeCount) = EmfModelLoader.load(model, graphWriter)
                 val writeTime = System.currentTimeMillis() - writeStartTime
                 val mem = getUsedMemoryKB() - beforeMemory
                 resFile.appendText("${getMetamodelName(model)},$nodeCount,$edgeCount,$writeTime,$mem\n")
@@ -54,7 +54,7 @@ class RQ2Eval {
         // get only the model name
         val file = File(model)
         val fileName = file.name
-        var end = ".ecore";
+        var end = ".ecore"
         if(model.contains("xmi"))
             end = ".xmi"
         return if (end.isNotEmpty()) fileName.removeSuffix(end) else fileName
