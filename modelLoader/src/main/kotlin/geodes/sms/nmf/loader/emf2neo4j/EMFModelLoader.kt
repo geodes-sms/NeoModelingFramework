@@ -45,42 +45,53 @@ interface EmfModelLoader {
         }
 
         private fun traverseAndLoad(root: EObject, writer: GraphBatchWriter): Pair<Int, Int> {
-            val visited = mutableMapOf<EObject, Entity>() // Map EObject -> Neo4j node
-            var totalNodes = 0
+            val visited = mutableMapOf<EObject, Entity>()
             var totalEdges = 0
 
-            fun traverse(obj: EObject) {
-                if (visited.containsKey(obj)) return
+            // Pass 1: create all nodes using a stack (avoid recursion entirely)
+            val stack = ArrayDeque<EObject>()
+            stack.addLast(root)
 
-                // Create node for this EObject
+            while (stack.isNotEmpty()) {
+                val obj = stack.removeLast()
+                if (visited.containsKey(obj)) continue
+
                 val label = obj.eClass().name
                 val props = mutableMapOf<String, Value>()
-                // Copy attributes as props
                 obj.eClass().eAllAttributes.forEach { attr ->
                     val value = obj.eGet(attr)
                     if (value != null) props[attr.name] = StringValue(value.toString())
                 }
 
-                val entity = writer.createNode(label, props)
-                visited[obj] = entity
-                totalNodes++
+                visited[obj] = writer.createNode(label, props)
 
-                // First traverse contained elements to create their nodes
-                obj.eContents().forEach { traverse(it) }
-
-                // Now create edges for all EReferences
+                // push all reachable objects onto the stack
                 obj.eClass().eAllReferences.forEach { ref ->
-                    val value = obj.eGet(ref)
-                    when (value) {
+                    when (val value = obj.eGet(ref)) {
+                        is EObject -> if (!visited.containsKey(value)) stack.addLast(value)
+                        is Collection<*> -> value.filterIsInstance<EObject>()
+                            .filter { !visited.containsKey(it) }
+                            .forEach { stack.addLast(it) }
+                    }
+                }
+            }
+
+            writer.commitNodes()
+
+            // Pass 2: create all edges, no recursion needed
+            visited.keys.forEach { obj ->
+                val entity = visited[obj]!!
+                obj.eClass().eAllReferences.forEach { ref ->
+                    when (val value = obj.eGet(ref)) {
                         is EObject -> {
-                            traverse(value) // ensure target node exists
-                            writer.createRef(ref.name, entity, visited[value]!!, ref.isContainment)
-                            totalEdges++
+                            visited[value]?.let { target ->
+                                writer.createRef(ref.name, entity, target, ref.isContainment)
+                                totalEdges++
+                            }
                         }
-                        is Collection<*> -> {
-                            value.filterIsInstance<EObject>().forEach { target ->
-                                traverse(target)
-                                writer.createRef(ref.name, entity, visited[target]!!, ref.isContainment)
+                        is Collection<*> -> value.filterIsInstance<EObject>().forEach { target ->
+                            visited[target]?.let {
+                                writer.createRef(ref.name, entity, it, ref.isContainment)
                                 totalEdges++
                             }
                         }
@@ -88,13 +99,9 @@ interface EmfModelLoader {
                 }
             }
 
-            traverse(root)
-
-            // Commit everything
-            writer.commitNodes()
             writer.commitRefs()
 
-            return totalNodes to totalEdges
+            return visited.size to totalEdges
         }
     }
 }
