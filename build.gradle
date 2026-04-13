@@ -23,6 +23,11 @@ allprojects {
         mavenCentral()
     }
 }
+subprojects {
+    tasks.withType(Test) {
+        jvmArgs '-Xmx12g', '-Xms8g'
+    }
+}
 
 task clean(type: Delete) {
     delete rootProject.buildDir

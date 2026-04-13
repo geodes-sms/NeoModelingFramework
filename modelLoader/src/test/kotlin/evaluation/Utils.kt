@@ -5,62 +5,103 @@ import java.io.File
 
 class Utils {
 
-    fun fixXmiHeadersBySubfolder(baseFolder: File, headerMap: Map<String, String>) {
+    fun fixXmiHeadersBySubfolder(baseFolder: File) {
         require(baseFolder.exists() && baseFolder.isDirectory) {
             "Base folder not found: ${baseFolder.absolutePath}"
         }
 
-        // Iterate over all subfolders
         baseFolder.listFiles { f -> f.isDirectory }?.forEach { subfolder ->
-            val header = headerMap[subfolder.name]
-            if (header == null) {
-                println("No header mapping for subfolder '${subfolder.name}', skipping")
-                return@forEach
-            }
+            val mm = subfolder.name
 
-            // Find all XMI files in the subfolder
-            val xmiFiles = subfolder.listFiles { f ->
-                f.isFile && f.extension.equals("xmi", ignoreCase = true)
-            } ?: emptyArray()
+            val xmiFiles = subfolder.walkTopDown()
+                .filter { it.isFile && it.extension.equals("xmi", ignoreCase = true) }
+                .toList()
 
             for (xmiFile in xmiFiles) {
-                // Process file line by line
-                val tempFile = File(xmiFile.absolutePath + ".tmp")
-                xmiFile.bufferedReader().use { reader ->
-                    tempFile.bufferedWriter().use { writer ->
-                        var firstLineReplaced = false
-                        reader.forEachLine { line ->
-                            if (!firstLineReplaced && line.trimStart().startsWith("<xmi:XMI")) {
-                                writer.write(header)
-                                writer.newLine()
-                                firstLineReplaced = true
-                            } else {
-                                writer.write(line)
-                                writer.newLine()
-                            }
-                        }
+                val metamodelFile = File(baseFolder, "metamodels/$mm.ecore")
+
+
+                val header = """
+            <xmi:XMI xmi:version="2.0"
+                     xmlns:xmi="http://www.omg.org/XMI"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xmlns:$mm="http://www.example.org/$mm"
+                     xsi:schemaLocation="http://www.example.org/$mm ../../metamodels/${metamodelFile.name}">
+                     """.trimIndent().replace("\n", " ")
+                val lines = xmiFile.readLines().toMutableList()
+
+                val newLines = mutableListOf<String>()
+
+                var xmlDeclHandled = false
+                var xmiHeaderInserted = false
+                var firstModelTagHandled = false
+
+                for ((index, line) in lines.withIndex()) {
+                    val trimmed = line.trim()
+
+                    // 1. XML declaration
+                    if (!xmlDeclHandled && trimmed.startsWith("<?xml")) {
+                        newLines.add(line)
+                        xmlDeclHandled = true
+                        continue
                     }
+
+                    // 2. Existing <xmi:XMI> → replace
+                    if (!xmiHeaderInserted && trimmed.startsWith("<xmi:XMI")) {
+                        newLines.add(header)
+                        xmiHeaderInserted = true
+                        continue
+                    }
+
+                    // 3. First non-header tag → insert header if missing
+                    if (!xmiHeaderInserted && trimmed.startsWith("<") && !trimmed.startsWith("<?")) {
+                        newLines.add(header)
+                        xmiHeaderInserted = true
+                    }
+
+                    // 4. Clean first model element tag
+                    if (xmiHeaderInserted && !firstModelTagHandled &&
+                        trimmed.startsWith("<") &&
+                        !trimmed.startsWith("<xmi:XMI") &&
+                        !trimmed.startsWith("<?")
+                    ) {
+                        val cleaned = cleanModelTag(trimmed)
+                        newLines.add(cleaned)
+                        firstModelTagHandled = true
+                        continue
+                    }
+
+                    newLines.add(line)
                 }
-                // Replace original file with fixed file
-                if (!xmiFile.delete() || !tempFile.renameTo(xmiFile)) {
-                    println("Failed to replace original file: ${xmiFile.absolutePath}")
-                } else {
-                    println("Fixed header for: ${xmiFile.absolutePath}")
+
+                // 5. Ensure closing tag
+                if (newLines.none { it.contains("</xmi:XMI>") }) {
+                    newLines.add("</xmi:XMI>")
                 }
+
+                xmiFile.writeText(newLines.joinToString("\n"))
+                println("Fixed: ${xmiFile.absolutePath}")
             }
         }
     }
 
+    /**
+     * Removes duplicated attributes like:
+     * - xmi:version
+     * - xmlns:*
+     * - xsi:*
+     */
+    private fun cleanModelTag(tag: String): String {
+        return tag
+            .replace(Regex("""\s+xmi:[^=]+="[^"]*""""), "")
+            .replace(Regex("""\s+xmlns:[^=]+="[^"]*""""), "")
+            .replace(Regex("""\s+xmlns="[^"]*""""), "")
+            .replace(Regex("""\s+xsi:[^=]+="[^"]*""""), "")
+    }
+
     @Test
     fun runFix() {
-        val baseFolder = File("../Evaluation/LinTra")
-
-        val headerMap = mapOf(
-            "java" to """<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:javaMM="http://www.eclipse.org/MoDisco/Java/0.2.incubation/java" xsi:schemaLocation="http://www.eclipse.org/MoDisco/Java/0.2.incubation/java ./java.ecore">""",
-            "DBLP" to """<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:DBLP="http://www.example.org/DBLP" xsi:schemaLocation="http://www.example.org/DBLP ./DBLP.ecore">""",
-            "movies" to """<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:movies="http://movies/1.0" xsi:schemaLocation="http://movies/1.0 ./movies.ecore">"""
-        )
-
-        fixXmiHeadersBySubfolder(baseFolder, headerMap)
+        val baseFolder = File("../Evaluation/dataset/models")
+        fixXmiHeadersBySubfolder(baseFolder)
     }
 }

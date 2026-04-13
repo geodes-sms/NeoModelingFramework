@@ -15,7 +15,7 @@ class RQ1Eval {
     @Test
     fun runEcoreAnalysis() {
         exportEcoreMetricsToCSV(
-            "../Evaluation/metamodels",
+            "../Evaluation/dataset/metamodels",
             "../Evaluation/results/RQ1/metamodels.csv"
         )
     }

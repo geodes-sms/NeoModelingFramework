@@ -15,7 +15,7 @@ class RQ2Eval {
     private val password =  DBCredentials.password
 
     @Test fun loadEvalData() {
-        val directory = File("../Evaluation/metamodels") // loading models
+        val directory = File("../Evaluation/dataset/metamodels") // loading models
         val files = directory
             .walk()
             .filter { it.isFile && it.extension == "ecore" }
