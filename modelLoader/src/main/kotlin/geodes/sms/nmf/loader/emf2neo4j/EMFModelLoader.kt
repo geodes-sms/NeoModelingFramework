@@ -20,6 +20,8 @@ import java.util.IdentityHashMap
 
 
 interface EmfModelLoader {
+
+
     companion object {
         fun load(modelPath: String, writer: GraphBatchWriter): Pair<Int, Int> {
             Resource.Factory.Registry.INSTANCE.extensionToFactoryMap.apply {
@@ -27,89 +29,41 @@ interface EmfModelLoader {
                 put("*", XMIResourceFactoryImpl())
             }
 
-            val resourceSet = ResourceSetImpl()
-            val resource: Resource = resourceSet.getResource(
-                URI.createFileURI(File(modelPath).absolutePath),
-                true
-            )
+            val resource = ResourceSetImpl()
+                .getResource(URI.createFileURI(File(modelPath).absolutePath), true)
 
-            // important: resolve all references in the resource (IDs, proxies)
-            EcoreUtil.resolveAll(resource)
+            // Separate EPackage roots from plain EObject roots
+            val ePackageRoots = resource.contents.filterIsInstance<EPackage>()
+            val eObjectRoots  = resource.contents.filterIsInstance<EObject>()
+                .filterNot { it is EPackage }
 
-            val root = resource.contents[0]
+            var totalNodes = 0
+            var totalRefs  = 0
 
-            return when (root) {
-                is EPackage -> EcoreLoader(writer).load(root)   // load metamodel itself
-                is EObject -> {
-                    // traverse all top-level elements and their references
-                    traverseAndLoad(root, writer)
-                }
-                else -> throw Exception("Unknown element type $root in the model $modelPath. SKIPPING the model")
-            }
-        }
-
-        private fun traverseAndLoad(root: EObject, writer: GraphBatchWriter): Pair<Int, Int> {
-            val visited = IdentityHashMap<EObject, Entity>(1024)
-            val refCache = HashMap<EClass, List<EReference>>()
-            val attrCache = HashMap<EClass, List<EAttribute>>()
-            var totalEdges = 0
-
-            // create all nodes using a stack (avoid recursion entirely)
-            val stack = ArrayDeque<EObject>(1024)
-            stack.addLast(root)
-
-            while (stack.isNotEmpty()) {
-                val obj = stack.removeLast()
-                if (visited.containsKey(obj)) continue
-
-                val eClass = obj.eClass()
-                val attrs = attrCache.getOrPut(eClass) { eClass.eAllAttributes.toList() }
-                val refs = refCache.getOrPut(eClass) { eClass.eAllReferences.toList() }
-
-                val props = mutableMapOf<String, Value>()
-                attrs.forEach { attr ->
-                    val value = obj.eGet(attr)
-                    if (value != null) props[attr.name] = StringValue(value.toString())
-                }
-                val label = obj.eClass().name
-                visited[obj] = writer.createNode(label, props)
-
-                refs.forEach { ref ->
-                    when (val value = obj.eGet(ref)) {
-                        is EObject -> if (!visited.containsKey(value)) stack.addLast(value)
-                        is Collection<*> -> value.forEach { target ->
-                            if (target is EObject && !visited.containsKey(target)) stack.addLast(target)
-                        }
-                    }
-                }
+            // EPackage roots are self-contained — process independently as before
+            for (pkg in ePackageRoots) {
+                val (n, r) = EcoreLoader(writer).load(pkg)
+                totalNodes += n
+                totalRefs  += r
             }
 
-            writer.commitNodes()
+            // EObject roots share a single nodes map so cross-root refs resolve
+            if (eObjectRoots.isNotEmpty()) {
+                val sharedNodes = hashMapOf<EObject, Entity>()
+                val loader = ReflectiveBatchLoader(writer, sharedNodes)
 
-            // create all edges
-            visited.entries.forEach { (obj, entity) ->
-                val refs = refCache.getOrPut(obj.eClass()) { obj.eClass().eAllReferences.toList() }
-                refs.forEach { ref ->
-                    when (val value = obj.eGet(ref)) {
-                        is EObject -> visited[value]?.let {
-                            writer.createRef(ref.name, entity, it, ref.isContainment)
-                            totalEdges++
-                        }
-                        is Collection<*> -> value.forEach { target ->
-                            if (target is EObject) visited[target]?.let {
-                                writer.createRef(ref.name, entity, it, ref.isContainment)
-                                totalEdges++
-                            }
-                        }
-                    }
+                // Phase 1: all nodes first
+                for (root in eObjectRoots) {
+                    totalNodes += loader.loadNodes(root)
                 }
+
+                // Phase 2: all refs (cross-root refs now resolve correctly)
+                totalRefs += loader.loadRefs()
             }
 
-            writer.commitRefs()
-            return visited.size to totalEdges
+            return totalNodes to totalRefs
         }
     }
-
 
 }
 
