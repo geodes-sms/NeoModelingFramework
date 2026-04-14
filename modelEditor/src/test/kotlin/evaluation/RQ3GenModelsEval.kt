@@ -8,6 +8,7 @@ import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.io.File
+import java.util.LinkedList
 
 // To run this file, follow the steps on the Readme.md
 // test file to evaluate RQ3
@@ -77,23 +78,23 @@ class RQ3GenModelsEval {
 
         for (model in files) {
             println("Loading model ${getModelName(model)}")
-            reset(model,graphWriter)
+            reset(model, graphWriter)
             // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
             //delete
-//            delete(metamodelName)
-//            reset(model,graphWriter)
+            delete(metamodelName)
+            reset(model,graphWriter)
             // create
 //            create(metamodelName)
 //            reset(model,graphWriter)
 
             // reads
-            read(metamodelName)
-            reset(model,graphWriter)
+//            read(metamodelName)
+//            reset(model, graphWriter)
 
             // update
-//            update()
+//            update(metamodelName)
 //            reset(model,graphWriter)
 
         }
@@ -121,8 +122,6 @@ class RQ3GenModelsEval {
     }
 
 
-
-
     // ---------------------------- READ ---------------------------- //
     fun read(metamodel: String) {
         val resWriter = getFile("Read", metamodel)
@@ -146,65 +145,52 @@ class RQ3GenModelsEval {
     }
 
 
-
     // ---------------------------- UPDATE ---------------------------- //
-    fun update(metamodel: String, model: String, graphWriter: GraphBatchWriter) {
-        val resWriter = getFile("Update",metamodel)
+    fun update(metamodel: String,) {
+        val resWriter = getFile("Update", metamodel)
         //----- preparation step -----
-//        val vertices = ArrayList<CompositeVertex>(maxSize)
-//        for (i in 1..maxSize) {
-//            val vertex = manager.createCompositeVertex()
-//            vertex.setCapacity(Random(42).nextInt(10)) // random value (seed makes sure it is always the same for all runs)
-//            vertex.setIs_initial(true)
-//            vertex.setName("x$i")
-//            vertices.add(vertex)
-//        }
-//        manager.saveChanges()
+        val nodes = manager.loadNodes(maxSize, { it })
         //---- preparation step end ----
         for (i in sizes) {
+            println("Running update evaluation for size $i")
             var mem: Long
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
             for (j in 0 until i) {
-//                val vertex = vertices[j]
-//                vertex.setCapacity(-1 * vertex.getCapacity()!!)
-//                vertex.setIs_initial(!vertex.getIs_initial()!!) //change boolean to opposite value
-//                vertex.setName("y$j")
+                val node = nodes[j]
+                node.putProperty("name", "newValue")
             }
             manager.saveChanges()
             val endTime = System.currentTimeMillis()
             mem = getUsedMemoryKB() - beforeMemory
-
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
     }
 
     // ---------------------------- DELETE ---------------------------- //
-    fun delete(metamodel: String, model: String, graphWriter: GraphBatchWriter) {
+    fun delete(metamodel: String) {
         val resWriter = getFile("DeleteSingle", metamodel)
         //----- preparation step -----
-        //val vertices: LinkedList<Vertex> = manager.loadNodes(getMaxSizeForDelete()) as LinkedList<Vertex>
+        val nodes = LinkedList(manager.loadNodes(maxSize) { it })
         //--- preparation step end ----
         for (i in sizes) {
+            println("Running delete evaluation for size $i")
             var mem: Long
             garbageCollector()
             val beforeMemory = getUsedMemoryKB()
             val startTime = System.currentTimeMillis()
             (1..i).forEach { j ->
-               // manager.remove(vertices.pop())
+                manager.remove(nodes.pop())
             }
             manager.saveChanges()
             val endTime = System.currentTimeMillis()
             mem = getUsedMemoryKB() - beforeMemory
-
             val time = endTime - startTime
             resWriter.appendText("$i,$time,$mem\n")
         }
     }
-
-
 
 
     // ---------------------------- UTILS ---------------------------- //
@@ -261,9 +247,10 @@ class RQ3GenModelsEval {
     fun reset(model: String?, graphWriter: GraphBatchWriter?) {
         manager.clearDB()
         manager.clearCache()
-        if(model != null && graphWriter != null)
+        if (model != null && graphWriter != null)
             EmfModelLoader.load(model, graphWriter)
     }
+
     fun getModelName(model: String): String {
         val file = File(model)
         val fileName = file.name
