@@ -44,6 +44,11 @@ internal class GraphManager(dbUri: String, username: String, password: String) :
         return mapper.loadNodesByLabel(label, limit, mapFunction)
     }
 
+    @Suppress("OVERRIDE_BY_INLINE")
+    override inline fun <R> loadNodes(limit: Int, crossinline mapFunction: (INodeController) -> R): List<R> {
+        return mapper.loadNodes(limit, mapFunction)
+    }
+
     //also unloads all out/in refs
     override fun unload(node: INodeEntity) {
         if (node is INodeController) node.unload()

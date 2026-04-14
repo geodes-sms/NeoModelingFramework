@@ -14,6 +14,7 @@ interface IGraphManager : AutoCloseable {
     fun createNode(label: String): INodeController
     fun loadNode(id: Long, label: String): INodeController
     fun <R> loadNodes(label: String, limit: Int, mapFunction: (INodeController) -> R): List<R>
+    fun <R> loadNodes(limit: Int, mapFunction: (INodeController) -> R): List<R>
     fun unload(node: INodeEntity)
     fun remove(node: INodeEntity)
 }

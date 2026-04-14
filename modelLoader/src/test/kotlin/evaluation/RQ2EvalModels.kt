@@ -72,7 +72,6 @@ class RQ2EvalModels {
                 println("Loading model ${getModelName(model)}")
 
                 val (nodeCount, edgeCount) = EmfModelLoader.load(model, graphWriter)
-
                 val writeTime = System.currentTimeMillis() - writeStartTime
                 val mem = getUsedMemoryKB() - beforeMemory
 

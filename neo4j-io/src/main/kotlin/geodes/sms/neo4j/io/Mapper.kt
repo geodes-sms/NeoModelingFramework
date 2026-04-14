@@ -96,6 +96,21 @@ internal class Mapper(
         }
     }
 
+    inline fun <R> loadNodes(limit: Int, crossinline mapFunction: (INodeController) -> R): List<R> {
+        return reader.findNodesWithCounts(limit) { res ->
+            val nc = NodeController(
+                mapper = this,
+                id = res.id,
+                label = res.label,
+                propsDiff = hashMapOf(),
+                outRefCount = res.outRefCount,
+                state = EntityState.PERSISTED
+            )
+            startTracking(nc)
+            mapFunction(nc)
+        }
+    }
+
     inline fun <R> loadOutConnectedNodes(
         startID: Long,
         rType: String,
