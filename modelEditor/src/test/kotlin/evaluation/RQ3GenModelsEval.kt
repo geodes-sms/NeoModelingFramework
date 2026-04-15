@@ -2,7 +2,6 @@ package evaluation
 
 import DBCredentials
 import geodes.sms.neo4j.io.controllers.IGraphManager
-import geodes.sms.neo4j.io.controllers.INodeController
 import geodes.sms.nmf.loader.emf2neo4j.EmfModelLoader
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.junit.jupiter.api.Test
@@ -11,10 +10,9 @@ import java.io.File
 import java.util.LinkedList
 
 // To run this file, follow the steps on the Readme.md
-// test file to evaluate RQ3
+// test file to evaluate RQ3 with generated models
 //  To what extent can our framework perform CRUD operations on models of different complexities and sizes?
 // metrics (time and memory consumed when performing each operation for different
-// configurations as defined in `sizesEval`) for different graph types
 @Suppress("UNCHECKED_CAST")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RQ3GenModelsEval {
@@ -36,7 +34,7 @@ class RQ3GenModelsEval {
 
     @Test
     fun loadEvalData() {
-        val rootDir = File("../Evaluation/dataset/modelsRQ3")
+        val rootDir = File("../Evaluation/dataset/models")
         require(rootDir.exists() && rootDir.isDirectory) {
             "Directory not found: ${rootDir.absolutePath}"
         }
@@ -50,20 +48,31 @@ class RQ3GenModelsEval {
             println("Processing subfolder: ${subfolder.name}")
 
 
-            // Load all .xmi files in the same subfolder
-            val xmiFiles = subfolder.walkTopDown()
-                .filter { it.isFile && it.extension.equals("xmi", ignoreCase = true) }
-                .toList()
+            // Load all .xmi files in the same subfolder and othe largest only
+            val (filteredXmiFiles, otherXmiFiles) =
+                subfolder.listFiles { file ->
+                    file.isFile && file.extension.equals("xmi", ignoreCase = true)
+                }?.partition { file ->
+                    file.name.contains("1000000") // only the largest file is used for create, update, and read
+                } ?: (emptyList<File>() to emptyList())
 
-            // Merge files: ecore first, then xmi
+            val allXmiFiles = filteredXmiFiles + otherXmiFiles
+
+
+            val largeFilesToLoad = mutableListOf<String>()
+            filteredXmiFiles.forEach { largeFilesToLoad.add(it.absolutePath) }
+
+            println("Files to load for create, update, read in ${subfolder.name}: ${largeFilesToLoad.size}")
+            reset(null, null) // to clear db in case last run threw an exception
+
             val filesToLoad = mutableListOf<String>()
-            xmiFiles.forEach { filesToLoad.add(it.absolutePath) }
-
-            println("Files to load in ${subfolder.name}: ${filesToLoad.size}")
+            allXmiFiles.forEach { filesToLoad.add(it.absolutePath) }
+            println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
             // Run evaluation multiple times if needed
             for (i in 1..2) {
-                runEval(filesToLoad, graphWriter, i, subfolder.name)
+                //runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
+                runEvalDel(filesToLoad, graphWriter, i, subfolder.name)
             }
 
         }
@@ -75,28 +84,46 @@ class RQ3GenModelsEval {
             sizes = sizesEval
         maxSize = sizes[sizes.size - 1]
         println("Running evaluation number: $i")
-
         for (model in files) {
             println("Loading model ${getModelName(model)}")
             reset(model, graphWriter)
             // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
-            //delete
-            delete(metamodelName)
-            reset(model,graphWriter)
             // create
-//            create(metamodelName)
-//            reset(model,graphWriter)
+            create(metamodelName)
+            reset(model, graphWriter)
 
             // reads
-//            read(metamodelName)
-//            reset(model, graphWriter)
+            read(metamodelName)
+            reset(model, graphWriter)
 
             // update
-//            update(metamodelName)
-//            reset(model,graphWriter)
+            update(metamodelName)
+            reset(model, graphWriter)
 
+        }
+    }
+
+    fun runEvalDel(files: List<String>, graphWriter: GraphBatchWriter, i: Int, metamodelName: String) {
+        if (isEval)
+            sizes = sizesEval
+        maxSize = sizes[sizes.size - 1]
+        println("Running delete evaluation number: $i")
+        val filteredFiles = files.mapNotNull { file ->
+            val name = getModelName(file)
+            val sizeInName = name.substringAfterLast("_").substringBefore(".").toIntOrNull()
+            if (sizeInName != null && sizeInName in sizes) {
+                file to sizeInName   // keep both
+            } else {
+                null
+            }
+        }
+        val resWriter = getFile("Delete", metamodelName)
+        for ((model, size) in filteredFiles) {
+            reset(model, graphWriter)
+            evalCount = i
+            delete(resWriter, size)
         }
     }
 
@@ -146,7 +173,7 @@ class RQ3GenModelsEval {
 
 
     // ---------------------------- UPDATE ---------------------------- //
-    fun update(metamodel: String,) {
+    fun update(metamodel: String) {
         val resWriter = getFile("Update", metamodel)
         //----- preparation step -----
         val nodes = manager.loadNodes(maxSize, { it })
@@ -170,26 +197,24 @@ class RQ3GenModelsEval {
     }
 
     // ---------------------------- DELETE ---------------------------- //
-    fun delete(metamodel: String) {
-        val resWriter = getFile("DeleteSingle", metamodel)
+    fun delete(resWriter: File, currentSize: Int) {
         //----- preparation step -----
         val nodes = LinkedList(manager.loadNodes(maxSize) { it })
         //--- preparation step end ----
-        for (i in sizes) {
-            println("Running delete evaluation for size $i")
-            var mem: Long
-            garbageCollector()
-            val beforeMemory = getUsedMemoryKB()
-            val startTime = System.currentTimeMillis()
-            (1..i).forEach { j ->
-                manager.remove(nodes.pop())
-            }
-            manager.saveChanges()
-            val endTime = System.currentTimeMillis()
-            mem = getUsedMemoryKB() - beforeMemory
-            val time = endTime - startTime
-            resWriter.appendText("$i,$time,$mem\n")
+        println("Running delete evaluation for size $currentSize")
+        var mem: Long
+        garbageCollector()
+        val beforeMemory = getUsedMemoryKB()
+        val startTime = System.currentTimeMillis()
+        val size = nodes.size
+        for (i in 0 until size) {
+            manager.remove(nodes[i])
         }
+        manager.saveChanges()
+        val endTime = System.currentTimeMillis()
+        mem = getUsedMemoryKB() - beforeMemory
+        val time = endTime - startTime
+        resWriter.appendText("$currentSize,$time,$mem\n")
     }
 
 
