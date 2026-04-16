@@ -19,13 +19,13 @@ class Utils {
 
             for (xmiFile in xmiFiles) {
                 val metamodelFile = File(baseFolder, "metamodels/$mm.ecore")
-
+                val metamodelLowerCase = mm.replaceFirstChar { it.lowercase() }
 
                 val header = """
             <xmi:XMI xmi:version="2.0"
                      xmlns:xmi="http://www.omg.org/XMI"
                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                     xmlns:$mm="http://www.example.org/$mm"
+                     xmlns:$metamodelLowerCase="http://www.example.org/$mm"
                      xsi:schemaLocation="http://www.example.org/$mm ../../metamodels/${metamodelFile.name}">
                      """.trimIndent().replace("\n", " ")
                 val lines = xmiFile.readLines().toMutableList()

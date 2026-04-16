@@ -2,7 +2,7 @@
   "DSLs": [
     "AppDSL","ApplauseDsl","AthenaDSL","AtsDsl","BatchDsl","BusinessDomainDsl",
     "BusinessObjectDsl","CoreDsl","CssDsl","CssExtDsl","DSLTrans","DataContractDsl",
-    "DdlDsl","DecoraDsl","DependenciesDsl","DependencyDsl","DeviceModelingLanguage",
+    "DdlDsl","DecoraDsl","DependenciesDsl","DependencyDsl",
     "DslECharts","EntityLang","EventOrientedLanguage","FlowDsl","Golang","Guixdsl",
     "HaxeDSL","ImpModLang","InteriorPlanningLang","LanguagePreferences","ObjectDsl",
     "OrganizationDsl","OseeDsl","P4Dsl","ServerGeneratorLanguage","ServiceDsl",
@@ -20,7 +20,7 @@
     "LLVM_IR","Lexer","MiniJava","MiniJavaMetaModel","MiniScript","RooScript",
     "Scala","Script","SimpleJava","SmallJava","StaticScript","StoredScript",
     "atl2java","compiler","grammar","java","java5","javaproperties","javaz",
-    "kermeta_java","parser"
+    "parser"
   ],
 
   "Software_Engineering_&_MDE": [
@@ -39,13 +39,13 @@
 
   "Business_Process_&_Workflow": [
     "BPM","CollaborativeMDEProcess","GraphicalProcessEditorModel","apromore",
-    "bpmn20di","epc","process","processor","q4bpmn","spem2","workflow","yawl",
+    "bpmn20di","epc","process","q4bpmn","workflow","yawl",
     "101companies","Company","business","accounting","salesystem",
     "Customers","customers","Insurance","claim","auction","catalog","rentalSample"
   ],
 
   "Data_&_Databases": [
-    "ER","CWM","dataset","datatypes","metadata","ParsedMetadata","json","xml","XSD",
+    "ER","dataset","datatypes","metadata","ParsedMetadata","json","xml",
     "DBLP","EveAPIDBModel","ExSchema","Ldb","MongoSQL","MovieDB","RDBMSMM",
     "Relational","SemanticDB","SqliteModel","plsql","sdb"
   ],
@@ -56,9 +56,9 @@
   ],
 
   "Systems_Cloud_&_Infrastructure_&_Architecture": [
-    "CloudML","Deployment","Hadoop","kevoree","kevoree2","esb","IAC",
+    "CloudML","Deployment","Hadoop","kevoree2","esb","IAC",
     "platform","environment","adaptiveSystem", "FractalItf","archi",
-    "archimate","componentMapping","gcomponent", "kompicsComponents","moduleCore","layer"
+    "componentMapping","gcomponent", "kompicsComponents","moduleCore","layer"
   ],
 
   "Graphs_&_Networks": [
@@ -73,11 +73,11 @@
   ],
 
   "Formal_Methods": [
-    "Constraints","LTL","OCL","SATELAPN","logicsemantic"
+    "Constraints","LTL","OCL","logicsemantic"
   ],
 
   "Security_&_Access_Control": [
-    "Iptables","Firewalll","PPTP","security","risk","sec",
+    "Iptables","Firewalll","PPTP","risk","sec",
     "accesscontrol","trust","trustMetamodel"
   ],
 

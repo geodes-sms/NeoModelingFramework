@@ -1,14 +1,10 @@
 $models = @(
-    "erlang", "LLVM_IR", "models", "timing-diagram", "spem2", "CWM",
-    "IFML", "esb", "NetModel", "Simulator", "SATELAPN", "security",
-    "reviews", "hockeyleague", "FlatQVT", "JDTAST", "java5", "XSD",
-    "SqliteModel", "MDD", "kermeta_java", "genericity_dsl", "StaticScript",
-    "plsql", "AthenaDSL", "DeviceModelingLanguage", "archimate", "Glsl",
-    "kevoree", "FractalItf"
+    'erlang', 'LLVM_IR', 'models', 'timing-diagram', 'IFML', 'esb', 'NetModel', 'Simulator', 'reviews', 'hockeyleague', 'FlatQVT', 'JDTAST', 'java5', 'SqliteModel', 'MDD',  'genericity_dsl', 'StaticScript', 'plsql', 'AthenaDSL', 'Glsl', 'FractalItf', 'CoreDsl', 'AtsDsl', 'OseeDsl','OCL', 'JavaVMTypes', 'Iptables', 'Transformation', 'business', 'ApplauseDsl'
+
 )
 
 $ecoreBasePath = "..\Evaluation\dataset\metamodels"
-$outputBasePath = "\generated_models"
+$outputBasePath = "generated_models"
 
 $sizes = @(
     10000, 50000,

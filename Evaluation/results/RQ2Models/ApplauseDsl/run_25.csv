@@ -1,0 +1,3 @@
+model,ext,nodes,edges,time,mem
+result0_10000,xmi,10378,12996,571,32768
+result0_100000,xmi,101869,129266,7373,313400
