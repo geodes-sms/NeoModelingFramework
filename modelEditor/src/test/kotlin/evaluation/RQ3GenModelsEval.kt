@@ -70,7 +70,7 @@ class RQ3GenModelsEval {
             println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
             // Run evaluation multiple times if needed
-            for (i in 1..5) {
+            for (i in 2..4) {
                 runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
                 runEvalDel(filesToLoad, graphWriter, i, subfolder.name)
             }
@@ -90,17 +90,18 @@ class RQ3GenModelsEval {
             // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
-            // create
-            create(metamodelName)
-            reset(model, graphWriter)
 
             // reads
             read(metamodelName)
-            reset(model, graphWriter)
+            //reset(model, graphWriter)
 
             // update
             update(metamodelName)
-            reset(model, graphWriter)
+            //reset(model, graphWriter)
+
+            // create
+            create(metamodelName)
+            //reset(model, graphWriter)
 
         }
     }
@@ -204,9 +205,9 @@ class RQ3GenModelsEval {
         println("Running delete evaluation for size $currentSize")
         var mem: Long
         garbageCollector()
+        val size = nodes.size
         val beforeMemory = getUsedMemoryKB()
         val startTime = System.currentTimeMillis()
-        val size = nodes.size
         for (i in 0 until size) {
             manager.remove(nodes[i])
         }
