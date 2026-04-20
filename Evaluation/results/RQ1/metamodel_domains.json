@@ -1,18 +1,18 @@
 {
   "DSLs": [
     "AppDSL","ApplauseDsl","AthenaDSL","AtsDsl","BatchDsl","BusinessDomainDsl",
-    "BusinessObjectDsl","CoreDsl","CssDsl","CssExtDsl","DSLTrans","DataContractDsl",
+    "BusinessObjectDsl","CoreDsl","CssDsl","CssExtDsl","DataContractDsl",
     "DdlDsl","DecoraDsl","DependenciesDsl","DependencyDsl",
     "DslECharts","EntityLang","EventOrientedLanguage","FlowDsl","Golang","Guixdsl",
     "HaxeDSL","ImpModLang","InteriorPlanningLang","LanguagePreferences","ObjectDsl",
     "OrganizationDsl","OseeDsl","P4Dsl","ServerGeneratorLanguage","ServiceDsl",
     "SmachDSL","SqlDSL","ThingDsl","ThreeJsWrapperDescriptionLanguage",
     "VisualizationDsl","WebAppDSL","WebDSL","dsl15926","dtdsl","erlang",
-    "genericity_dsl","jdsl","language","martinfowlerdsl","q7dsl"
+    "jdsl","language","martinfowlerdsl","q7dsl"
   ],
 
   "Programming_Languages_&_Code_Models": [
-    "C","B","FJ","JDTAST","Xturing","Swift","pl0","uForthProgram","uForthRT",
+    "C","B","FJ","Xturing","Swift","pl0","uForthProgram","uForthRT",
     "lambdacalculus","Glsl","HOOPL","Byteman","Karel","Jex","prolog",
     "mprolog","mprologTermReference","expression","Function","Program",
     "BasicBlocks","CFG","DFA",
@@ -25,7 +25,7 @@
 
   "Software_Engineering_&_MDE": [
     "EMOF","DSML","MDD","Transformation","Trace","TefkatTrace","ATL-Profiler",
-    "FlatQVT","Gra2MoL","api2mol","generator2","model","metamodel","models",
+    "FlatQVT","Gra2MoL","api2mol","generator2","model","metamodel",
     "modifications","analysis","TraceEditor","modelica"
   ],
 
@@ -47,11 +47,11 @@
   "Data_&_Databases": [
     "ER","dataset","datatypes","metadata","ParsedMetadata","json","xml",
     "DBLP","EveAPIDBModel","ExSchema","Ldb","MongoSQL","MovieDB","RDBMSMM",
-    "Relational","SemanticDB","SqliteModel","plsql","sdb"
+    "Relational","SemanticDB","SqliteModel","sdb"
   ],
 
   "Web_&_UI": [
-    "IFML","extjs","faceletTaglib","widget","views","viewmodel",
+    "extjs","faceletTaglib","widget","views","viewmodel",
     "menus","layout","layouts","appmodel"
   ],
 
@@ -68,12 +68,8 @@
   ],
 
   "Simulation_&_Systems": [
-    "MultiRobotSystem","RobotTask","Simulator","robot","embedded",
+    "MultiRobotSystem","RobotTask","robot","embedded",
     "fmusim","stochsim","simpleModel","simplemath"
-  ],
-
-  "Formal_Methods": [
-    "Constraints","LTL","OCL","logicsemantic"
   ],
 
   "Security_&_Access_Control": [

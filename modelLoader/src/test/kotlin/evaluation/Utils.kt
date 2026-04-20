@@ -18,23 +18,14 @@ class Utils {
                 .toList()
 
             for (xmiFile in xmiFiles) {
-                val metamodelFile = File(baseFolder, "metamodels/$mm.ecore")
-                val metamodelLowerCase = mm.replaceFirstChar { it.lowercase() }
 
-                val header = """
-            <xmi:XMI xmi:version="2.0"
-                     xmlns:xmi="http://www.omg.org/XMI"
-                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                     xmlns:$metamodelLowerCase="http://www.example.org/$mm"
-                     xsi:schemaLocation="http://www.example.org/$mm ../../metamodels/${metamodelFile.name}">
-                     """.trimIndent().replace("\n", " ")
                 val lines = xmiFile.readLines().toMutableList()
-
                 val newLines = mutableListOf<String>()
 
                 var xmlDeclHandled = false
                 var xmiHeaderInserted = false
                 var firstModelTagHandled = false
+                var metamodelLowerCase: String? = null
 
                 for ((index, line) in lines.withIndex()) {
                     val trimmed = line.trim()
@@ -46,27 +37,45 @@ class Utils {
                         continue
                     }
 
-                    // 2. Existing <xmi:XMI> → replace
-                    if (!xmiHeaderInserted && trimmed.startsWith("<xmi:XMI")) {
-                        newLines.add(header)
-                        xmiHeaderInserted = true
+                    // 2. Skip existing <xmi:XMI> (we will replace it later)
+                    if (trimmed.startsWith("<xmi:XMI")) {
                         continue
                     }
 
-                    // 3. First non-header tag → insert header if missing
-                    if (!xmiHeaderInserted && trimmed.startsWith("<") && !trimmed.startsWith("<?")) {
+                    // 3. First real model tag → extract prefix + insert header
+                    if (!firstModelTagHandled &&
+                        trimmed.startsWith("<") &&
+                        !trimmed.startsWith("<?") &&
+                        !trimmed.startsWith("<xmi:XMI")
+                    ) {
+
+                        // Extract prefix (e.g., editor from <editor:declaration>)
+                        val match = Regex("""<\s*([a-zA-Z0-9_]+):""").find(trimmed)
+                        metamodelLowerCase = if (match != null) {
+                            match.groupValues[1]
+                        } else {
+                            // fallback (rare case)
+                            mm.replaceFirstChar { it.lowercase() }
+                        }
+
+                        // Build header NOW that we know the prefix
+                        val metamodelFile = File(baseFolder, "metamodels/$mm.ecore")
+
+                        val header = """
+                            <xmi:XMI xmi:version="2.0"
+                                     xmlns:xmi="http://www.omg.org/XMI"
+                                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                     xmlns:$metamodelLowerCase="http://www.example.org/$mm"
+                                     xsi:schemaLocation="http://www.example.org/$mm ../../metamodels/${metamodelFile.name}">
+                        """.trimIndent().replace("\n", " ")
+
                         newLines.add(header)
                         xmiHeaderInserted = true
-                    }
 
-                    // 4. Clean first model element tag
-                    if (xmiHeaderInserted && !firstModelTagHandled &&
-                        trimmed.startsWith("<") &&
-                        !trimmed.startsWith("<xmi:XMI") &&
-                        !trimmed.startsWith("<?")
-                    ) {
+                        // Clean the model tag
                         val cleaned = cleanModelTag(trimmed)
                         newLines.add(cleaned)
+
                         firstModelTagHandled = true
                         continue
                     }
@@ -74,7 +83,7 @@ class Utils {
                     newLines.add(line)
                 }
 
-                // 5. Ensure closing tag
+                // 4. Ensure closing tag
                 if (newLines.none { it.contains("</xmi:XMI>") }) {
                     newLines.add("</xmi:XMI>")
                 }

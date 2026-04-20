@@ -26,10 +26,10 @@ class RQ3GenModelsEval {
         10, 50, 100, 500, 1000, 5000, 10000
     )
     private val sizesEval = listOf( // for the evaluation
-        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000
+        10000, 50000, 100000, 500000, 1000000
     )
     var sizes = sizesDebug
-    val isEval = false // set to true to use the evaluation data
+    val isEval = true // set to true to use the evaluation data
     var maxSize = 0
 
     @Test
@@ -70,8 +70,8 @@ class RQ3GenModelsEval {
             println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
             // Run evaluation multiple times if needed
-            for (i in 1..2) {
-                //runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
+            for (i in 1..5) {
+                runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
                 runEvalDel(filesToLoad, graphWriter, i, subfolder.name)
             }
 

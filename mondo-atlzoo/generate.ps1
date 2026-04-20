@@ -1,5 +1,5 @@
 $models = @(
-    'erlang', 'LLVM_IR', 'models', 'timing-diagram', 'IFML', 'esb', 'NetModel', 'Simulator', 'reviews', 'hockeyleague', 'FlatQVT', 'JDTAST', 'java5', 'SqliteModel', 'MDD',  'genericity_dsl', 'StaticScript', 'plsql', 'AthenaDSL', 'Glsl', 'FractalItf', 'CoreDsl', 'AtsDsl', 'OseeDsl','OCL', 'JavaVMTypes', 'Iptables', 'Transformation', 'business', 'ApplauseDsl'
+    'erlang', 'LLVM_IR', 'timing-diagram', 'esb', 'NetModel', 'reviews', 'hockeyleague', 'FlatQVT', 'java5', 'SqliteModel', 'MDD', 'StaticScript', 'AthenaDSL', 'Glsl', 'FractalItf', 'CoreDsl', 'AtsDsl', 'OseeDsl', 'JavaVMTypes', 'Iptables', 'Transformation', 'business', 'ApplauseDsl','language' , 'modelica', 'widget', 'DialogScript', 'environment', 'EventOrientedLanguage', 'MultiRobotSystem'
 
 )
 
