@@ -1,6 +1,5 @@
 $models = @(
-    'erlang', 'LLVM_IR', 'timing-diagram', 'esb', 'NetModel', 'reviews', 'hockeyleague', 'FlatQVT', 'java5', 'SqliteModel', 'MDD', 'StaticScript', 'AthenaDSL', 'Glsl', 'FractalItf', 'CoreDsl', 'AtsDsl', 'OseeDsl', 'JavaVMTypes', 'Iptables', 'Transformation', 'business', 'ApplauseDsl','language' , 'modelica', 'widget', 'DialogScript', 'environment', 'EventOrientedLanguage', 'MultiRobotSystem'
-
+   'erlang', 'LLVM_IR', 'FlatQVT', 'timing-diagram', 'business', 'SqliteModel', 'widget', 'esb', 'NetModel', 'RobotTask', 'Iptables', 'reviews', 'hockeyleague', 'java5', 'MDD', 'StaticScript', 'AthenaDSL', 'Glsl', 'FractalItf', 'CoreDsl', 'AtsDsl', 'OseeDsl', 'JavaVMTypes', 'Transformation', 'ApplauseDsl', 'modelica', 'DialogScript', 'EventOrientedLanguage', 'environment', 'CssExtDsl'
 )
 
 $ecoreBasePath = "..\Evaluation\dataset\metamodels"

@@ -8,7 +8,7 @@
     "OrganizationDsl","OseeDsl","P4Dsl","ServerGeneratorLanguage","ServiceDsl",
     "SmachDSL","SqlDSL","ThingDsl","ThreeJsWrapperDescriptionLanguage",
     "VisualizationDsl","WebAppDSL","WebDSL","dsl15926","dtdsl","erlang",
-    "jdsl","language","martinfowlerdsl","q7dsl"
+    "jdsl","martinfowlerdsl","q7dsl"
   ],
 
   "Programming_Languages_&_Code_Models": [
@@ -68,7 +68,7 @@
   ],
 
   "Simulation_&_Systems": [
-    "MultiRobotSystem","RobotTask","robot","embedded",
+    "RobotTask","robot","embedded",
     "fmusim","stochsim","simpleModel","simplemath"
   ],
 

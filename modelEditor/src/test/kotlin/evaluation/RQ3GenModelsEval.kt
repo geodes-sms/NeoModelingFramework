@@ -65,14 +65,14 @@ class RQ3GenModelsEval {
             println("Files to load for create, update, read in ${subfolder.name}: ${largeFilesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
 
-            val filesToLoad = mutableListOf<String>()
-            allXmiFiles.forEach { filesToLoad.add(it.absolutePath) }
-            println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
+//            val filesToLoad = mutableListOf<String>()
+//            allXmiFiles.forEach { filesToLoad.add(it.absolutePath) }
+//            println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
             // Run evaluation multiple times if needed
-            for (i in 2..4) {
+            for (i in 1..3) {
                 runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
-                runEvalDel(filesToLoad, graphWriter, i, subfolder.name)
+                //runEvalDel(filesToLoad, graphWriter, i, subfolder.name)
             }
 
         }
@@ -96,7 +96,7 @@ class RQ3GenModelsEval {
             //reset(model, graphWriter)
 
             // update
-            update(metamodelName)
+            //update(metamodelName)
             //reset(model, graphWriter)
 
             // create

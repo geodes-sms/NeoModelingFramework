@@ -40,7 +40,7 @@ interface EmfModelLoader {
             var totalNodes = 0
             var totalRefs  = 0
 
-            // EPackage roots are self-contained — process independently as before
+            // EPackage roots are self-contained process independently as before
             for (pkg in ePackageRoots) {
                 val (n, r) = EcoreLoader(writer).load(pkg)
                 totalNodes += n
