@@ -2,13 +2,12 @@ package evaluation
 
 import DBCredentials
 import geodes.sms.neo4j.io.controllers.IGraphManager
+import geodes.sms.neo4j.io.type.AsString
 import geodes.sms.nmf.loader.emf2neo4j.EmfModelLoader
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.io.File
-import java.util.LinkedList
-
 // To run this file, follow the steps on the Readme.md
 // test file to evaluate RQ3 with generated models
 //  To what extent can our framework perform CRUD operations on models of different complexities and sizes?
@@ -23,7 +22,7 @@ class RQ3GenModelsEval {
 
     private var evalCount = 0
     private val sizesDebug = listOf( // only for debugging
-        10, 50, 100, 500, 1000, 5000, 10000
+        10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
     )
     private val sizesEval = listOf( // for the evaluation
         10000, 50000, 100000, 500000, 1000000
@@ -65,14 +64,16 @@ class RQ3GenModelsEval {
             println("Files to load for create, update, read in ${subfolder.name}: ${largeFilesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
 
-//            val filesToLoad = mutableListOf<String>()
-//            allXmiFiles.forEach { filesToLoad.add(it.absolutePath) }
-//            println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
+            val filesToLoad = mutableListOf<String>()
+            allXmiFiles.forEach { filesToLoad.add(it.absolutePath) }
+            println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
             // Run evaluation multiple times if needed
-            for (i in 1..3) {
+            for (i in 1..4) {
                 runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
-                //runEvalDel(filesToLoad, graphWriter, i, subfolder.name)
+            }
+            for (j in 1..4) { // delete is run separately because it uses multiple files
+                runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
 
         }
@@ -93,16 +94,14 @@ class RQ3GenModelsEval {
 
             // reads
             read(metamodelName)
-            //reset(model, graphWriter)
+//
+//
+//            // create
+            create(metamodelName)
+
 
             // update
-            //update(metamodelName)
-            //reset(model, graphWriter)
-
-            // create
-            create(metamodelName)
-            //reset(model, graphWriter)
-
+            update(metamodelName)
         }
     }
 
@@ -120,10 +119,10 @@ class RQ3GenModelsEval {
                 null
             }
         }
+        evalCount = i
         val resWriter = getFile("Delete", metamodelName)
         for ((model, size) in filteredFiles) {
             reset(model, graphWriter)
-            evalCount = i
             delete(resWriter, size)
         }
     }
@@ -177,7 +176,7 @@ class RQ3GenModelsEval {
     fun update(metamodel: String) {
         val resWriter = getFile("Update", metamodel)
         //----- preparation step -----
-        val nodes = manager.loadNodes(maxSize, { it })
+        val nodes = ArrayList(manager.loadNodes(maxSize) { it })
         //---- preparation step end ----
         for (i in sizes) {
             println("Running update evaluation for size $i")
@@ -200,7 +199,7 @@ class RQ3GenModelsEval {
     // ---------------------------- DELETE ---------------------------- //
     fun delete(resWriter: File, currentSize: Int) {
         //----- preparation step -----
-        val nodes = LinkedList(manager.loadNodes(maxSize) { it })
+        val nodes = ArrayList(manager.loadNodes(maxSize) { it })
         //--- preparation step end ----
         println("Running delete evaluation for size $currentSize")
         var mem: Long

@@ -67,7 +67,7 @@ class ReflectiveBatchLoader(
     }
 
     fun loadRefs(): Int {
-        val refStep = 10_000
+        val refStep = 20_000
         var index    = 0
         var refCount = 0
 

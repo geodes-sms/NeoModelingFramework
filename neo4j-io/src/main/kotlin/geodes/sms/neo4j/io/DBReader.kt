@@ -67,7 +67,7 @@ class DBReader(val driver: Driver) {
                             " RETURN id, label, apoc.map.fromPairs(collect([rType, count])) AS count", params
                 )
             )
-            val data = LinkedList<R>()
+            val data = ArrayList<R>()
             for (record in res) {
                 data.add(
                     mapFunction(
@@ -105,7 +105,7 @@ class DBReader(val driver: Driver) {
                 )
             )
 
-            val data = LinkedList<R>()
+            val data = ArrayList<R>()
             for (record in res) {
                 data.add(
                     mapFunction(
@@ -154,7 +154,7 @@ class DBReader(val driver: Driver) {
                             " RETURN id, label, apoc.map.fromPairs(collect([rType, count])) AS count", params
                 )
             )
-            val data = LinkedList<R>()
+            val data = ArrayList<R>()
             for (record in res) {
                 data.add(
                     mapFunction(

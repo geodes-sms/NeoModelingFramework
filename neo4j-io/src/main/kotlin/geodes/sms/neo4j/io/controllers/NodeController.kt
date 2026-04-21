@@ -85,8 +85,10 @@ internal class NodeController constructor(
     }
 
     override fun updateEntity() {
+        if (state !is StateModified) {
+            state = StateModified()
+        }
         mapper.updateNode(_id, propsDiff)
-        state = StateModified()
     }
     ////////////////////////////////////////////
 

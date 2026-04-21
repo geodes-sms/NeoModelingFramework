@@ -24,7 +24,7 @@ internal class Mapper(
     //private val refsToCreate = hashMapOf<Long, RelationshipController>()
 
     /** Cache startNode alias (or ID for persisted node) --> (out ref type --> RelationshipEntity) */
-    private val adjOutput = hashMapOf<Long, HashMap<String, LinkedList<RelationshipEntity>>>()
+    private val adjOutput = hashMapOf<Long, HashMap<String, ArrayList<RelationshipEntity>>>()
 
     /** DB nodeID --> NodeController */
     private val trackedNodes = hashMapOf<Long, NodeController>()
@@ -47,7 +47,7 @@ internal class Mapper(
             mapOf("containment" to Values.value(true))
         )
         adjOutput.getOrPut(parent._id) { hashMapOf() }
-            .getOrPut(rType) { LinkedList() }
+            .getOrPut(rType) { ArrayList() }
             .add(RelationshipEntity(rAlias, rType, parent, childNode, true))
         return childNode
     }
@@ -61,7 +61,7 @@ internal class Mapper(
             mapOf("containment" to Values.value(false))
         )
         adjOutput.getOrPut(startNode._id) { hashMapOf() }
-            .getOrPut(rType) { LinkedList() }
+            .getOrPut(rType) { ArrayList() }
             .add(RelationshipEntity(rAlias, rType, startNode, endNode, false))
     }
 
