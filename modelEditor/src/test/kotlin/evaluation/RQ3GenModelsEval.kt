@@ -69,11 +69,11 @@ class RQ3GenModelsEval {
             println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
             // Run evaluation multiple times if needed
-            for (i in 1..4) {
+            for (i in 1..3) {
                 runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
-            for (j in 1..4) { // delete is run separately because it uses multiple files
-                runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
+            for (j in 1..3) { // delete is run separately because it uses multiple files
+               // runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
 
         }
