@@ -90,16 +90,6 @@ class BufferedRemover(val nodesBatchSize: Int = ManagerBatchSizes.removerNodesBa
                         " RETURN value", //return nothing
                     MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
                 ))
-//                tx.run(Query("UNWIND \$batch as row" +
-//                        " MATCH (start) WHERE ID(start)=row.startID" +
-//                        " CALL {" +
-//                        "  WITH start, row" +
-//                        "  MATCH (start)-[r]->(end)" +
-//                        "  WHERE type(r)=rType AND ID(end)=endID" +
-//                        "  RETURN r LIMIT row.limit" +  //It is not allowed to refer to variables in LIMIT
-//                        " } DELETE r",
-//                    MapValue(mapOf("batch" to ListValue(*Array(batchSize) { paramsIterator.next() })))
-//                ))
             }
         }
 

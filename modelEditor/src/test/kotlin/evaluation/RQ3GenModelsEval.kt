@@ -39,44 +39,56 @@ class RQ3GenModelsEval {
         }
 
         // Iterate over each subfolder
-        val subfolders = rootDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+        val subfolders = rootDir.listFiles()?.asSequence()
+            ?.filter { it.isDirectory }
+            ?.toList() ?: emptyList()
+
         println("Found ${subfolders.size} subfolders to process")
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
-        for ((subIndex, subfolder) in subfolders.withIndex()) {
+
+        for (subfolder in subfolders) {
             println("Processing subfolder: ${subfolder.name}")
 
+            // Get .xmi files
+            val xmiFiles = subfolder.listFiles { file ->
+                file.isFile && file.extension.equals("xmi", ignoreCase = true)
+            } ?: emptyArray()
 
-            // Load all .xmi files in the same subfolder and othe largest only
-            val (filteredXmiFiles, otherXmiFiles) =
-                subfolder.listFiles { file ->
-                    file.isFile && file.extension.equals("xmi", ignoreCase = true)
-                }?.partition { file ->
-                    file.name.contains("1000000")  || file.name.contains("eclipseModel-all")// only the largest file is used for create, update, and read
-                } ?: (emptyList<File>() to emptyList())
+            val (filteredXmiFiles, otherXmiFiles) = xmiFiles.partition { file ->
+                val name = file.name
+                name.contains("1000000") || name.contains("eclipseModel-all")
+            }
 
-            val allXmiFiles = filteredXmiFiles + otherXmiFiles
+            val allXmiFiles = ArrayList<File>(xmiFiles.size).apply {
+                addAll(filteredXmiFiles)
+                addAll(otherXmiFiles)
+            }
+
+//            val largeFilesToLoad = mutableListOf<String>()
+//            filteredXmiFiles.forEach { largeFilesToLoad.add(it.absolutePath) }
+//            println("Files to load for create, update, read in ${subfolder.name}: ${largeFilesToLoad.size}")
 
 
-            val largeFilesToLoad = mutableListOf<String>()
-            filteredXmiFiles.forEach { largeFilesToLoad.add(it.absolutePath) }
+            val filesToLoad = ArrayList<String>(allXmiFiles.size)
+            for (file in allXmiFiles) {
+                filesToLoad.add(file.absolutePath)
+            }
 
-            println("Files to load for create, update, read in ${subfolder.name}: ${largeFilesToLoad.size}")
-            reset(null, null) // to clear db in case last run threw an exception
-
-            val filesToLoad = mutableListOf<String>()
-            allXmiFiles.forEach { filesToLoad.add(it.absolutePath) }
             println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
+
             reset(null, null) // to clear db in case last run threw an exception
+
             // Run evaluation multiple times if needed
             for (i in 1..30) {
                 //runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
-            for (j in 1..3) { // delete is run separately because it uses multiple files
-               runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
-            }
 
+            for (j in 1..2) { // delete is run separately because it uses multiple files
+                runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
+            }
         }
+
         manager.close() // close db connection
     }
 
@@ -106,21 +118,27 @@ class RQ3GenModelsEval {
     }
 
     fun runEvalDel(files: List<String>, graphWriter: GraphBatchWriter, i: Int, metamodelName: String) {
-        if (isEval)
-            sizes = sizesEval
-        maxSize = sizes[sizes.size - 1]
+        if (isEval) sizes = sizesEval
+
+        maxSize = sizes.last()
         println("Running delete evaluation number: $i")
+
+        val validSizes = sizes.toSet()
+
         val filteredFiles = files.mapNotNull { file ->
             val name = getModelName(file)
-            val sizeInName = name.substringAfterLast("_").substringBefore(".").toIntOrNull()
-            if (sizeInName != null && sizeInName in sizes) {
-                file to sizeInName   // keep both
-            } else {
-                null
-            }
-        }
+            val size = name.substringAfterLast("_")
+                .substringBefore(".")
+                .toIntOrNull()
+
+            if (size != null && size in validSizes) {
+                file to size
+            } else null
+        }.sortedBy { it.second }
+
         evalCount = i
         val resWriter = getFile("Delete", metamodelName)
+
         for ((model, size) in filteredFiles) {
             reset(model, graphWriter)
             delete(resWriter, size)
@@ -198,22 +216,24 @@ class RQ3GenModelsEval {
 
     // ---------------------------- DELETE ---------------------------- //
     fun delete(resWriter: File, currentSize: Int) {
-        //----- preparation step -----
-        val nodes = ArrayList(manager.loadNodes(maxSize) { it })
-        //--- preparation step end ----
         println("Running delete evaluation for size $currentSize")
-        var mem: Long
+        //----- preparation step -----
+        val nodes = manager.loadNodes(currentSize) { it }
+        //--- preparation step end ----
         garbageCollector()
-        val size = nodes.size
+
         val beforeMemory = getUsedMemoryKB()
         val startTime = System.currentTimeMillis()
-        for (i in 0 until size) {
-            manager.remove(nodes[i])
+
+        val mgr = manager
+        for (i in 0 until currentSize) {
+            val node = nodes[i]
+            mgr.remove(node)
         }
-        manager.saveChanges()
-        val endTime = System.currentTimeMillis()
-        mem = getUsedMemoryKB() - beforeMemory
-        val time = endTime - startTime
+        mgr.saveChanges()
+
+        val time = System.currentTimeMillis() - startTime
+        val mem = getUsedMemoryKB() - beforeMemory
         resWriter.appendText("$currentSize,$time,$mem\n")
     }
 
@@ -270,10 +290,13 @@ class RQ3GenModelsEval {
      * Clear db data and cache to go back to original state
      */
     fun reset(model: String?, graphWriter: GraphBatchWriter?) {
-        manager.clearDB()
-        manager.clearCache()
-        if (model != null && graphWriter != null)
+        if (model != null && graphWriter != null) {
             EmfModelLoader.load(model, graphWriter)
+            println("Loading file ${getModelName(model)}")
+        }else{
+            manager.clearDB()
+            manager.clearCache()
+        }
     }
 
     fun getModelName(model: String): String {
