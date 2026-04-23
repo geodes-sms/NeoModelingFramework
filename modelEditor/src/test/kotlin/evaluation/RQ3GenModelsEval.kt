@@ -8,6 +8,7 @@ import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.io.File
+
 // To run this file, follow the steps on the Readme.md
 // test file to evaluate RQ3 with generated models
 //  To what extent can our framework perform CRUD operations on models of different complexities and sizes?
@@ -84,7 +85,7 @@ class RQ3GenModelsEval {
                 //runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
 
-            for (j in 1..2) { // delete is run separately because it uses multiple files
+            for (j in 2..2) { // delete is run separately because it uses multiple files
                 runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
         }
@@ -216,17 +217,17 @@ class RQ3GenModelsEval {
 
     // ---------------------------- DELETE ---------------------------- //
     fun delete(resWriter: File, currentSize: Int) {
+        garbageCollector()
         println("Running delete evaluation for size $currentSize")
+        val beforeMemory = getUsedMemoryKB()
         //----- preparation step -----
         val nodes = manager.loadNodes(currentSize) { it }
         //--- preparation step end ----
-        garbageCollector()
-
-        val beforeMemory = getUsedMemoryKB()
+        val limit = minOf(currentSize, nodes.size)
         val startTime = System.currentTimeMillis()
 
         val mgr = manager
-        for (i in 0 until currentSize) {
+        for (i in 0 until limit) {
             val node = nodes[i]
             mgr.remove(node)
         }
@@ -239,16 +240,6 @@ class RQ3GenModelsEval {
 
 
     // ---------------------------- UTILS ---------------------------- //
-    /**
-     * For deletes, we create as many elements as we will delete in total (the combination of all sizes)
-     */
-    private fun getMaxSizeForDelete(): Int {
-        var deleteMaxSize = 0
-        for (i in sizes) {
-            deleteMaxSize += i
-        }
-        return deleteMaxSize
-    }
 
     /**
      * create csv file to store the results
@@ -290,12 +281,13 @@ class RQ3GenModelsEval {
      * Clear db data and cache to go back to original state
      */
     fun reset(model: String?, graphWriter: GraphBatchWriter?) {
+        if (model == null || model.contains("1000000")) {
+            manager.clearDB()
+            manager.clearCache()
+        }
         if (model != null && graphWriter != null) {
             EmfModelLoader.load(model, graphWriter)
             println("Loading file ${getModelName(model)}")
-        }else{
-            manager.clearDB()
-            manager.clearCache()
         }
     }
 
