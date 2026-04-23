@@ -52,7 +52,7 @@ class RQ3GenModelsEval {
                 subfolder.listFiles { file ->
                     file.isFile && file.extension.equals("xmi", ignoreCase = true)
                 }?.partition { file ->
-                    file.name.contains("1000000") // only the largest file is used for create, update, and read
+                    file.name.contains("1000000")  || file.name.contains("eclipseModel-all")// only the largest file is used for create, update, and read
                 } ?: (emptyList<File>() to emptyList())
 
             val allXmiFiles = filteredXmiFiles + otherXmiFiles
@@ -69,11 +69,11 @@ class RQ3GenModelsEval {
             println("Files to load for delete in ${subfolder.name}: ${filesToLoad.size}")
             reset(null, null) // to clear db in case last run threw an exception
             // Run evaluation multiple times if needed
-            for (i in 1..3) {
-                runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
+            for (i in 1..30) {
+                //runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
             for (j in 1..3) { // delete is run separately because it uses multiple files
-               // runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
+               runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
 
         }

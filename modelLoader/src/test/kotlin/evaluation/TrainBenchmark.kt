@@ -19,20 +19,47 @@ class TrainBenchmark {
             "Directory not found: ${rootDir.absolutePath}"
         }
 
-        // Collect all XMI files directly (no subfolders)
-        val xmiFiles = rootDir.walkTopDown()
-            .filter { it.isFile && it.extension.equals("xmi", ignoreCase = true) }
+        // Collect files
+        val allFiles = rootDir.walkTopDown()
+            .filter { it.isFile }
             .toList()
 
-        println("Found ${xmiFiles.size} XMI files to process")
+        val ecoreFiles = allFiles.filter { it.extension.equals("ecore", ignoreCase = true) }
+        val xmiFiles = allFiles.filter { it.extension.equals("xmi", ignoreCase = true) }
+
+        require(ecoreFiles.isNotEmpty()) {
+            "No Ecore file found in ${rootDir.absolutePath}"
+        }
+
+        println("Found ${ecoreFiles.size} Ecore file(s) and ${xmiFiles.size} XMI files")
 
         val graphWriter = GraphBatchWriter(dbUri, username, password)
 
         try {
             graphWriter.clearDB()
+            // Load Ecore first
+            loadEcore(ecoreFiles.map { it.absolutePath },graphWriter)
+
+            // Then run evaluation on XMI models
             runEval(xmiFiles.map { it.absolutePath }, graphWriter)
+
         } finally {
             graphWriter.close()
+        }
+    }
+
+    /**
+     * Loads and registers the Ecore metamodel(s) before any XMI loading.
+     */
+    private fun loadEcore(ecoreFiles: List<String>, graphWriter: GraphBatchWriter) {
+        for (ecore in ecoreFiles) {
+            try {
+                println("Loading file ${getModelName(ecore)}")
+                EmfModelLoader.load(ecore, graphWriter)
+
+            } catch (e: Exception) {
+                println("Error loading Ecore ${ecore}: ${e.message}")
+            }
         }
     }
 
@@ -40,6 +67,7 @@ class TrainBenchmark {
 
         for (model in files) {
             try {
+                graphWriter.clearDB()
                 println("Loading file ${getModelName(model)}")
 
                 val (nodeCount, edgeCount) = EmfModelLoader.load(model, graphWriter)
@@ -52,7 +80,6 @@ class TrainBenchmark {
         }
     }
 
-    // Helper function
     fun getModelName(model: String): String {
         val file = File(model)
         val fileName = file.name
