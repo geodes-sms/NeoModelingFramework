@@ -1,0 +1,90 @@
+
+//get type of properties of the node
+match (n) WHERE ID(n) = 170
+WITH properties(n) as props
+return props, apoc.meta.types(props)
+
+
+// remove all elements excluding metamodel
+MATCH (:EPackage)-[*0..2]->(m)
+WITH collect(DISTINCT m) AS m
+OPTIONAL MATCH (n) WHERE NOT n IN m
+DETACH DELETE n
+
+// get count of all nodes and all relationships
+MATCH ()-[r]->()
+WITH  COUNT(r) as refCount
+MATCH (n)
+RETURN COUNT(n), refCount
+
+
+// clear db with apoc
+call apoc.periodic.iterate("MATCH (n) return n", "DETACH DELETE n", {batchSize:10000, parallel:true})
+YIELD batches, total return batches, total
+
+//delete all relationships
+call apoc.periodic.iterate("MATCH ()-[r]->() return r", "DELETE r", {batchSize:10000, parallel:false})
+YIELD batches, total return batches, total
+
+
+// create nodes with dynamic labels; return IDs by alias
+WITH [{alias: 'a1', label: 'LL', props: {a:10, b:20}},
+{alias: 'a2', label: 'LL', props: {a:30}},
+{alias: 'a3', label: 'LL', props: {a:40, b:50}}] as batch
+UNWIND batch as row
+CALL apoc.create.node([row.label], row.props) YIELD node
+RETURN row.alias AS alias, id(node) AS id
+
+
+// find all startNode - nodes that don't have inputs
+Match (n)
+optional match (m)-[r]->(n)
+WITH n, count(r) AS count WHERE count = 0
+return n
+
+// ref setter  upperBound == 1
+MATCH (c:MindMap) WHERE ID(c)=811
+MATCH (e:CentralTopic) WHERE ID(e)=813
+OPTIONAL MATCH (c)-[r:centralTopic {containment:true}]->(:CentralTopic)
+OPTIONAL MATCH (e)<-[{containment: true}]-(endNodeContainer)
+WITH c, e, r, COUNT(endNodeContainer) = 0  AS predicate
+FOREACH (ignoreMe IN CASE WHEN predicate THEN [1] ELSE [] END |
+	DELETE r
+	MERGE (c)-[:centralTopic {containment:true}]->(e))
+RETURN predicate
+
+
+//ref setter  upperBound > 1
+MATCH (c:MindMap) WHERE ID(c)=811
+MATCH (e:CentralTopic) WHERE ID(e)=813
+OPTIONAL MATCH (c)-[r:centralTopic {containment:true}]->(:CentralTopic)
+OPTIONAL MATCH (e)<-[{containment: true}]-(endNodeContainer)
+WITH c, e, COUNT(r) < 2 AND COUNT(endNodeContainer) = 0 AS predicate
+FOREACH (ignoreMe IN CASE WHEN predicate THEN [1] ELSE [] END |
+  CREATE (c)-[r:$refName{containment:{containment}}]->(e))
+RETURN predicate
+
+
+//create whole subGraph
+with [{alias:1,label:"A",props:{}}, {alias:2,label:"B",props:{}}, {alias:3,label:"C",props:{}}] as nodes,
+  [{from:"1", to:"1"}, {from:"1", to:"2"}, {from:"2", to:"3"}, {from:"3", to:"3"}] AS refs
+UNWIND nodes as n
+CALL apoc.create.node([n.label], n.props) YIELD node
+WITH apoc.map.fromPairs(collect([n.alias, node])) as map, refs
+UNWIND refs as r
+CALL apoc.create.relationship(apoc.map.get(map, r.from), "r", {}, apoc.map.get(map, r.to)) YIELD rel
+RETURN rel
+
+
+//get connected nodes
+match (a) where id(a)=0
+CALL apoc.path.expand(a, "marker>", null, 1, 1) YIELD path
+RETURN nodes(path)[1] AS node, collect(ID(relationships(path)[0])) AS refID
+
+
+//create unique constraint
+CREATE CONSTRAINT [constraint_name] ON (n:LabelName) ASSERT n.$propertyName IS UNIQUE
+
+DROP CONSTRAINT $constraintName
+
+//List constraints -->  CALL db.constraints

@@ -1,0 +1,18 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' //version '1.3.61' -- no need to specify version
+}
+
+dependencies {
+    //implementation fileTree(dir: 'libs', include: ['*.jar'])
+    //implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.neo4j.driver:neo4j-java-driver:4.2.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    implementation project(':config')
+    testImplementation "org.jetbrains.kotlin:kotlin-test:1.5.21"
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -1,0 +1,319 @@
+error loading metamodel: aadl2 with message: Cannot construct StringValue from null
+error loading metamodel: abapmapping with message: Cannot construct StringValue from null
+error loading metamodel: abstractsyntax with message: Cannot construct StringValue from null
+error loading metamodel: AbstractTypes with message: Cannot construct StringValue from null
+error loading metamodel: AcceleoTraceability with message: Cannot construct StringValue from null
+error loading metamodel: AcceleoWizardModel with message: Cannot construct StringValue from null
+error loading metamodel: acctrace with message: Cannot construct StringValue from null
+error loading metamodel: actordiagram with message: Cannot construct StringValue from null
+error loading metamodel: aggregator_0.9.0 with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: aggregator_1.0.0 with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: aom with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: ApplyStereotypeActionConfiguration with message: Cannot construct StringValue from null
+error loading metamodel: As3 with message: Cannot construct StringValue from null
+error loading metamodel: AstCacheCode with message: Cannot construct StringValue from null
+error loading metamodel: AstCacheWiki with message: Cannot construct StringValue from null
+error loading metamodel: ATest with message: Cannot construct StringValue from null
+error loading metamodel: AthenaML with message: Cannot construct StringValue from null
+error loading metamodel: AttrM with message: Cannot construct StringValue from null
+error loading metamodel: AttrMM with message: Cannot construct StringValue from null
+error loading metamodel: B3Backend with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: BaseResources_Diagram with message: Cannot invoke "org.eclipse.emf.ecore.EClassifier.getName()" because the return value of "org.eclipse.emf.ecore.EAttribute.getEType()" is null
+error loading metamodel: beaninfo with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: behavioral with message: Cannot construct StringValue from null
+error loading metamodel: BPEL with message: Cannot construct StringValue from null
+error loading metamodel: Broker with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: browser_state with message: eRef.eReferenceType must not be null
+error loading metamodel: BuilderState with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: builds with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: builtin-email with message: Cannot construct StringValue from null
+error loading metamodel: builtin-social with message: Cannot construct StringValue from null
+error loading metamodel: builtin-story with message: Cannot construct StringValue from null
+error loading metamodel: BundleTree with message: Cannot construct StringValue from null
+error loading metamodel: buzz-core with message: Cannot construct StringValue from null
+error loading metamodel: Cache with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: category with message: Cannot construct StringValue from null
+error loading metamodel: cdk5 with message: Cannot construct StringValue from null
+error loading metamodel: Change with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: change_copy with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: chart with message: Cannot construct StringValue from null
+error loading metamodel: Check with message: Cannot construct StringValue from null
+error loading metamodel: CheckCfg with message: Cannot construct StringValue from null
+error loading metamodel: ClickWatchModel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: cloudMM with message: Cannot invoke "org.eclipse.emf.ecore.EClassifier.getName()" because the return value of "org.eclipse.emf.ecore.EAttribute.getEType()" is null
+error loading metamodel: CMOF with message: Cannot invoke "org.eclipse.emf.ecore.EClass.eContainer()" because the return value of "org.eclipse.emf.ecore.EAttribute.getEContainingClass()" is null
+error loading metamodel: codegen with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: codesync with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: Codetemplates with message: Cannot construct StringValue from null
+error loading metamodel: com.ibm.commerce.foundation.common.datatypes with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: commands with message: Cannot construct StringValue from null
+error loading metamodel: communication with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: compare with message: Cannot construct StringValue from null
+error loading metamodel: compilerInformations with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: complet with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: component_cache with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: concepts with message: Cannot construct StringValue from null
+error loading metamodel: ConcreteSyntax with message: Cannot construct StringValue from null
+error loading metamodel: Configuration with message: Cannot construct StringValue from null
+error loading metamodel: contextModel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: Copy of sybaseasesqlmodel with message: Cannot construct StringValue from null
+error loading metamodel: coremodel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: crud with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: cspec with message: Cannot construct StringValue from null
+error loading metamodel: cspecxml with message: Cannot construct StringValue from null
+error loading metamodel: dataaccess with message: Cannot construct StringValue from null
+error loading metamodel: datalib with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: DataModel with message: Cannot invoke "org.eclipse.emf.ecore.EClassifier.getName()" because the return value of "org.eclipse.emf.ecore.EAttribute.getEType()" is null
+error loading metamodel: datamodelerUI with message: Cannot construct StringValue from null
+error loading metamodel: DataMsgInheritence with message: Cannot invoke "org.eclipse.emf.ecore.EClassifier.getName()" because the return value of "org.eclipse.emf.ecore.EAttribute.getEType()" is null
+error loading metamodel: DawnCodeGen with message: Cannot construct StringValue from null
+error loading metamodel: DawnCodeGen.gmf with message: Cannot construct StringValue from null
+error loading metamodel: dbdefinition with message: Cannot construct StringValue from null
+error loading metamodel: dcd with message: Cannot construct StringValue from null
+error loading metamodel: DependencyModel with message: Cannot construct StringValue from null
+error loading metamodel: derivation_data with message: eRef.eReferenceType must not be null
+error loading metamodel: derivedModel with message: Cannot invoke "org.eclipse.emf.ecore.EClassifier.getName()" because the return value of "org.eclipse.emf.ecore.EAttribute.getEType()" is null
+error loading metamodel: desktop with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: devices with message: Cannot construct StringValue from null
+error loading metamodel: Df with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: di with message: Cannot construct StringValue from null
+error loading metamodel: diff with message: Cannot construct StringValue from null
+error loading metamodel: DiffUIData with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: dmd with message: Cannot construct StringValue from null
+error loading metamodel: documentation_metamodel with message: Cannot construct StringValue from null
+error loading metamodel: dom1 with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: domains with message: Cannot construct StringValue from null
+error loading metamodel: dr3d with message: Cannot construct StringValue from null
+error loading metamodel: easyflow with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: ecp with message: null
+error loading metamodel: editormodel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: eip with message: Cannot construct StringValue from null
+error loading metamodel: email with message: Cannot construct StringValue from null
+error loading metamodel: emfdoc with message: Cannot construct StringValue from null
+error loading metamodel: emylyn with message: Cannot construct StringValue from null
+error loading metamodel: engine with message: Cannot construct StringValue from null
+error loading metamodel: eresource with message: Cannot construct StringValue from null
+error loading metamodel: erf with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: ErrorModel with message: Cannot construct StringValue from null
+error loading metamodel: Esterel with message: Cannot construct StringValue from null
+error loading metamodel: etricegen with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: etypes with message: Cannot construct StringValue from null
+error loading metamodel: executionmodel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: executionstate with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: exercise01 with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: extensionsample with message: Cannot construct StringValue from null
+error loading metamodel: extentedsysml with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: filesystem with message: Cannot construct StringValue from null
+error loading metamodel: fo with message: Cannot construct StringValue from null
+error loading metamodel: fragment_description with message: eRef.eReferenceType must not be null
+error loading metamodel: FullOCL with message: Cannot construct StringValue from null
+error loading metamodel: geo with message: Cannot construct StringValue from null
+error loading metamodel: geoff-map with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: GML with message: Unable to convert org.eclipse.emf.ecore.xml.type.internal.XMLCalendar to Neo4j Value.
+error loading metamodel: gml311 with message: Cannot construct StringValue from null
+error loading metamodel: grid with message: Cannot construct StringValue from null
+error loading metamodel: hierarchy with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: history with message: Cannot construct StringValue from null
+error loading metamodel: ht with message: Cannot construct StringValue from null
+error loading metamodel: httpComponents with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: humantask with message: Cannot construct StringValue from null
+error loading metamodel: IMS_Data with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: IMS_Data_CLI with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: infomngmnt with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: ingressqlmodel with message: Cannot construct StringValue from null
+error loading metamodel: inspection with message: Cannot construct StringValue from null
+error loading metamodel: Instrument with message: Cannot construct StringValue from null
+error loading metamodel: integration with message: Cannot construct StringValue from null
+error loading metamodel: interfaces with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: internal with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: its with message: Cannot construct StringValue from null
+error loading metamodel: jbi with message: Cannot construct StringValue from null
+error loading metamodel: Jease with message: null
+error loading metamodel: JFXCss with message: Cannot construct StringValue from null
+error loading metamodel: jotify with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: jsr181 with message: Cannot construct StringValue from null
+error loading metamodel: k3sle with message: eRef.eReferenceType must not be null
+error loading metamodel: kgraph with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: labels with message: Cannot construct StringValue from null
+error loading metamodel: LayoutEuristic with message: Cannot construct StringValue from null
+error loading metamodel: localization with message: Cannot construct StringValue from null
+error loading metamodel: locations with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: loophole with message: Cannot construct StringValue from null
+error loading metamodel: m2mproject with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: mail with message: Cannot construct StringValue from null
+error loading metamodel: manpages with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: maven with message: Cannot construct StringValue from null
+error loading metamodel: mbot with message: Cannot construct StringValue from null
+error loading metamodel: mecore with message: Cannot construct StringValue from null
+error loading metamodel: messageproperties with message: Cannot construct StringValue from null
+error loading metamodel: mets with message: Cannot construct StringValue from null
+error loading metamodel: mmocore with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: model with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: modelingUnit with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: modelmanagement with message: Cannot construct StringValue from null
+error loading metamodel: ModelRegistry with message: Cannot construct StringValue from null
+error loading metamodel: model_connections with message: Cannot construct StringValue from null
+error loading metamodel: modifier with message: Cannot construct StringValue from null
+error loading metamodel: ModifySemanticValuesActionConfiguration with message: Cannot construct StringValue from null
+error loading metamodel: mods with message: Cannot construct StringValue from null
+error loading metamodel: ModuleModel with message: Cannot construct StringValue from null
+error loading metamodel: mongo with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: Monitor with message: eRef.eReferenceType must not be null
+error loading metamodel: MTLCST with message: Cannot construct StringValue from null
+error loading metamodel: My_alternative with message: Cannot construct StringValue from null
+error loading metamodel: Nano with message: Cannot construct StringValue from null
+error loading metamodel: nav with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: netracer with message: Cannot construct StringValue from null
+error loading metamodel: Netxscript with message: Cannot construct StringValue from null
+error loading metamodel: NPPN with message: null
+error loading metamodel: nuxeo with message: Cannot construct StringValue from null
+error loading metamodel: ontoumlprime with message: Cannot construct StringValue from null
+error loading metamodel: OOTPrimitives with message: Cannot construct StringValue from null
+error loading metamodel: org.eclipse.birt.chart.model.attribute with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: org.eclipse.mylyn.reviews.r4e.core.model with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: outputMetamodel with message: null
+error loading metamodel: owl-s with message: Cannot construct StringValue from null
+error loading metamodel: owl11 with message: eRef.eReferenceType must not be null
+error loading metamodel: owlcl with message: Cannot construct StringValue from null
+error loading metamodel: ows10 with message: Cannot construct StringValue from null
+error loading metamodel: ows110 with message: Cannot construct StringValue from null
+error loading metamodel: p2 with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: packages with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: PaletteConfiguration with message: Cannot construct StringValue from null
+error loading metamodel: PaletteInfos with message: Cannot construct StringValue from null
+error loading metamodel: partitioning with message: Cannot construct StringValue from null
+error loading metamodel: partnerlinktype with message: Cannot construct StringValue from null
+error loading metamodel: pde with message: Cannot construct StringValue from null
+error loading metamodel: pdetools with message: Cannot construct StringValue from null
+error loading metamodel: perf with message: Cannot construct StringValue from null
+error loading metamodel: person.owl with message: null
+error loading metamodel: PetClinic with message: null
+error loading metamodel: Pivot with message: null
+error loading metamodel: playtrd with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: pm with message: Cannot construct StringValue from null
+error loading metamodel: pojo with message: Cannot construct StringValue from null
+error loading metamodel: PokerLeague with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: PomDsl with message: Cannot construct StringValue from null
+error loading metamodel: Portal with message: Cannot construct StringValue from null
+error loading metamodel: ports with message: Cannot construct StringValue from null
+error loading metamodel: prf with message: Cannot construct StringValue from null
+error loading metamodel: PrimeOntoUML with message: Cannot construct StringValue from null
+error loading metamodel: ProjectInfrastructure with message: null
+error loading metamodel: ProjectSet with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: protocols with message: Cannot construct StringValue from null
+error loading metamodel: proyservsocial with message: null
+error loading metamodel: QIdl with message: Cannot construct StringValue from null
+error loading metamodel: qm with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: quartz with message: Cannot construct StringValue from null
+error loading metamodel: Quiz with message: Cannot construct StringValue from null
+error loading metamodel: QVTcoreBase with message: Cannot construct StringValue from null
+error loading metamodel: qvticgmodel with message: Cannot construct StringValue from null
+error loading metamodel: QVTimperative with message: Cannot construct StringValue from null
+error loading metamodel: r4e with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: references with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: RefOntoUML with message: null
+error loading metamodel: RefUML with message: null
+error loading metamodel: render with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: report_cell with message: Cannot construct StringValue from null
+error loading metamodel: reqif10 with message: Cannot construct StringValue from null
+error loading metamodel: research_team with message: null
+error loading metamodel: reviews with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: rif with message: Cannot construct StringValue from null
+error loading metamodel: rmap with message: Cannot construct StringValue from null
+error loading metamodel: RobotMLExtension with message: Cannot construct StringValue from null
+error loading metamodel: rom with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: RtFTable-1 with message: Cannot construct StringValue from null
+error loading metamodel: rttResolutionModel with message: Cannot construct StringValue from null
+error loading metamodel: RuntimeArchitecture with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: sad with message: Cannot construct StringValue from null
+error loading metamodel: saltCommon with message: Cannot construct StringValue from null
+error loading metamodel: sap-rfc with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: sca with message: Cannot construct StringValue from null
+error loading metamodel: scaDebug with message: Cannot construct StringValue from null
+error loading metamodel: scd with message: Cannot construct StringValue from null
+error loading metamodel: scheduling with message: Cannot construct StringValue from null
+error loading metamodel: schema with message: Cannot construct StringValue from null
+error loading metamodel: schemes with message: Cannot construct StringValue from null
+error loading metamodel: scm with message: null
+error loading metamodel: scriptEngine with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: scripting with message: Cannot construct StringValue from null
+error loading metamodel: SDO with message: Cannot construct StringValue from null
+error loading metamodel: sdr with message: Cannot construct StringValue from null
+error loading metamodel: security with message: Cannot construct StringValue from null
+error loading metamodel: Segment2 with message: Cannot construct StringValue from null
+error loading metamodel: SemiFormalProof with message: Cannot construct StringValue from null
+error loading metamodel: sftp with message: Cannot construct StringValue from null
+error loading metamodel: sitac with message: null
+error loading metamodel: slickemf with message: eAttr.eAttributeType must not be null
+error loading metamodel: smil with message: Cannot construct StringValue from null
+error loading metamodel: SOAP with message: Cannot construct StringValue from null
+error loading metamodel: social with message: Cannot construct StringValue from null
+error loading metamodel: solver with message: Cannot construct StringValue from null
+error loading metamodel: spd with message: Cannot construct StringValue from null
+error loading metamodel: spreadsheet_modified with message: null
+error loading metamodel: spreadsheet_visitor with message: null
+error loading metamodel: sql with message: Cannot construct StringValue from null
+error loading metamodel: sqlmodel with message: Cannot construct StringValue from null
+error loading metamodel: status with message: Cannot construct StringValue from null
+error loading metamodel: store with message: Cannot construct StringValue from null
+error loading metamodel: story-schema with message: Cannot construct StringValue from null
+error loading metamodel: strategy-engine-core with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: StyleSheets with message: Cannot construct StringValue from null
+error loading metamodel: sybaseasabasesqlmodel with message: Cannot construct StringValue from null
+error loading metamodel: sybasesqlmodel with message: Cannot construct StringValue from null
+error loading metamodel: symrefs with message: Cannot construct StringValue from null
+error loading metamodel: synccharts_sim with message: eRef.eReferenceType must not be null
+error loading metamodel: taipanExt with message: null
+error loading metamodel: TalendFile with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: tclchecker with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: TCS with message: Cannot construct StringValue from null
+error loading metamodel: teav with message: null
+error loading metamodel: TefkatConfig with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: TefkatData with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: TefkatModel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: TefkatRuntime with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: texo-annotations-model with message: Cannot construct StringValue from null
+error loading metamodel: ToolConfiguration with message: Cannot construct StringValue from null
+error loading metamodel: tools with message: Cannot construct StringValue from null
+error loading metamodel: tosca with message: Cannot construct StringValue from null
+error loading metamodel: transaction with message: Cannot construct StringValue from null
+error loading metamodel: transport with message: Cannot construct StringValue from null
+error loading metamodel: Tree with message: Cannot construct StringValue from null
+error loading metamodel: ucmmodel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: uibindings with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: uid with message: Cannot construct StringValue from null
+error loading metamodel: UIElements with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: UML with message: null
+error loading metamodel: UML2 with message: null
+error loading metamodel: UmlCollaborationUse with message: Cannot construct StringValue from null
+error loading metamodel: UmlCommon with message: Cannot construct StringValue from null
+error loading metamodel: UmlParameter with message: Cannot construct StringValue from null
+error loading metamodel: UmlProperty with message: Cannot construct StringValue from null
+error loading metamodel: UmlState with message: Cannot construct StringValue from null
+error loading metamodel: UmlTransition with message: Cannot construct StringValue from null
+error loading metamodel: UML_21 with message: null
+error loading metamodel: UML_simple with message: null
+error loading metamodel: uni with message: null
+error loading metamodel: validation with message: Cannot construct StringValue from null
+error loading metamodel: versions with message: Cannot construct StringValue from null
+error loading metamodel: View with message: Cannot construct StringValue from null
+error loading metamodel: Vishnu_Data with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: VisualInterface with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: visualligence with message: Cannot construct StringValue from null
+error loading metamodel: wcs111_gml with message: Cannot construct StringValue from null
+error loading metamodel: widgets with message: Cannot construct StringValue from null
+error loading metamodel: WML with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: Worthwhile with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: WorthwhilePlain with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: WSDL with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: wsmodel with message: null
+error loading metamodel: xaml with message: Cannot construct StringValue from null
+error loading metamodel: xlink with message: Cannot construct StringValue from null
+error loading metamodel: xmlns with message: Cannot construct StringValue from null
+error loading metamodel: XpectJavaModel with message: Unable to convert java.lang.Class to Neo4j Value.
+error loading metamodel: XSLT with message: Cannot construct StringValue from null
+error loading metamodel: Xtext with message: Cannot construct StringValue from null
+error loading metamodel: xwt_generated with message: Cannot construct StringValue from null
+error loading metamodel: xwt_generatedFromCharles with message: Cannot construct StringValue from null
+error loading metamodel: YaceEntities with message: Cannot construct StringValue from null
+error loading metamodel: yasem with message: eRef.eReferenceType must not be null

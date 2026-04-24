@@ -1,0 +1,87 @@
+{
+  "DSLs": [
+    "AppDSL","ApplauseDsl","AthenaDSL","AtsDsl","BatchDsl","BusinessDomainDsl",
+    "BusinessObjectDsl","CoreDsl","CssDsl","CssExtDsl","DataContractDsl",
+    "DdlDsl","DecoraDsl","DependenciesDsl","DependencyDsl",
+    "DslECharts","EntityLang","EventOrientedLanguage","FlowDsl","Golang","Guixdsl",
+    "HaxeDSL","ImpModLang","InteriorPlanningLang","LanguagePreferences","ObjectDsl",
+    "OrganizationDsl","OseeDsl","P4Dsl","ServerGeneratorLanguage","ServiceDsl",
+    "SmachDSL","SqlDSL","ThingDsl","ThreeJsWrapperDescriptionLanguage",
+    "VisualizationDsl","WebAppDSL","WebDSL","dsl15926","dtdsl","erlang",
+    "jdsl","martinfowlerdsl","q7dsl"
+  ],
+
+  "Programming_Languages_&_Code_Models": [
+    "C","B","FJ","Xturing","Swift","pl0","uForthProgram","uForthRT",
+    "lambdacalculus","Glsl","HOOPL","Byteman","Karel","Jex","prolog",
+    "mprolog","mprologTermReference","expression","Function","Program",
+    "BasicBlocks","CFG","DFA",
+    "CharacterScript","DialogScript","GoModel","JavaFXAntTask","JavaVMTypes",
+    "LLVM_IR","Lexer","MiniJava","MiniJavaMetaModel","MiniScript","RooScript",
+    "Scala","Script","SimpleJava","SmallJava","StaticScript","StoredScript",
+    "atl2java","compiler","grammar","java","java5","javaproperties","javaz",
+    "parser"
+  ],
+
+  "Software_Engineering_&_MDE": [
+    "EMOF","DSML","MDD","Transformation","Trace","TefkatTrace","ATL-Profiler",
+    "FlatQVT","Gra2MoL","api2mol","generator2","model","metamodel",
+    "modifications","analysis","TraceEditor","modelica"
+  ],
+
+  "UML_&_Software_Design": [
+    "ClassDiagram","ClassMM","Enumliterals2","Erdiagram","FlowerDiagramNotation",
+    "OCLStates","OO_concept","OO_concept_initial","SimpleUML","StateChart",
+    "StateDiagram","StateMachineActions","StateMachineTriggers","StateMachine_mk2",
+    "StateVariables","Statecharts","UMLConfiguration","UseCaseInvariant",
+    "class_diagramm","sequence-diagram","sequence_diagram","timing-diagram","useCase"
+  ],
+
+  "Business_Process_&_Workflow": [
+    "BPM","CollaborativeMDEProcess","GraphicalProcessEditorModel","apromore",
+    "bpmn20di","epc","process","q4bpmn","workflow","yawl",
+    "101companies","Company","business","accounting","salesystem",
+    "Customers","customers","Insurance","claim","auction","catalog","rentalSample"
+  ],
+
+  "Data_&_Databases": [
+    "ER","dataset","datatypes","metadata","ParsedMetadata","json","xml",
+    "DBLP","EveAPIDBModel","ExSchema","Ldb","MongoSQL","MovieDB","RDBMSMM",
+    "Relational","SemanticDB","SqliteModel","sdb"
+  ],
+
+  "Web_&_UI": [
+    "extjs","faceletTaglib","widget","views","viewmodel",
+    "menus","layout","layouts","appmodel"
+  ],
+
+  "Systems_Cloud_&_Infrastructure_&_Architecture": [
+    "CloudML","Deployment","Hadoop","kevoree2","esb","IAC",
+    "platform","environment","adaptiveSystem", "FractalItf","archi",
+    "componentMapping","gcomponent", "kompicsComponents","moduleCore","layer"
+  ],
+
+  "Graphs_&_Networks": [
+    "FlowGraph","GraphEditor","GraphEditorModel","GraphVizDot","MGraph",
+    "NetModel","PetriNet","PetriNetModel","PetriNets","graph","network",
+    "petri","petrinet2","simpleGraph"
+  ],
+
+  "Simulation_&_Systems": [
+    "RobotTask","robot","embedded",
+    "fmusim","stochsim","simpleModel","simplemath"
+  ],
+
+  "Security_&_Access_Control": [
+    "Iptables","Firewalll","PPTP","risk","sec",
+    "accesscontrol","trust","trustMetamodel"
+  ],
+
+  "Requirements_&_Docs": [
+    "Spec","documentation","report","review","reviews","specification"
+  ],
+
+  "Games_&_Entertainment": [
+    "ArcadeTongame_editor","LudoModel","bowling","games","hockeyleague"
+  ]
+}

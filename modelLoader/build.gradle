@@ -1,0 +1,46 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+dependencies {
+    //implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.eclipse.emf:org.eclipse.emf.ecore.xmi:2.16.0'
+    implementation 'org.eclipse.emf:org.eclipse.emf.ecore:2.23.0'
+    implementation 'commons-cli:commons-cli:1.4'
+    implementation 'org.neo4j.driver:neo4j-java-driver:4.2.0'
+    //implementation 'org.eclipselabs:cdo:4.7.2'
+    //implementation "org.atlanmod.zoo:cdo.java:1.0.5"
+    implementation project(":config")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+jar {
+    manifest {
+        attributes('Main-Class': 'geodes.sms.nmf.loader.MainKt')
+    }
+}
+
+task fatJar(type: Jar) {
+    manifest.from jar.manifest
+    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude 'META-INF/*.RSA'
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+    }
+    with jar
+}
+test {
+    useJUnitPlatform()
+    jvmArgs '-Xmx12g', '-Xms8g'
+
+}
