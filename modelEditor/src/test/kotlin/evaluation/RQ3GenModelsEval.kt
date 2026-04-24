@@ -34,7 +34,7 @@ class RQ3GenModelsEval {
 
     @Test
     fun loadEvalData() {
-        val rootDir = File("../Evaluation/dataset/models")
+        val rootDir = File("../Evaluation/dataset/models-test")
         require(rootDir.exists() && rootDir.isDirectory) {
             "Directory not found: ${rootDir.absolutePath}"
         }
@@ -66,9 +66,9 @@ class RQ3GenModelsEval {
                 addAll(otherXmiFiles)
             }
 
-//            val largeFilesToLoad = mutableListOf<String>()
-//            filteredXmiFiles.forEach { largeFilesToLoad.add(it.absolutePath) }
-//            println("Files to load for create, update, read in ${subfolder.name}: ${largeFilesToLoad.size}")
+            val largeFilesToLoad = mutableListOf<String>()
+            filteredXmiFiles.forEach { largeFilesToLoad.add(it.absolutePath) }
+            println("Files to load for create, update, read in ${subfolder.name}: ${largeFilesToLoad.size}")
 
 
             val filesToLoad = ArrayList<String>(allXmiFiles.size)
@@ -82,10 +82,10 @@ class RQ3GenModelsEval {
 
             // Run evaluation multiple times if needed
             for (i in 1..30) {
-                //runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
+                runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
 
-            for (j in 1..2) { // delete is run separately because it uses multiple files
+            for (j in 1..30) { // delete is run separately because it uses multiple files
                 runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
         }
@@ -221,7 +221,7 @@ class RQ3GenModelsEval {
         println("Running delete evaluation for size $currentSize")
         val beforeMemory = getUsedMemoryKB()
         //----- preparation step -----
-        val nodes = manager.loadNodes(currentSize) { it }
+        val nodes = ArrayList(manager.loadNodes(currentSize) { it })
         //--- preparation step end ----
         val limit = minOf(currentSize, nodes.size)
         val startTime = System.currentTimeMillis()
