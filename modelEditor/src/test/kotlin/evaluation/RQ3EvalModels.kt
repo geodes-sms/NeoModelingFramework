@@ -2,7 +2,6 @@ package evaluation
 
 import DBCredentials
 import geodes.sms.neo4j.io.controllers.IGraphManager
-import geodes.sms.neo4j.io.type.AsString
 import geodes.sms.nmf.loader.emf2neo4j.EmfModelLoader
 import geodes.sms.nmf.neo4j.io.GraphBatchWriter
 import org.junit.jupiter.api.Test
@@ -15,7 +14,7 @@ import java.io.File
 // metrics (time and memory consumed when performing each operation for different
 @Suppress("UNCHECKED_CAST")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RQ3GenModelsEval {
+class RQ3EvalModels {
     private val dbUri = DBCredentials.dbUri
     private val username = DBCredentials.username
     private val password = DBCredentials.password
@@ -34,7 +33,7 @@ class RQ3GenModelsEval {
 
     @Test
     fun loadEvalData() {
-        val rootDir = File("../Evaluation/dataset/models-test")
+        val rootDir = File("../Evaluation/dataset/models")
         require(rootDir.exists() && rootDir.isDirectory) {
             "Directory not found: ${rootDir.absolutePath}"
         }
@@ -58,8 +57,7 @@ class RQ3GenModelsEval {
 
             val (filteredXmiFiles, otherXmiFiles) = xmiFiles.partition { file ->
                 val name = file.name
-                name.contains("1000000") || name.contains("eclipseModel-all")
-            }
+                name.contains("1000000")}
 
             val allXmiFiles = ArrayList<File>(xmiFiles.size).apply {
                 addAll(filteredXmiFiles)
@@ -81,11 +79,11 @@ class RQ3GenModelsEval {
             reset(null, null) // to clear db in case last run threw an exception
 
             // Run evaluation multiple times if needed
-            for (i in 1..30) {
+            for (i in 1..3) {
                 runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
 
-            for (j in 1..30) { // delete is run separately because it uses multiple files
+            for (j in 1..3) { // delete is run separately because it uses multiple files
                 runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
         }
@@ -106,13 +104,10 @@ class RQ3GenModelsEval {
             // For each run, execute all tests
             // reads
             read(metamodelName)
-            reset(model, graphWriter)
-            // create
-            create(metamodelName)
-            reset(model, graphWriter)
             // update
             update(metamodelName)
-            reset(model, graphWriter)
+            // create
+            create(metamodelName)
         }
     }
 
