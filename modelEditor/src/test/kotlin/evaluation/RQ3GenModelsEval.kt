@@ -85,7 +85,7 @@ class RQ3GenModelsEval {
                 //runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
 
-            for (j in 2..2) { // delete is run separately because it uses multiple files
+            for (j in 1..2) { // delete is run separately because it uses multiple files
                 runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
         }
