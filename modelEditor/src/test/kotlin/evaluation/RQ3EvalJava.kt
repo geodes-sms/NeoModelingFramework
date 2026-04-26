@@ -26,7 +26,7 @@ class RQ3EvalJava {
         10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
     )
     private val sizesEval = listOf( // for the evaluation
-        10000, 50000, 100000, 500000, 1000000
+        10000, 50000, 100000, 500000, 1000000, 4000000
     )
     var sizes = sizesDebug
     val isEval = true // set to true to use the evaluation data
@@ -81,12 +81,12 @@ class RQ3EvalJava {
             reset(null, null) // to clear db in case last run threw an exception
 
             // Run evaluation multiple times if needed
-            for (i in 1..3) {
+            for (i in 1..30) {
                 runEval(largeFilesToLoad, graphWriter, i, subfolder.name)
             }
 
             for (j in 1..30) { // delete is run separately because it uses multiple files
-                //runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
+                runEvalDel(filesToLoad, graphWriter, j, subfolder.name)
             }
         }
 
@@ -119,24 +119,23 @@ class RQ3EvalJava {
         maxSize = sizes.last()
         println("Running delete evaluation number: $i")
 
-        val validSizes = sizes.toSet()
-
-        val filteredFiles = files.mapNotNull { file ->
-            val name = getModelName(file)
-            val size = name.substringAfterLast("_")
-                .substringBefore(".")
-                .toIntOrNull()
-
-            if (size != null && size in validSizes) {
-                file to size
-            } else null
-        }.sortedBy { it.second }
-
         evalCount = i
         val resWriter = getFile("Delete", metamodelName)
 
-        for ((model, size) in filteredFiles) {
-            reset(model, graphWriter)
+        for (size in sizes) {
+            val selectedFile = if (size == 4000000) {
+                files.find { it.contains("eclipseModel-all") }
+            } else {
+                files.find { it.contains("eclipseModel-0.1") }
+            }
+
+            require(selectedFile != null) {
+                "No file found for size $size with expected pattern"
+            }
+
+            // Reset DB with correct model
+            reset(selectedFile, graphWriter)
+            // delete
             delete(resWriter, size)
         }
     }
