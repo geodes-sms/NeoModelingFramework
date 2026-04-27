@@ -1,2 +1,4 @@
 model,ext,nodes,edges,time,mem
-eclipseModel-all,xmi,4357774,11478915,732783,6390738
+eclipseModel-0.1,xmi,100126,262258,11205,571864
+eclipseModel-1.0,xmi,1000658,2672591,122636,2030056
+eclipseModel-all,xmi,4357774,11478915,536577,4035666

@@ -38,7 +38,7 @@ class RQ2EvalJava {
             println("Files to load in ${subfolder.name}: ${filesToLoad.size}")
 
             // Run evaluation multiple times if needed
-            for (i in 1..3) {
+            for (i in 1..30) {
                 graphWriter.clearDB()
                 runEval(filesToLoad, graphWriter, i, "../Evaluation/results/RQ2Models-reverse/",
                     subfolder.name)
