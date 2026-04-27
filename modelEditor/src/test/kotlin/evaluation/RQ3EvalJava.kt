@@ -26,7 +26,7 @@ class RQ3EvalJava {
         10, 50, 100, 500, 1000, 5000, 10000, 50000, 100000
     )
     private val sizesEval = listOf( // for the evaluation
-        10000, 50000, 100000, 500000, 1000000, 4000000
+         4000000
     )
     var sizes = sizesDebug
     val isEval = true // set to true to use the evaluation data
@@ -100,7 +100,7 @@ class RQ3EvalJava {
         println("Running evaluation number: $i")
         for (model in files) {
             println("Loading model ${getModelName(model)}")
-            reset(model, graphWriter)
+            //reset(model, graphWriter)
             // we run the evaluation multiple times to mitigate threats
             evalCount = i
             // For each run, execute all tests
@@ -123,12 +123,12 @@ class RQ3EvalJava {
         val resWriter = getFile("Delete", metamodelName)
 
         for (size in sizes) {
-            val selectedFile = if (size == 4000000) {
-                files.find { it.contains("eclipseModel-all") }
-            } else {
-                files.find { it.contains("eclipseModel-0.1") }
+            var selectedFile = files.find { it.contains("eclipseModel-0.1") }
+            if (size == 500000 || size == 1000000) {
+                selectedFile = files.find { it.contains("eclipseModel-1.0") }
+            } else if (size == 4000000) {
+                selectedFile = files.find { it.contains("eclipseModel-all") }
             }
-
             require(selectedFile != null) {
                 "No file found for size $size with expected pattern"
             }
@@ -276,11 +276,11 @@ class RQ3EvalJava {
      */
     fun reset(model: String?, graphWriter: GraphBatchWriter?) {
 
-            manager.clearDB()
-            manager.clearCache()
+        manager.clearDB()
+        manager.clearCache()
         if (model != null && graphWriter != null) {
-            EmfModelLoader.load(model, graphWriter)
             println("Loading file ${getModelName(model)}")
+            EmfModelLoader.load(model, graphWriter)
         }
     }
 
