@@ -137,7 +137,9 @@ java -jar <NMF_LOADER_PATH> --help
 ```JDK 11``` is required. 
 Make sure to run ```./gradlew assemble``` on the root directory. 
 
-The quantitative evaluation can be re-run by running [RQ1Eval.kt, RQ2Eval.kt](modelLoader/src/test/kotlin/evaluation) and [RQ3Eval.kt](modelEditor/src/test/kotlin/evaluation) files. Make sure you have an empty instance of Neo4j running.
+The DomainSpecific API used for the Train benchmark scenario is available at [modelEditor\src\main\kotlin\geodes\sms\nmf\editor\railway](modelEditor\src\main\kotlin\geodes\sms\nmf\editor\railway) and the generic api code is located at [TrainBenchmark]((modelLoader/src/test/kotlin/evaluation))
+
+The quantitative evaluation can be re-run by running [RQ1Eval.kt, RQ2Eval.kt, RQ2EvalModels.kt, RQ2EvalJava.kt](modelLoader/src/test/kotlin/evaluation) and [RQ3Eval.kt, RQ3EvalModels.kt, RQ3EvalJava.kt](modelEditor/src/test/kotlin/evaluation) files. Make sure you have an empty instance of Neo4j running.
 Results will be generated as CSV files, under [Evaluation/results](Evaluation/results).
 
 Results can be plotted by running the Jupyter Notebooks at [Evaluation/analysis](Evaluation/analysis).
