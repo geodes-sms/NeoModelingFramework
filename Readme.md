@@ -36,7 +36,7 @@ The modules are designed to achieve the following goals:
 The overall NMF architecture within dependencies between the modules are presented in the following figure:
 
 <p align="center">
-   <img src="/docs/NMF-architecture.svg" width="500" style="background-color:white;">
+   <img src="/docs/framework.png" width="500" style="background-color:white;">
 </p>
 
 ## Prerequisites
